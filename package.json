@@ -1,0 +1,15 @@
+{
+  "name": "gaming-zone-booking",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "website",
+    "admin"
+  ],
+  "scripts": {
+    "dev:backend": "npm run dev --workspace=backend",
+    "dev:admin": "npm run dev --workspace=admin",
+    "dev:website": "npm run dev --workspace=website"
+  }
+}

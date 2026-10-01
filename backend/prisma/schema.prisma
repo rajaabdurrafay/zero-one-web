@@ -1,0 +1,464 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ResourceType {
+  SNOOKER
+  PS5_OPEN
+  PS5_PRIVATE
+  CINEMA
+  TABLE_TENNIS
+  CAR_SIMULATOR
+}
+
+enum PricingUnit {
+  PER_MINUTE
+  PER_HOUR
+}
+
+enum BookingStatus {
+  PENDING
+  PENDING_PAYMENT
+  AWAITING_VERIFICATION
+  CONFIRMED
+  CANCELLED
+  REJECTED
+  COMPLETED
+}
+
+enum PaymentMethod {
+  CASH
+  ONLINE_JAZZCASH
+  ONLINE_EASYPAISA
+  ONLINE_BANK
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED_AMOUNT
+}
+
+enum ApplicableTo {
+  ALL_ACTIVITIES
+  SPECIFIC_ACTIVITY
+}
+
+enum PopupFrequency {
+  ONCE_PER_SESSION
+  EVERY_VISIT
+  ONCE_PER_DAY
+}
+
+enum ThemeTarget {
+  WEBSITE
+  ADMIN
+}
+
+enum ThemeMode {
+  LIGHT
+  DARK
+}
+
+enum AdminRole {
+  SUPER_ADMIN
+  MANAGER
+  RECEPTIONIST
+}
+
+enum SessionMode {
+  COUNTDOWN
+  COUNT_UP
+}
+
+enum SessionStatus {
+  RUNNING
+  PAUSED
+  COMPLETED
+}
+
+enum SessionAction {
+  START
+  PAUSE
+  RESUME
+  EXTEND
+  STOP
+}
+
+model Resource {
+  id        String       @id @default(cuid())
+  name      String
+  type      ResourceType
+  isActive  Boolean      @default(true)
+  bookings  Booking[]
+  sessions  Session[]
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  @@index([type])
+  @@index([isActive])
+}
+
+model Activity {
+  id             String       @id @default(cuid())
+  name           String
+  resourceType   ResourceType @unique
+  pricingUnit    PricingUnit
+  basePrice      Float
+  halfHourPrice  Int?
+  fullHourPrice  Int?
+  offers         Offer[]
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+model Customer {
+  id                String         @id @default(cuid())
+  name              String
+  phone             String
+  email             String?
+  password          String?
+  isRegistered      Boolean        @default(false)
+  profilePictureUrl String?
+  resetToken        String?
+  resetTokenExpiry  DateTime?
+  bookings          Booking[]
+  bookingGroups     BookingGroup[]
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  @@index([phone])
+}
+
+model Offer {
+  id                 String        @id @default(cuid())
+  title              String
+  description        String?
+  discountType       DiscountType
+  discountValue      Float
+  applicableTo       ApplicableTo  @default(ALL_ACTIVITIES)
+  activityId         String?
+  activity           Activity?     @relation(fields: [activityId], references: [id])
+  validFrom          DateTime
+  validUntil         DateTime
+  isActive           Boolean       @default(true)
+  isVisibleOnWebsite Boolean       @default(true)
+  minDuration        Int?
+  promoCode          String?
+  bannerImageUrl     String?
+  bookings           Booking[]
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  @@index([isActive])
+  @@index([isVisibleOnWebsite])
+  @@index([promoCode])
+  @@index([validFrom, validUntil])
+}
+
+model BookingGroup {
+  id                   String         @id @default(cuid())
+  customerId           String
+  totalAmount          Float
+  status               BookingStatus  @default(PENDING_PAYMENT)
+  paymentMethod        PaymentMethod?
+  amountPaid           Float?
+  paymentScreenshotUrl String?
+  paymentSubmittedAt   DateTime?
+  verifiedAt           DateTime?
+  rejectionReason      String?
+  customer             Customer       @relation(fields: [customerId], references: [id])
+  bookings             Booking[]
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+
+  @@index([customerId])
+  @@index([status])
+}
+
+model Booking {
+  id                   String         @id @default(cuid())
+  bookingGroupId       String?
+  bookingGroup         BookingGroup?  @relation(fields: [bookingGroupId], references: [id], onDelete: SetNull)
+  resourceId           String
+  customerId           String
+  startTime            DateTime
+  endTime              DateTime
+  status               BookingStatus  @default(PENDING_PAYMENT)
+  totalPrice           Float
+  discountAmount       Float?         @default(0)
+  appliedOfferId       String?
+  appliedOffer         Offer?         @relation(fields: [appliedOfferId], references: [id])
+  isWalkIn             Boolean        @default(false)
+  paymentMethod        PaymentMethod?
+  amountPaid           Float?
+  paymentScreenshotUrl String?
+  paymentSubmittedAt   DateTime?
+  verifiedAt           DateTime?
+  rejectionReason      String?
+  reminderSent         Boolean        @default(false)
+  addons               BookingAddon[]
+  session              Session?
+  resource             Resource       @relation(fields: [resourceId], references: [id])
+  customer             Customer       @relation(fields: [customerId], references: [id])
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+
+  @@index([resourceId, startTime, endTime])
+  @@index([status])
+  @@index([startTime])
+  @@index([reminderSent])
+  @@index([appliedOfferId])
+  @@index([bookingGroupId])
+}
+
+model ThemeSettings {
+  id               String      @id @default(cuid())
+  target           ThemeTarget
+  mode             ThemeMode   @default(DARK)
+  primaryColor     String
+  primaryDarkColor String
+  accentColor      String
+  accentDarkColor  String
+  backgroundColor  String
+  textColor        String
+  displayFont      String      @default("Poppins")
+  bodyFont         String      @default("Inter")
+  baseSizeScale    Float       @default(1.0)
+  glassEffectEnabled Boolean   @default(false)
+  logoUrlDark      String?
+  logoUrlLight     String?
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  @@unique([target, mode])
+}
+
+model AdminUser {
+  id              String       @id @default(cuid())
+  username        String       @unique
+  password        String
+  name            String
+  avatarUrl       String?
+  role            AdminRole    @default(RECEPTIONIST)
+  isActive        Boolean      @default(true)
+  lastLoginAt     DateTime?
+  startedSessions Session[]
+  sessionLogs     SessionLog[]
+  auditLogs       AuditLog[]
+  attendanceLogs  AttendanceLog[]
+  loginSessions   LoginSession[]
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@index([username])
+}
+
+model ContactMessage {
+  id        String   @id @default(cuid())
+  name      String
+  email     String?
+  phone     String?
+  subject   String?
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isRead])
+  @@index([createdAt])
+}
+
+model SitePopup {
+  id           String         @id @default("default_popup")
+  isEnabled    Boolean        @default(false)
+  delaySeconds Int            @default(4)
+  frequency    PopupFrequency @default(ONCE_PER_SESSION)
+  heading      String         @default("Special Announcement")
+  message      String         @default("Check out our latest deals and book your gaming or snooker arena slot today!")
+  buttonText   String         @default("Book Your Slot")
+  buttonLink   String         @default("/book")
+  imageUrl     String?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+}
+
+model SystemSettings {
+  id                     String    @id @default("system_settings")
+  maintenanceMode        Boolean   @default(false)
+  maintenanceMessage     String?   @default("We are currently undergoing scheduled maintenance. We will be back online shortly!")
+  bookingsEnabled        Boolean   @default(true)
+  bookingsPausedMessage  String?   @default("Online bookings are temporarily paused. Please call or visit us directly to book your slot.")
+  emergencyClosedToday   Boolean   @default(false)
+  emergencyClosedMessage String?   @default("We are closed for today due to a private event or maintenance. Normal operations resume tomorrow.")
+  walkInsEnabled         Boolean   @default(true)
+  contactPhone           String?   @default("+92 300 1234567")
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+}
+
+model AddonItem {
+  id          String         @id @default(cuid())
+  name        String
+  description String?
+  price       Float
+  category    String?        @default("Snacks") // e.g. Drinks, Snacks, CafÃ©
+  stock       Int?           // null means unlimited/untracked stock
+  isAvailable Boolean        @default(true)
+  imageUrl    String?
+  bookingAddons BookingAddon[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@index([isAvailable])
+  @@index([category])
+}
+
+model BookingAddon {
+  id              String     @id @default(cuid())
+  bookingId       String
+  booking         Booking    @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  addonItemId     String
+  addonItem       AddonItem  @relation(fields: [addonItemId], references: [id], onDelete: Restrict)
+  quantity        Int        @default(1)
+  priceAtBooking  Float      // locked unit price at booking time
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  @@index([bookingId])
+  @@index([addonItemId])
+}
+
+model Session {
+  id                 String        @id @default(cuid())
+  bookingId          String?       @unique
+  booking            Booking?      @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+  resourceId         String
+  resource           Resource      @relation(fields: [resourceId], references: [id])
+  customerName       String?
+  mode               SessionMode
+  status             SessionStatus @default(RUNNING)
+  startedAt          DateTime      @default(now())
+  endedAt            DateTime?
+  plannedMinutes     Int?
+  extendedMinutes    Int           @default(0)
+  pausedAt           DateTime?
+  totalPausedSeconds Int           @default(0)
+  finalAmount        Float?
+  startedByUserId    String
+  startedByUser      AdminUser     @relation(fields: [startedByUserId], references: [id])
+  logs               SessionLog[]
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  @@index([resourceId])
+  @@index([status])
+  @@index([startedAt])
+}
+
+model SessionLog {
+  id                String        @id @default(cuid())
+  sessionId         String
+  session           Session       @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  action            SessionAction
+  performedByUserId String
+  performedByUser   AdminUser     @relation(fields: [performedByUserId], references: [id])
+  details           String?
+  createdAt         DateTime      @default(now())
+
+  @@index([sessionId])
+  @@index([createdAt])
+}
+
+model GalleryImage {
+  id           String   @id @default(cuid())
+  imageUrl     String
+  caption      String?
+  category     String?
+  displayOrder Int      @default(0)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+
+  @@index([isActive])
+  @@index([displayOrder])
+}
+
+model Review {
+  id                String   @id @default(cuid())
+  customerName      String
+  customerAvatarUrl String?
+  rating            Int
+  reviewText        String   @db.Text
+  isApproved        Boolean  @default(false)
+  isFeatured        Boolean  @default(false)
+  createdAt         DateTime @default(now())
+
+  @@index([isApproved])
+  @@index([isFeatured])
+  @@index([createdAt])
+}
+
+model SocialReel {
+  id           String   @id @default(cuid())
+  platform     String   @default("INSTAGRAM")
+  url          String
+  thumbnailUrl String
+  caption      String?
+  displayOrder Int      @default(0)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+
+  @@index([isActive])
+  @@index([displayOrder])
+}
+
+model AuditLog {
+  id        String    @id @default(cuid())
+  staffId   String
+  staff     AdminUser @relation(fields: [staffId], references: [id])
+  action    String
+  entity    String
+  entityId  String?
+  details   Json?
+  createdAt DateTime  @default(now())
+
+  @@index([staffId])
+  @@index([action])
+  @@index([entity])
+  @@index([createdAt])
+}
+
+model AttendanceLog {
+  id              String    @id @default(cuid())
+  adminUserId     String
+  adminUser       AdminUser @relation(fields: [adminUserId], references: [id])
+  loginAt         DateTime
+  logoutAt        DateTime?
+  durationMinutes Int?      // Calculated on logout
+  date            DateTime  // Date portion of loginAt â€” for easy daily grouping
+
+  @@index([adminUserId])
+  @@index([date])
+  @@index([adminUserId, date])
+}
+
+model LoginSession {
+  id                String    @id @default(cuid())
+  adminUserId       String
+  adminUser         AdminUser @relation(fields: [adminUserId], references: [id])
+  deviceFingerprint String
+  ipAddress         String?
+  userAgent         String?
+  location          String?
+  firstSeenAt       DateTime  @default(now())
+  lastSeenAt        DateTime  @default(now())
+
+  @@index([adminUserId])
+  @@index([deviceFingerprint])
+  @@index([adminUserId, deviceFingerprint])
+}
+
