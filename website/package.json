@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 3002",
-    "build": "next build --webpack",
+    "build": "next build --webpack && node ../scripts/prepare-standalone.cjs website",
     "start": "next start",
     "lint": "eslint"
   },
