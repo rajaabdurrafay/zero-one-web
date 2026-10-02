@@ -114,11 +114,15 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 app.listen(Number(PORT), '0.0.0.0', () => {
   console.log(`🚀 Server running on http://0.0.0.0:${PORT}`);
 
-  // Run immediately on server launch
+  // Database-changing background jobs require explicit opt-in.
+  if (process.env.ENABLE_BOOKING_AUTOMATION !== 'true') {
+    console.log('Booking automation disabled');
+    return;
+  }
+
   autoCompleteExpiredBookings();
   autoCancelExpiredPendingPayments();
 
-  // Background interval: Check every 30 seconds for expired holds & completions
   setInterval(() => {
     autoCompleteExpiredBookings();
     autoCancelExpiredPendingPayments();
