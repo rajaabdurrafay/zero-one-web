@@ -91,7 +91,6 @@ router.post('/', async (req: AuthenticatedAdminRequest, res, next) => {
       where: {
         username: {
           equals: username,
-          mode: 'insensitive',
         },
       },
     });
@@ -186,7 +185,6 @@ router.patch('/:id', async (req: AuthenticatedAdminRequest, res, next) => {
         where: {
           username: {
             equals: data.username.trim(),
-            mode: 'insensitive',
           },
         },
       });

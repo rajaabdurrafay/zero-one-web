@@ -1147,12 +1147,13 @@ router.get('/group/:groupId/receipt-pdf', requireAdminAuth(), async (req, res, n
     // Logo check
     let logoLoaded = false;
     try {
-      const themeSettings: any[] = await prisma.$queryRaw`
-        SELECT "logoUrlLight", "logoUrlDark" FROM "public"."ThemeSettings"
-        WHERE "target"::text = 'WEBSITE' AND "mode"::text = 'LIGHT'
-        LIMIT 1
-      `;
-      const customLogo = themeSettings[0]?.logoUrlLight || themeSettings[0]?.logoUrlDark;
+      const theme = await prisma.themeSettings.findFirst({
+        where: {
+          target: 'WEBSITE',
+          mode: 'LIGHT',
+        },
+      });
+      const customLogo = theme?.logoUrlLight || theme?.logoUrlDark;
       if (customLogo) {
         const cleanPath = customLogo.replace(/^\//, '');
         const fullCustomLogoPath = path.join(process.cwd(), cleanPath);
@@ -1714,8 +1715,8 @@ router.get('/', async (req, res, next) => {
         ...(isWalkInFilter !== undefined && { isWalkIn: isWalkInFilter }),
         ...(searchStr && {
           OR: [
-            { customer: { name: { contains: searchStr, mode: 'insensitive' } } },
-            { customer: { phone: { contains: searchStr, mode: 'insensitive' } } }
+            { customer: { name: { contains: searchStr } } },
+            { customer: { phone: { contains: searchStr } } }
           ]
         })
       },
@@ -2071,12 +2072,13 @@ router.get('/:id/receipt-pdf', requireAdminAuth(), async (req, res, next) => {
     let logoLoaded = false;
     try {
       // Look up theme settings in DB for light mode logo
-      const themeSettings: any[] = await prisma.$queryRaw`
-        SELECT "logoUrlLight", "logoUrlDark" FROM "public"."ThemeSettings"
-        WHERE "target"::text = 'WEBSITE' AND "mode"::text = 'LIGHT'
-        LIMIT 1
-      `;
-      const customLogo = themeSettings[0]?.logoUrlLight || themeSettings[0]?.logoUrlDark;
+      const theme = await prisma.themeSettings.findFirst({
+        where: {
+          target: 'WEBSITE',
+          mode: 'LIGHT',
+        },
+      });
+      const customLogo = theme?.logoUrlLight || theme?.logoUrlDark;
       if (customLogo) {
         const cleanPath = customLogo.replace(/^\//, '');
         const fullCustomLogoPath = path.join(process.cwd(), cleanPath);

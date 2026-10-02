@@ -10,6 +10,15 @@
   "scripts": {
     "dev:backend": "npm run dev --workspace=backend",
     "dev:admin": "npm run dev --workspace=admin",
-    "dev:website": "npm run dev --workspace=website"
+    "dev:website": "npm run dev --workspace=website",
+    "build:admin": "npm run build --workspace=admin",
+    "build:backend": "npm run build --workspace=backend",
+    "build:website": "npm run build --workspace=website",
+    "start:admin": "npm run start --workspace=admin",
+    "start:backend": "npm run start --workspace=backend",
+    "start:website": "npm run start --workspace=website"
+  },
+  "devDependencies": {
+    "mysql2": "^3.24.5"
   }
 }

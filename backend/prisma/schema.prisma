@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
@@ -104,16 +104,16 @@ model Resource {
 }
 
 model Activity {
-  id             String       @id @default(cuid())
-  name           String
-  resourceType   ResourceType @unique
-  pricingUnit    PricingUnit
-  basePrice      Float
-  halfHourPrice  Int?
-  fullHourPrice  Int?
-  offers         Offer[]
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  id            String       @id @default(cuid())
+  name          String
+  resourceType  ResourceType @unique
+  pricingUnit   PricingUnit
+  basePrice     Float
+  halfHourPrice Int?
+  fullHourPrice Int?
+  offers        Offer[]
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
 }
 
 model Customer {
@@ -135,24 +135,24 @@ model Customer {
 }
 
 model Offer {
-  id                 String        @id @default(cuid())
+  id                 String       @id @default(cuid())
   title              String
   description        String?
   discountType       DiscountType
   discountValue      Float
-  applicableTo       ApplicableTo  @default(ALL_ACTIVITIES)
+  applicableTo       ApplicableTo @default(ALL_ACTIVITIES)
   activityId         String?
-  activity           Activity?     @relation(fields: [activityId], references: [id])
+  activity           Activity?    @relation(fields: [activityId], references: [id])
   validFrom          DateTime
   validUntil         DateTime
-  isActive           Boolean       @default(true)
-  isVisibleOnWebsite Boolean       @default(true)
+  isActive           Boolean      @default(true)
+  isVisibleOnWebsite Boolean      @default(true)
   minDuration        Int?
   promoCode          String?
   bannerImageUrl     String?
   bookings           Booking[]
-  createdAt          DateTime      @default(now())
-  updatedAt          DateTime      @updatedAt
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
 
   @@index([isActive])
   @@index([isVisibleOnWebsite])
@@ -217,43 +217,43 @@ model Booking {
 }
 
 model ThemeSettings {
-  id               String      @id @default(cuid())
-  target           ThemeTarget
-  mode             ThemeMode   @default(DARK)
-  primaryColor     String
-  primaryDarkColor String
-  accentColor      String
-  accentDarkColor  String
-  backgroundColor  String
-  textColor        String
-  displayFont      String      @default("Poppins")
-  bodyFont         String      @default("Inter")
-  baseSizeScale    Float       @default(1.0)
-  glassEffectEnabled Boolean   @default(false)
-  logoUrlDark      String?
-  logoUrlLight     String?
-  createdAt        DateTime    @default(now())
-  updatedAt        DateTime    @updatedAt
+  id                 String      @id @default(cuid())
+  target             ThemeTarget
+  mode               ThemeMode   @default(DARK)
+  primaryColor       String
+  primaryDarkColor   String
+  accentColor        String
+  accentDarkColor    String
+  backgroundColor    String
+  textColor          String
+  displayFont        String      @default("Poppins")
+  bodyFont           String      @default("Inter")
+  baseSizeScale      Float       @default(1.0)
+  glassEffectEnabled Boolean     @default(false)
+  logoUrlDark        String?
+  logoUrlLight       String?
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
 
   @@unique([target, mode])
 }
 
 model AdminUser {
-  id              String       @id @default(cuid())
-  username        String       @unique
+  id              String          @id @default(cuid())
+  username        String          @unique
   password        String
   name            String
   avatarUrl       String?
-  role            AdminRole    @default(RECEPTIONIST)
-  isActive        Boolean      @default(true)
+  role            AdminRole       @default(RECEPTIONIST)
+  isActive        Boolean         @default(true)
   lastLoginAt     DateTime?
   startedSessions Session[]
   sessionLogs     SessionLog[]
   auditLogs       AuditLog[]
   attendanceLogs  AttendanceLog[]
   loginSessions   LoginSession[]
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
 
   @@index([username])
 }
@@ -288,46 +288,46 @@ model SitePopup {
 }
 
 model SystemSettings {
-  id                     String    @id @default("system_settings")
-  maintenanceMode        Boolean   @default(false)
-  maintenanceMessage     String?   @default("We are currently undergoing scheduled maintenance. We will be back online shortly!")
-  bookingsEnabled        Boolean   @default(true)
-  bookingsPausedMessage  String?   @default("Online bookings are temporarily paused. Please call or visit us directly to book your slot.")
-  emergencyClosedToday   Boolean   @default(false)
-  emergencyClosedMessage String?   @default("We are closed for today due to a private event or maintenance. Normal operations resume tomorrow.")
-  walkInsEnabled         Boolean   @default(true)
-  contactPhone           String?   @default("+92 300 1234567")
-  createdAt              DateTime  @default(now())
-  updatedAt              DateTime  @updatedAt
+  id                     String   @id @default("system_settings")
+  maintenanceMode        Boolean  @default(false)
+  maintenanceMessage     String?  @default("We are currently undergoing scheduled maintenance. We will be back online shortly!")
+  bookingsEnabled        Boolean  @default(true)
+  bookingsPausedMessage  String?  @default("Online bookings are temporarily paused. Please call or visit us directly to book your slot.")
+  emergencyClosedToday   Boolean  @default(false)
+  emergencyClosedMessage String?  @default("We are closed for today due to a private event or maintenance. Normal operations resume tomorrow.")
+  walkInsEnabled         Boolean  @default(true)
+  contactPhone           String?  @default("+92 300 1234567")
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
 }
 
 model AddonItem {
-  id          String         @id @default(cuid())
-  name        String
-  description String?
-  price       Float
-  category    String?        @default("Snacks") // e.g. Drinks, Snacks, CafÃ©
-  stock       Int?           // null means unlimited/untracked stock
-  isAvailable Boolean        @default(true)
-  imageUrl    String?
+  id            String         @id @default(cuid())
+  name          String
+  description   String?
+  price         Float
+  category      String?        @default("Snacks") // e.g. Drinks, Snacks, CafÃ©
+  stock         Int? // null means unlimited/untracked stock
+  isAvailable   Boolean        @default(true)
+  imageUrl      String?
   bookingAddons BookingAddon[]
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 
   @@index([isAvailable])
   @@index([category])
 }
 
 model BookingAddon {
-  id              String     @id @default(cuid())
-  bookingId       String
-  booking         Booking    @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  addonItemId     String
-  addonItem       AddonItem  @relation(fields: [addonItemId], references: [id], onDelete: Restrict)
-  quantity        Int        @default(1)
-  priceAtBooking  Float      // locked unit price at booking time
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
+  id             String    @id @default(cuid())
+  bookingId      String
+  booking        Booking   @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  addonItemId    String
+  addonItem      AddonItem @relation(fields: [addonItemId], references: [id], onDelete: Restrict)
+  quantity       Int       @default(1)
+  priceAtBooking Float // locked unit price at booking time
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   @@index([bookingId])
   @@index([addonItemId])
@@ -438,8 +438,8 @@ model AttendanceLog {
   adminUser       AdminUser @relation(fields: [adminUserId], references: [id])
   loginAt         DateTime
   logoutAt        DateTime?
-  durationMinutes Int?      // Calculated on logout
-  date            DateTime  // Date portion of loginAt â€” for easy daily grouping
+  durationMinutes Int? // Calculated on logout
+  date            DateTime // Date portion of loginAt â€” for easy daily grouping
 
   @@index([adminUserId])
   @@index([date])
@@ -461,4 +461,3 @@ model LoginSession {
   @@index([deviceFingerprint])
   @@index([adminUserId, deviceFingerprint])
 }
-

@@ -59,7 +59,7 @@ interface GroupCartItem {
   promoCode: string;
 }
 
-export function clearBookingDraft() {
+function clearBookingDraft() {
   if (typeof window !== 'undefined') {
     try {
       sessionStorage.removeItem(STORAGE_KEY);

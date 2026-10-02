@@ -28,7 +28,6 @@ router.post('/login', async (req, res, next) => {
       where: {
         username: {
           equals: username,
-          mode: 'insensitive',
         },
       },
     });

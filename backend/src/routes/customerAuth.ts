@@ -50,8 +50,7 @@ router.post('/forgot-password', async (req, res, next) => {
     const customer = await prisma.customer.findFirst({
       where: {
         email: {
-          equals: email,
-          mode: 'insensitive'
+          equals: email
         }
       }
     });

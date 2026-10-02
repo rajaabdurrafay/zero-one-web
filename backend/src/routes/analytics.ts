@@ -687,12 +687,13 @@ router.get('/export-pdf', async (req, res, next) => {
     // Logo check
     let logoLoaded = false;
     try {
-      const themeSettings: any[] = await prisma.$queryRaw`
-        SELECT "logoUrlLight", "logoUrlDark" FROM "public"."ThemeSettings"
-        WHERE "target"::text = 'ADMIN'
-        LIMIT 1
-      `;
-      const customLogo = themeSettings[0]?.logoUrlDark || themeSettings[0]?.logoUrlLight;
+      const theme = await prisma.themeSettings.findFirst({
+        where: {
+          target: 'ADMIN',
+          mode: 'DARK',
+        },
+      });
+      const customLogo = theme?.logoUrlDark || theme?.logoUrlLight;
       if (customLogo) {
         const cleanPath = customLogo.replace(/^\//, '');
         const fullCustomLogoPath = path.join(process.cwd(), cleanPath);

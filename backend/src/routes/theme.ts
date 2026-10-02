@@ -101,10 +101,11 @@ router.get('/', async (req: Request, res: Response) => {
     const target: ThemeTarget = targetParam === 'ADMIN' ? 'ADMIN' : 'WEBSITE';
 
     // Fetch all themes for this target from database
-    const results: any[] = await prisma.$queryRaw`
-      SELECT * FROM "public"."ThemeSettings"
-      WHERE "target"::text = ${target}
-    `;
+    const results = await prisma.themeSettings.findMany({
+      where: {
+        target,
+      },
+    });
 
     const darkDb = results.find((r) => r.mode === 'DARK');
     const lightDb = results.find((r) => r.mode === 'LIGHT');
@@ -210,50 +211,49 @@ router.put('/', requireAdminAuth([AdminRole.SUPER_ADMIN]), async (req: Request, 
     const now = new Date();
     const newId = `theme_${validatedData.target.toLowerCase()}_${validatedData.mode.toLowerCase()}`;
 
-    await prisma.$executeRaw`
-      INSERT INTO "public"."ThemeSettings" (
-        "id", "target", "mode", "primaryColor", "primaryDarkColor",
-        "accentColor", "accentDarkColor", "backgroundColor",
-        "textColor", "displayFont", "bodyFont", "baseSizeScale", "glassEffectEnabled",
-        "logoUrlDark", "logoUrlLight",
-        "createdAt", "updatedAt"
-      ) VALUES (
-        ${newId},
-        ${validatedData.target}::"public"."ThemeTarget",
-        ${validatedData.mode}::"public"."ThemeMode",
-        ${validatedData.primaryColor}, ${validatedData.primaryDarkColor},
-        ${validatedData.accentColor}, ${validatedData.accentDarkColor},
-        ${validatedData.backgroundColor}, ${validatedData.textColor},
-        ${validatedData.displayFont}, ${validatedData.bodyFont},
-        ${validatedData.baseSizeScale}, ${validatedData.glassEffectEnabled},
-        ${validatedData.logoUrlDark ?? null}, ${validatedData.logoUrlLight ?? null},
-        ${now}, ${now}
-      )
-      ON CONFLICT ("target", "mode") DO UPDATE SET
-        "primaryColor" = EXCLUDED."primaryColor",
-        "primaryDarkColor" = EXCLUDED."primaryDarkColor",
-        "accentColor" = EXCLUDED."accentColor",
-        "accentDarkColor" = EXCLUDED."accentDarkColor",
-        "backgroundColor" = EXCLUDED."backgroundColor",
-        "textColor" = EXCLUDED."textColor",
-        "displayFont" = EXCLUDED."displayFont",
-        "bodyFont" = EXCLUDED."bodyFont",
-        "baseSizeScale" = EXCLUDED."baseSizeScale",
-        "glassEffectEnabled" = EXCLUDED."glassEffectEnabled",
-        "logoUrlDark" = EXCLUDED."logoUrlDark",
-        "logoUrlLight" = EXCLUDED."logoUrlLight",
-        "updatedAt" = EXCLUDED."updatedAt";
-    `;
-
-    const updated: any[] = await prisma.$queryRaw`
-      SELECT * FROM "public"."ThemeSettings"
-      WHERE "target"::text = ${validatedData.target} AND "mode"::text = ${validatedData.mode}
-      LIMIT 1
-    `;
+    const updated = await prisma.themeSettings.upsert({
+      where: {
+        target_mode: {
+          target: validatedData.target,
+          mode: validatedData.mode,
+        },
+      },
+      create: {
+        id: newId,
+        target: validatedData.target,
+        mode: validatedData.mode,
+        primaryColor: validatedData.primaryColor,
+        primaryDarkColor: validatedData.primaryDarkColor,
+        accentColor: validatedData.accentColor,
+        accentDarkColor: validatedData.accentDarkColor,
+        backgroundColor: validatedData.backgroundColor,
+        textColor: validatedData.textColor,
+        displayFont: validatedData.displayFont,
+        bodyFont: validatedData.bodyFont,
+        baseSizeScale: validatedData.baseSizeScale,
+        glassEffectEnabled: validatedData.glassEffectEnabled,
+        logoUrlDark: validatedData.logoUrlDark ?? null,
+        logoUrlLight: validatedData.logoUrlLight ?? null,
+      },
+      update: {
+        primaryColor: validatedData.primaryColor,
+        primaryDarkColor: validatedData.primaryDarkColor,
+        accentColor: validatedData.accentColor,
+        accentDarkColor: validatedData.accentDarkColor,
+        backgroundColor: validatedData.backgroundColor,
+        textColor: validatedData.textColor,
+        displayFont: validatedData.displayFont,
+        bodyFont: validatedData.bodyFont,
+        baseSizeScale: validatedData.baseSizeScale,
+        glassEffectEnabled: validatedData.glassEffectEnabled,
+        logoUrlDark: validatedData.logoUrlDark ?? null,
+        logoUrlLight: validatedData.logoUrlLight ?? null,
+      },
+    });
 
     res.json({
       message: `${validatedData.target} ${validatedData.mode} mode theme updated successfully`,
-      theme: updated[0] || validatedData,
+      theme: updated || validatedData,
     });
   } catch (error) {
     if (error instanceof z.ZodError) {

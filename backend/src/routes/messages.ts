@@ -102,11 +102,11 @@ router.get(
       if (search && typeof search === 'string' && search.trim().length > 0) {
         const searchTerm = search.trim();
         where.OR = [
-          { name: { contains: searchTerm, mode: 'insensitive' } },
-          { email: { contains: searchTerm, mode: 'insensitive' } },
-          { phone: { contains: searchTerm, mode: 'insensitive' } },
-          { subject: { contains: searchTerm, mode: 'insensitive' } },
-          { message: { contains: searchTerm, mode: 'insensitive' } },
+          { name: { contains: searchTerm } },
+          { email: { contains: searchTerm } },
+          { phone: { contains: searchTerm } },
+          { subject: { contains: searchTerm } },
+          { message: { contains: searchTerm } },
         ];
       }
 
