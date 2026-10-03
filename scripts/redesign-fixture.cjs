@@ -120,6 +120,7 @@ async function startFixture() {
       response.statusCode = 401;
       return send({ error: 'No fixture user' });
     }
+    if (pathname === '/api/bookings/my-bookings') return send({ customer: { id: 'fixture-account', name: 'Fixture Player', phone: '03000000000', isRegistered: true }, upcoming: [], past: [], total: 0 });
     if (pathname === '/api/auth/logout') {
       scenario = 'empty';
       return send({ success: true });

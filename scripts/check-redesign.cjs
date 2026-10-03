@@ -78,6 +78,7 @@ async function main() {
           'Theme choice remains persistent',
         );
       }
+      assert.equal(await page.locator('.zo-feature-grid .zo-feature-accent .zo-feature-photo').getAttribute('data-photo-shape'), '01');
       assert.match(await page.locator('.zo-hero').innerText(), /Reviews coming soon/);
       assert.match(await page.locator('.zo-hero').innerText(), /Open 24\/7/);
       assert.equal(
@@ -93,7 +94,7 @@ async function main() {
           .evaluate((element) =>
             getComputedStyle(element).maskImage.includes('data:image/svg+xml'),
           ),
-        'Organic image mask is active',
+        'Bold 01 photo mask is active',
       );
       const activity = page.locator('.zo-activity-card').first();
       assert.match(await activity.getAttribute('href'), /\/book\?activity=/);

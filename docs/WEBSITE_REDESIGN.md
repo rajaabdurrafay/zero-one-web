@@ -110,3 +110,23 @@ Owner revision checks: website build/type-check passed, lint zero errors with th
 The actual owner browser reported prefers-reduced-motion: reduce, which explained the invisible motion. The new per-site Enable/Pause control respects that default while supporting explicit opt-in. Motion preference and live system preference changes are regression-tested. A missed Connect image path was corrected and all homepage photo loads are now checked.
 
 The visit aggregate exposes only totalPlayerVisits. It uses the existing indexed booking status and includes repeat COMPLETED session records; groups count per completed resource session, since physical party headcounts are not recorded. Historical/offline visits absent from the system are not invented. API failure returns 503 without database details. The count is cached for 10 seconds and successful mutations invalidate it. Tests inject the count dependency and never query a real DB; 29 unit/security tests passed. The local fixture uses zero visits by default and 2500 in the labelled live test scenario to verify 2.5K formatting, not production business figures.
+
+## Customer website consistency — 3 October 2026
+
+Reference reviewed: https://finovate.vamtam.com/ (owner-licensed reference). The website adapts its spacious split introductions, large photography, numbered editorial rows, pill actions and FAQ treatment to ZeroOne's existing purple light/dark palette. Reference people photos, finance content and logos are not used.
+
+- All customer routes now use the shared navigation and footer. Active-page links follow the route; mobile navigation closes on route changes. Appearance-controlled glass remains in place.
+- `PageIntro` supplies consistent photography and page headings for Activities, About, Gallery, Reviews, Location and Contact.
+- About uses real venue photography, numbered experience points, a native expandable FAQ and the existing booking banner.
+- Login, signup and password recovery share a split photo/form layout on desktop and a focused form on mobile. Theme-aware logos replace legacy media-query logos.
+- Booking, review submission, profile and my-bookings share the homepage typography, containers, rounded panels, focus states and action styling. Existing event handlers, pricing and booking requests remain unchanged.
+- FeatureCard's former organic cutout is replaced by a bold, font-independent SVG `01` photo mask, including on the offer card. Real venue images remain optimized with next/image.
+- Gallery prefers the existing public gallery API. If no images are published or its existing API helper returns an empty fallback, it displays the six bundled venue photographs. Cards are keyboard-operable buttons and preserve the existing category and lightbox behavior.
+- The same persistent animation preference applies across routes. Marketing introductions/sections reveal subtly; forms remain stable and usable. Reduced-motion preference remains the default unless the visitor explicitly enables animation.
+- Corrected visible legacy Unicode corruption, small-text contrast, the Contact Subject accessible name and the missing-token reset page heading found during visual/accessibility checks.
+
+Responsive decisions: content stays at 1240px with mobile gutters; marketing image/text introductions stack below 850px. Authentication photo panels are hidden below 850px, keeping the form foremost. Existing navigation stays at 1320px maximum and uses the prior mobile breakpoint.
+
+Verification uses `scripts/check-customer-pages.cjs` with the same optional Playwright, axe and Chrome environment variables as `scripts/check-redesign.cjs`. It covers all 14 customer routes in desktop light, mobile dark and 320px light, including active navigation, overflow, runtime errors, accessibility, booking entry, gallery keyboard opening, logo theme and text encoding. All API responses are local in-memory fixtures; no real database is used. The fixture's empty account-booking response exists only for these tests.
+
+No admin changes, migrations, database resets, file cleanup, deployment or push are included.
