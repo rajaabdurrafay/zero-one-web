@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import { CustomerPageShell } from '@/components/redesign/CustomerPageShell';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { SitePopupModal } from '@/components/SitePopupModal';
@@ -50,7 +51,7 @@ export default async function RootLayout({
           <ThemeProvider initialTheme={theme}>
             <CustomerAuthProvider>
               <Navbar />
-              <main id="main-content" tabIndex={-1} className="flex-1">{children}</main>
+              <main id="main-content" tabIndex={-1} className="flex-1"><CustomerPageShell>{children}</CustomerPageShell></main>
               <Footer />
               <SitePopupModal />
             </CustomerAuthProvider>

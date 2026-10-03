@@ -1,3 +1,4 @@
+import { PageIntro } from '@/components/redesign/PageIntro';
 import Link from 'next/link';
 import Image from 'next/image';
 import { getPricing, getActiveOffers, type Activity, type Offer } from '@/lib/api';
@@ -7,8 +8,8 @@ export const dynamic = 'force-dynamic';
 
 const ACTIVITY_IMAGES: Record<string, string> = {
   SNOOKER: '/images/Snokker/snooker-table.jpg.webp',
-  PS5_OPEN: '/images/priveat ps5.webp',
-  PS5_PRIVATE: '/images/PS5/ps5-room.jpg.webp',
+  PS5_OPEN: '/images/PS5/ps5-room.jpg.webp',
+  PS5_PRIVATE: '/images/priveat ps5.webp',
   CINEMA: '/images/Cinema/cinema.jpg.webp',
   TABLE_TENNIS: '/images/Table tennis/table-tennis.jpg.webp',
   CAR_SIMULATOR: '/images/Car simulater/car-simulator.jpg.webp',
@@ -83,27 +84,13 @@ export default async function ActivitiesPage() {
   ]);
 
   return (
-    <div className="space-y-16 sm:space-y-24 pb-16 pt-24 sm:pt-28">
+    <div className="space-y-16 sm:space-y-24 zo-page-spacing">
       {!activities.length && <p className="text-center text-brand-text-muted">Live pricing is temporarily unavailable. Please contact the venue.</p>}
       {/* Top Banner */}
-      <section className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-surface-raised border border-brand-border text-xs font-semibold text-brand-text-muted">
-          <Icon name="target" size={13} className="text-brand-primary" />
-          <span>All Arenas &amp; Official Rates</span>
-        </div>
-        <h1 className="text-4xl sm:text-6xl font-black text-brand-text-main tracking-tight leading-[0.95]">
-          Activities &amp; Experiences at <br />
-          <span className="text-brand-primary">
-            ZeroOne Cue &amp; Play
-          </span>
-        </h1>
-        <p className="text-brand-text-muted text-base sm:text-lg max-w-3xl mx-auto leading-relaxed">
-          From professional tournament snooker tables and next-gen PS5 setups to private laser cinemas and motion racing rigs. Transparent pricing, zero hidden fees, open 24/7 in Gulistan-e-Jauhar, Karachi.
-        </p>
-      </section>
+      <PageIntro label="Activities" title="Find your game." description="Six ways to make it a great night. Explore the spaces, compare live rates and choose your next session." image="/images/PS5/ps5-room.jpg.webp" />
 
       {/* Detailed Activities List */}
-      <section className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+      <section className="zo-page-container space-y-12">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {activities.map((activity) => {
             const meta = ACTIVITY_METADATA[activity.resourceType] || {
@@ -134,7 +121,7 @@ export default async function ActivitiesPage() {
             return (
               <div
                 key={activity.id}
-                className="rounded-3xl p-7 sm:p-9 bg-brand-surface border border-brand-border hover:border-brand-primary/40 shadow-xs transition-all flex flex-col justify-between relative overflow-hidden"
+                data-reveal className="zo-experience-detail rounded-3xl zo-panel p-7 sm:p-9 bg-brand-surface border border-brand-border hover:border-brand-primary/40 shadow-xs transition-all flex flex-col justify-between relative overflow-hidden"
               >
                 {matchingOffer && (
                   <div className="absolute top-4 right-4 bg-brand-primary text-white text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full shadow-xs flex items-center gap-1 z-10">
@@ -202,7 +189,7 @@ export default async function ActivitiesPage() {
                           <span className="text-xl font-black text-brand-text-main">₨{activity.halfHourPrice}</span>
                           <span className="text-xs text-brand-text-muted">/ 30 min</span>
                           <span className="text-brand-text-muted font-bold">•</span>
-                          <span className="text-2xl font-black text-emerald-400">₨{activity.fullHourPrice}</span>
+                          <span className="text-2xl font-black text-brand-primary">₨{activity.fullHourPrice}</span>
                           <span className="text-xs text-brand-text-muted">/ 1 hour</span>
                         </div>
                         <span className="text-[11px] text-brand-primary font-semibold block mt-0.5">
@@ -217,7 +204,7 @@ export default async function ActivitiesPage() {
                               ₨{activity.basePrice}
                             </span>
                           )}
-                          <span className="text-3xl font-black text-emerald-400">
+                          <span className="text-3xl font-black text-brand-primary">
                             ₨{getDiscountedRate(activity.basePrice)}
                           </span>
                           <span className="text-xs text-brand-text-muted font-semibold">/ minute</span>
@@ -261,8 +248,8 @@ export default async function ActivitiesPage() {
       </section>
 
       {/* Booking Rules & Walk-in Note */}
-      <section className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="rounded-3xl bg-brand-surface border border-brand-border p-8 sm:p-10 space-y-6 shadow-xs">
+      <section className="zo-page-container">
+        <div className="rounded-3xl zo-panel bg-brand-surface border border-brand-border p-8 sm:p-10 space-y-6 shadow-xs">
           <div className="flex items-center gap-3">
             <Icon name="calendar" size={22} className="text-brand-primary" />
             <h3 className="text-xl font-bold text-brand-text-main">Booking &amp; Walk-in Guidelines</h3>

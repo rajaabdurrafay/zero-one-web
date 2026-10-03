@@ -1,0 +1,336 @@
+/* Customer routes share the home palette and typography; admin is a separate app. */
+.zo-pages {
+  padding: 132px 0 0;
+}
+.zo-page-spacing {
+  padding-block: 0 80px;
+}
+.zo-page-container {
+  width: min(1240px, calc(100% - 40px));
+  margin-inline: auto;
+}
+.zo-pages .zo-page-intro {
+  margin-bottom: clamp(48px, 7vw, 100px);
+}
+.zo-page-intro-visual {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  gap: clamp(28px, 5vw, 80px);
+}
+.zo-page-intro-copy {
+  padding-block: 28px;
+  max-width: 700px;
+}
+.zo-pages .zo-page-intro h1 {
+  font-size: clamp(44px, 5.4vw, 72px);
+  line-height: 1.04;
+}
+.zo-page-intro p {
+  max-width: 470px;
+  margin-block: 24px 30px;
+  font-size: 16px;
+}
+.zo-page-intro-image {
+  position: relative;
+  min-height: 400px;
+  border-radius: 28px;
+  overflow: hidden;
+}
+.zo-page-intro-image img {
+  object-fit: cover;
+}
+.zo-page-intro-image > span {
+  position: absolute;
+  bottom: 18px;
+  left: 18px;
+  right: 18px;
+  padding: 16px 20px;
+  background: var(--zo-card);
+  color: var(--zo-ink);
+  border-radius: 16px;
+  font-size: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: space-between;
+}
+.zo-page-intro-image b {
+  font-weight: 500;
+}
+.zo-pages .zo-inner-title {
+  font-size: clamp(28px, 3.5vw, 42px);
+  line-height: 1.14;
+  font-weight: 500;
+  text-transform: none;
+}
+.zo-pages h2 {
+  font-size: clamp(24px, 2.6vw, 34px);
+  line-height: 1.2;
+}
+.zo-pages h3 {
+  font-size: 22px;
+}
+.zo-pages .zo-panel {
+  border-radius: 28px;
+  box-shadow: none;
+}
+.zo-pages
+  :is(
+    input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+    select,
+    textarea
+  ) {
+  border-radius: 14px;
+}
+.zo-pages :is(button, a).bg-brand-primary {
+  color: var(--theme-primary-contrast, #fff);
+  border-radius: 100px;
+  min-height: 44px;
+  font-weight: 600;
+}
+.zo-pages :is(a, button, input, select, textarea):focus-visible {
+  outline: 2px solid var(--zo-accent);
+  outline-offset: 4px;
+}
+.zo-pages .zo-experience-detail {
+  padding: 24px;
+}
+.zo-experience-detail > .space-y-6 > div:first-child:has(img) {
+  height: clamp(230px, 26vw, 340px);
+  border-radius: 20px;
+  margin-top: 0;
+}
+.zo-experience-detail img {
+  transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.zo-experience-detail:hover img {
+  transform: scale(1.035);
+}
+.zo-account-stage {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  padding-bottom: 80px;
+  align-items: stretch;
+}
+.zo-account-art {
+  position: relative;
+  overflow: hidden;
+  border-radius: 28px;
+  min-height: 620px;
+  background: #090d16;
+  color: white;
+}
+.zo-account-art > img {
+  object-fit: cover;
+}
+.zo-account-art::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.85));
+}
+.zo-account-art > div {
+  position: absolute;
+  inset: auto 40px 40px;
+  z-index: 1;
+}
+.zo-account-art h2 {
+  font-size: clamp(44px, 5vw, 70px);
+}
+.zo-account-art p {
+  color: #e7e7eb;
+  margin-top: 20px;
+  max-width: 280px;
+}
+.zo-account-signature {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 100px;
+  letter-spacing: -0.1em;
+  line-height: 1;
+  margin-top: 30px;
+  opacity: 0.75;
+}
+.zo-account-form {
+  display: flex;
+  align-items: center;
+}
+.zo-account-form > div {
+  width: 100%;
+  min-height: 0;
+  padding: 0;
+}
+.zo-account-form > div > .zo-panel {
+  max-width: none;
+  padding: clamp(24px, 4vw, 48px);
+}
+.zo-account-form .blur-3xl {
+  display: none;
+}
+.zo-pages[data-page="book"] .zo-inner-title {
+  font-size: clamp(28px, 3.5vw, 40px);
+}
+.zo-pages[data-page="book"] h2,
+.zo-pages[data-page="profile"] h2,
+.zo-pages[data-page="my-bookings"] h2 {
+  font-size: 24px;
+}
+.zo-story {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: clamp(32px, 7vw, 100px);
+  padding-block: 20px 80px;
+}
+.zo-story > div > p + p {
+  margin-top: 20px;
+}
+.zo-story h2 {
+  font-size: clamp(34px, 4vw, 52px);
+}
+.zo-numbered-section {
+  padding: clamp(28px, 5vw, 64px);
+  border-radius: 28px;
+  background: var(--zo-card);
+}
+.zo-numbered-section > h2 {
+  max-width: 650px;
+  font-size: clamp(34px, 4vw, 52px);
+  margin-bottom: 36px;
+}
+.zo-numbered-row {
+  display: grid;
+  grid-template-columns: 60px 1fr 1fr;
+  gap: 24px;
+  padding-block: 28px;
+  border-top: 1px solid var(--zo-border);
+  align-items: start;
+}
+.zo-numbered-row > span {
+  color: var(--zo-accent);
+  font-family: var(--font-display);
+  font-size: 26px;
+}
+.zo-numbered-row p {
+  font-size: 14px;
+}
+.zo-faq {
+  padding-block: 70px;
+  display: grid;
+  grid-template-columns: 1fr 1.3fr;
+  gap: 64px;
+}
+.zo-faq details {
+  border-bottom: 1px solid var(--zo-border);
+}
+.zo-faq summary {
+  cursor: pointer;
+  padding-block: 24px;
+  font-size: 18px;
+  font-family: var(--font-display);
+}
+.zo-faq details p {
+  padding-bottom: 24px;
+  font-size: 14px;
+}
+.zo-pages .zo-banner-card h2 {
+  font-size: clamp(38px, 5vw, 64px);
+}
+.zo-pages .zo-banner-card {
+  margin-bottom: 72px;
+}
+.zo-nav-links a[aria-current="page"] {
+  color: var(--zo-ink);
+  text-decoration: underline;
+  text-decoration-color: var(--zo-accent);
+  text-underline-offset: 6px;
+}
+@media (max-width: 850px) {
+  .zo-pages {
+    padding-top: 110px;
+  }
+  .zo-account-stage {
+    display: block;
+    max-width: 560px;
+  }
+  .zo-account-art {
+    display: none;
+  }
+  .zo-page-intro-visual {
+    grid-template-columns: 1fr;
+  }
+  .zo-page-intro-copy {
+    padding-block: 10px;
+  }
+  .zo-page-intro-image {
+    min-height: 320px;
+  }
+  .zo-story,
+  .zo-faq {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+  .zo-numbered-row {
+    grid-template-columns: 38px 1fr;
+    gap: 16px;
+  }
+  .zo-numbered-row p {
+    grid-column: 2;
+  }
+}
+@media (max-width: 480px) {
+  .zo-pages {
+    padding-top: 100px;
+  }
+  .zo-page-container {
+    width: calc(100% - 32px);
+  }
+  .zo-page-intro-image {
+    min-height: 280px;
+  }
+  .zo-pages .zo-experience-detail {
+    padding: 20px;
+  }
+  .zo-page-spacing {
+    padding-bottom: 48px;
+  }
+}
+
+.zo-account-form button[type="submit"] {
+  background: var(--zo-accent);
+  color: var(--theme-primary-contrast, #fff);
+  border-radius: 100px;
+  min-height: 48px;
+  box-shadow: none;
+}
+
+/* Small accent text needs a stronger contrast than large display headings. */
+.zo-pages :is(.text-brand-primary, .text-brand-accent) {
+  color: color-mix(in srgb, var(--zo-accent) 65%, var(--zo-ink));
+}
+.zo-pages p a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.zo-pages[data-page="book"] .opacity-75 {
+  opacity: 1;
+}
+.zo-pages[data-page="profile"] .text-emerald-400 {
+  color: var(--zo-ink);
+}
+
+.zo-pages .text-brand-danger {
+  color: color-mix(in srgb, var(--color-brand-danger) 65%, var(--zo-ink));
+}
+.zo-pages button.bg-gradient-to-r {
+  background: var(--zo-accent);
+  color: var(--theme-primary-contrast, #fff);
+  box-shadow: none;
+}
+.zo-pages button.bg-gradient-to-r:not(.snap-start) {
+  border-radius: 100px;
+}
+.zo-pages button.bg-gradient-to-r .text-brand-text-main {
+  color: inherit;
+}

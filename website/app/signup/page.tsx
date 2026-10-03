@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
+import { BrandLogo } from '@/components/BrandLogo';
 import { useRouter } from 'next/navigation';
 import { customerSignup } from '@/lib/api';
 import { isValidEmail, isValidPakistaniPhone } from '@/lib/validation';
@@ -53,30 +53,17 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-[70vh] flex items-center justify-center px-4 pb-16 pt-24 sm:pt-28">
-      <div className="w-full max-w-md bg-brand-surface border border-brand-border rounded-3xl p-8 sm:p-10 shadow-2xl relative overflow-hidden">
+    <div className="min-h-[70vh] flex items-center justify-center px-4 zo-page-spacing">
+      <div className="w-full max-w-md bg-brand-surface border border-brand-border rounded-3xl zo-panel p-8 sm:p-10 shadow-2xl relative overflow-hidden">
         {/* Glow decoration */}
         <div className="absolute top-0 right-0 -mr-16 -mt-16 w-48 h-48 bg-brand-primary/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 left-0 -ml-16 -mb-16 w-48 h-48 bg-brand-accent/10 rounded-full blur-3xl pointer-events-none" />
 
         <div className="text-center space-y-3 mb-8 relative">
           <Link href="/" className="inline-block group mb-2">
-            <Image
-              src="/logo-dark.png"
-              alt="ZEROONE Cue & Play"
-              width={200}
-              height={70}
-              className="h-11 w-auto object-contain mx-auto transition-transform duration-300 group-hover:scale-105 block dark:hidden"
-            />
-            <Image
-              src="/logo.png"
-              alt="ZEROONE Cue & Play"
-              width={200}
-              height={70}
-              className="h-11 w-auto object-contain mx-auto transition-transform duration-300 group-hover:scale-105 drop-shadow-[0_0_15px_rgba(255,255,255,0.15)] hidden dark:block"
-            />
+            <BrandLogo width={160} height={56} className="h-10 w-auto object-contain" />
           </Link>
-          <h1 className="text-2xl sm:text-3xl font-black text-brand-text-main tracking-tight font-display uppercase">
+          <h1 className="zo-inner-title text-2xl sm:text-3xl font-black text-brand-text-main tracking-tight font-display uppercase">
             Create Customer Account
           </h1>
           <p className="text-xs sm:text-sm text-brand-text-muted">
@@ -144,7 +131,7 @@ export default function SignupPage() {
 
           <div>
             <label className="block text-xs font-bold text-brand-text-muted uppercase tracking-wider mb-2">
-              Email Address <span className="text-brand-text-muted/60">(Optional)</span>
+              Email Address <span className="text-brand-text-muted">(Optional)</span>
             </label>
             <input
               type="email"
@@ -202,7 +189,7 @@ export default function SignupPage() {
                 <span>Creating Account...</span>
               </>
             ) : (
-              <span>Create Account â†’</span>
+              <span>Create Account →</span>
             )}
           </button>
         </form>

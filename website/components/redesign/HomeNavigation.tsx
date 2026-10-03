@@ -1,36 +1,41 @@
-'use client';
+"use client";
 
-import { useRef, useState } from 'react';
-import Link from 'next/link';
-import { BrandLogo } from '@/components/BrandLogo';
-import { ThemeToggle } from '@/components/ui/ThemeToggle';
-import { useCustomerAuth } from '@/context/CustomerAuthContext';
-import { useSystemSettings } from '@/components/SystemStatusProvider';
-import { PillLink } from './ui';
+import { useRef, useState, useEffect } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { BrandLogo } from "@/components/BrandLogo";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { useCustomerAuth } from "@/context/CustomerAuthContext";
+import { useSystemSettings } from "@/components/SystemStatusProvider";
+import { PillLink } from "./ui";
 
 const links = [
-  ['Home', '/'],
-  ['Activities', '/activities'],
-  ['About', '/about'],
-  ['Gallery', '/gallery'],
-  ['Reviews', '/reviews'],
-  ['Location', '/location'],
-  ['Contact', '/contact'],
+  ["Home", "/"],
+  ["Activities", "/activities"],
+  ["About", "/about"],
+  ["Gallery", "/gallery"],
+  ["Reviews", "/reviews"],
+  ["Location", "/location"],
+  ["Contact", "/contact"],
 ];
 
 export function HomeNavigation() {
+  const pathname = usePathname();
   const dialog = useRef<HTMLDialogElement>(null);
   const [open, setOpen] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const { customer, logout } = useCustomerAuth();
   const { settings } = useSystemSettings();
+  useEffect(() => {
+    dialog.current?.close();
+  }, [pathname]);
   const signOut = async () => {
     try {
       await logout();
-      setError('');
+      setError("");
       dialog.current?.close();
     } catch {
-      setError('Sign out failed. Please retry.');
+      setError("Sign out failed. Please retry.");
     }
   };
   return (
@@ -42,11 +47,16 @@ export function HomeNavigation() {
         className="zo-nav-inner zo-container glass-nav"
         aria-label="Main navigation"
         style={{
-          backdropFilter: 'blur(var(--theme-glass-nav-blur, 0px))',
-          WebkitBackdropFilter: 'blur(var(--theme-glass-nav-blur, 0px))',
+          backdropFilter: "blur(var(--theme-glass-nav-blur, 0px))",
+          WebkitBackdropFilter: "blur(var(--theme-glass-nav-blur, 0px))",
         }}
       >
-        <Link prefetch={false} href="/" className="zo-nav-logo" aria-label="ZeroOne home">
+        <Link
+          prefetch={false}
+          href="/"
+          className="zo-nav-logo"
+          aria-label="ZeroOne home"
+        >
           <BrandLogo width={116} height={34} />
         </Link>
         <div className="zo-nav-links">
@@ -55,7 +65,7 @@ export function HomeNavigation() {
               prefetch={false}
               key={href}
               href={href}
-              aria-current={href === '/' ? 'page' : undefined}
+              aria-current={href === pathname ? "page" : undefined}
             >
               {label}
             </Link>
@@ -67,7 +77,11 @@ export function HomeNavigation() {
           </div>
           <PillLink
             href="/book"
-            ariaLabel={settings?.bookingsEnabled === false ? 'Bookings Paused' : undefined}
+            ariaLabel={
+              settings?.bookingsEnabled === false
+                ? "Bookings Paused"
+                : undefined
+            }
           >
             {settings?.bookingsEnabled === false ? (
               <>
@@ -75,7 +89,7 @@ export function HomeNavigation() {
                 <span className="zo-book-label-short">Paused</span>
               </>
             ) : (
-              'Book Now'
+              "Book Now"
             )}
           </PillLink>
           <div className="zo-nav-account">
@@ -142,7 +156,13 @@ export function HomeNavigation() {
         </div>
         <nav aria-label="Mobile navigation">
           {links.map(([label, href]) => (
-            <Link prefetch={false} key={href} href={href} onClick={() => dialog.current?.close()}>
+            <Link
+              prefetch={false}
+              key={href}
+              href={href}
+              aria-current={href === pathname ? "page" : undefined}
+              onClick={() => dialog.current?.close()}
+            >
               {label}
               <span aria-hidden="true">↗</span>
             </Link>
@@ -154,10 +174,18 @@ export function HomeNavigation() {
         </div>
         {customer ? (
           <>
-            <Link prefetch={false} href="/my-bookings" onClick={() => dialog.current?.close()}>
+            <Link
+              prefetch={false}
+              href="/my-bookings"
+              onClick={() => dialog.current?.close()}
+            >
               My Bookings
             </Link>
-            <Link prefetch={false} href="/profile" onClick={() => dialog.current?.close()}>
+            <Link
+              prefetch={false}
+              href="/profile"
+              onClick={() => dialog.current?.close()}
+            >
               My Profile
             </Link>
             <button

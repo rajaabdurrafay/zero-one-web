@@ -1,11 +1,19 @@
 'use client';
 
+import { experiences, imageRoot } from '@/components/redesign/content';
+import { PageIntro } from '@/components/redesign/PageIntro';
 import { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import { getPublicGallery, type GalleryImage } from '@/lib/api';
 import dynamic from 'next/dynamic';
 const Lightbox=dynamic(()=>import('@/components/Lightbox').then(module=>module.Lightbox),{ssr:false});
 import { Icon } from '@/components/Icon';
+
+const venueGallery: GalleryImage[] = experiences.map((experience, index) => ({
+  id: `venue-${experience.type}`, imageUrl: `${imageRoot}/${experience.image}`,
+  caption: experience.name, category: experience.name, displayOrder: index,
+  isActive: true, createdAt: '',
+}));
 
 export default function GalleryPage() {
   const [images, setImages] = useState<GalleryImage[]>([]);
@@ -18,7 +26,7 @@ export default function GalleryPage() {
 
   useEffect(() => {
     getPublicGallery()
-      .then((data) => setImages(data))
+      .then((data) => setImages(data.length ? data : venueGallery))
       .finally(() => setLoading(false));
   }, []);
 
@@ -49,25 +57,13 @@ export default function GalleryPage() {
   };
 
   return (
-    <div className="space-y-12 sm:space-y-16 pb-20 pt-24 sm:pt-28">
+    <div className="space-y-12 sm:space-y-16 zo-page-spacing">
       {/* Top Banner Header */}
-      <section className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-4">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-surface-raised border border-brand-border text-xs font-semibold text-brand-text-muted">
-          <Icon name="camera" size={13} className="text-brand-primary" />
-          <span>Visual Showcase</span>
-        </div>
-        <h1 className="text-4xl sm:text-6xl font-black text-brand-text-main tracking-tight leading-[0.95]">
-          ZeroOne Venue <br />
-          <span className="text-brand-primary">Photo Gallery</span>
-        </h1>
-        <p className="text-brand-text-muted text-base sm:text-lg max-w-2xl mx-auto leading-relaxed">
-          Take a look inside our tournament snooker hall, luxury PS5 suites, 120&quot; 4K laser cinema, and motion racing rigs.
-        </p>
-      </section>
+      <PageIntro label="Gallery" title="A look inside." description="The tables, the screens, the spaces. Explore ZeroOne before your next visit." image="/images/Snokker/snooker-table.jpg (3).webp" />
 
       {/* Category Filter Tabs */}
       {categories.length > 1 && (
-        <section className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+        <section className="zo-page-container">
           <div className="flex flex-wrap items-center justify-center gap-2">
             {categories.map((cat) => (
               <button
@@ -87,22 +83,23 @@ export default function GalleryPage() {
       )}
 
       {/* Gallery Grid */}
-      <section className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="zo-page-container">
         {loading ? (
           <div className="py-20 flex justify-center">
             <div className="w-8 h-8 rounded-full border-2 border-brand-primary border-t-transparent animate-spin" />
           </div>
         ) : filteredImages.length === 0 ? (
-          <div className="text-center py-20 bg-brand-surface border border-brand-border rounded-3xl text-brand-text-muted text-sm">
+          <div className="text-center py-20 bg-brand-surface border border-brand-border rounded-3xl zo-panel text-brand-text-muted text-sm">
             No gallery photos uploaded yet. Check back soon!
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredImages.map((image, index) => (
-              <div
+              <button
+                type="button" aria-label={`View ${image.caption || 'venue photo'}`}
                 key={image.id}
                 onClick={() => openLightbox(index)}
-                className="group relative h-64 sm:h-72 rounded-3xl overflow-hidden bg-brand-surface border border-brand-border cursor-pointer shadow-xs transition-all hover:shadow-md hover:border-brand-primary/50"
+                className="group relative h-64 sm:h-72 rounded-3xl zo-panel overflow-hidden bg-brand-surface border border-brand-border cursor-pointer shadow-xs transition-all hover:shadow-md hover:border-brand-primary/50"
               >
                 <Image
                   src={getFullImageUrl(image.imageUrl)}
@@ -114,15 +111,15 @@ export default function GalleryPage() {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-6">
                   {image.caption && (
-                    <p className="text-white text-sm font-bold line-clamp-2">{image.caption}</p>
+                    <p className="!text-white text-sm font-bold line-clamp-2">{image.caption}</p>
                   )}
                   {image.category && (
-                    <span className="text-brand-primary text-[10px] font-extrabold uppercase tracking-widest mt-1">
+                    <span className="text-white text-[10px] font-extrabold uppercase tracking-widest mt-1">
                       {image.category}
                     </span>
                   )}
                 </div>
-              </div>
+              </button>
             ))}
           </div>
         )}

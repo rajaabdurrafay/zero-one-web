@@ -27,7 +27,7 @@ export default function ProfilePage() {
       <div className="min-h-[70vh] flex items-center justify-center">
         <div className="text-center space-y-3">
           <div className="w-8 h-8 border-2 border-brand-primary border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-xs font-mono text-brand-text-muted">Loading your profileâ€¦</p>
+          <p className="text-xs font-mono text-brand-text-muted">Loading your profile…</p>
         </div>
       </div>
     );
@@ -76,14 +76,14 @@ export default function ProfilePage() {
   ) : null);
 
   return (
-    <div className="min-h-[70vh] pb-16 pt-24 sm:pt-28 px-4 sm:px-6 lg:px-8 max-w-[1400px] mx-auto">
+    <div className="min-h-[70vh] zo-page-spacing zo-page-container">
       {/* Breadcrumb / Top Bar */}
       <div className="flex items-center justify-between gap-4 mb-8">
         <Link
           href="/my-bookings"
           className="text-xs font-semibold text-brand-text-muted hover:text-brand-text-main flex items-center gap-1.5 transition-colors min-h-[44px] py-2"
         >
-          <span>â†</span>
+          <span>←</span>
           <span>View My Bookings</span>
         </Link>
         <button
@@ -94,9 +94,9 @@ export default function ProfilePage() {
         </button>
       </div>
 
-      <div className="bg-brand-surface border border-brand-border rounded-3xl p-6 sm:p-10 space-y-8 shadow-sm">
+      <div className="bg-brand-surface border border-brand-border rounded-3xl zo-panel p-6 sm:p-10 space-y-8 shadow-sm">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-black text-brand-text-main tracking-tight">
+          <h1 className="zo-inner-title text-2xl sm:text-3xl font-black text-brand-text-main tracking-tight">
             Account Settings &amp; Profile
           </h1>
           <p className="text-xs sm:text-sm text-brand-text-muted mt-1">
@@ -161,7 +161,7 @@ export default function ProfilePage() {
                 disabled={uploading}
                 className="px-4 py-2 min-h-[44px] rounded-xl text-xs font-bold text-white bg-brand-primary hover:bg-brand-primary-hover transition-colors shadow-xs cursor-pointer disabled:opacity-50"
               >
-                {uploading ? 'Uploadingâ€¦' : 'Upload Photo'}
+                {uploading ? 'Uploading…' : 'Upload Photo'}
               </button>
             </div>
           </div>
@@ -206,7 +206,7 @@ export default function ProfilePage() {
             className="text-xs font-bold text-brand-primary hover:underline flex items-center justify-center gap-1 min-h-[44px] py-2"
           >
             <span>Go to My Bookings &amp; Passes</span>
-            <span>â†’</span>
+            <span>→</span>
           </Link>
           <Link
             href="/book"

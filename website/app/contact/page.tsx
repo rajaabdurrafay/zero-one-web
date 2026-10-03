@@ -1,5 +1,6 @@
 ﻿'use client';
 
+import { PageIntro } from '@/components/redesign/PageIntro';
 import { useState } from 'react';
 import Link from 'next/link';
 import { isValidEmail, isValidPakistaniPhone } from '@/lib/validation';
@@ -88,30 +89,16 @@ export default function ContactPage() {
   };
 
   return (
-    <div className="space-y-16 sm:space-y-24 pb-16 pt-24 sm:pt-28">
+    <div className="space-y-16 sm:space-y-24 zo-page-spacing">
       {/* Header */}
-      <section className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-brand-primary/10 border border-brand-primary/30 text-xs font-bold text-brand-primary uppercase tracking-widest">
-          <Icon name="message" size={13} />
-          <span>Get in Touch</span>
-        </div>
-        <h1 className="text-4xl sm:text-6xl font-black text-brand-text-main tracking-tight">
-          Contact <br />
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-primary via-brand-accent to-brand-primary-hover">
-            ZeroOne Cue & Play
-          </span>
-        </h1>
-        <p className="text-brand-text-muted text-base sm:text-lg max-w-2xl mx-auto leading-relaxed">
-          Have questions about private cinema bookings, squad tournaments, or corporate gaming sessions? Send us a message or chat with us directly on WhatsApp.
-        </p>
-      </section>
+      <PageIntro label="Contact" title="Let’s connect." description="Planning a game night or need a hand with your booking? Reach out to the ZeroOne team." image="/images/Cinema/cinema.jpg.webp" />
 
       {/* Main Grid: Form + Quick Contact Cards */}
-      <section className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="zo-page-container">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* LEFT: Direct Contact Channels (lg:col-span-5) */}
           <div className="lg:col-span-5 space-y-6">
-            <div className="bg-brand-surface rounded-3xl border border-brand-border p-6 sm:p-8 space-y-6">
+            <div className="bg-brand-surface rounded-3xl zo-panel border border-brand-border p-6 sm:p-8 space-y-6">
               <h2 className="text-xl font-black text-brand-text-main">Direct Channels</h2>
 
               <div className="space-y-4 text-sm">
@@ -130,7 +117,7 @@ export default function ContactPage() {
                     <span className="text-brand-text-main font-black text-base group-hover:text-emerald-400 transition-colors">
                       WhatsApp Chat
                     </span>
-                    <span className="text-xs text-emerald-400 block font-mono mt-0.5">{phone}</span>
+                    <span className="text-xs text-brand-primary block font-mono mt-0.5">{phone}</span>
                   </div>
                 </a>
 
@@ -180,10 +167,10 @@ export default function ContactPage() {
                     </span>
                     <Link
                       href="/location"
-                      className="text-xs text-amber-400 hover:text-amber-300 font-semibold inline-flex items-center gap-1 mt-1"
+                      className="text-xs text-brand-primary hover:underline font-semibold inline-flex items-center gap-1 mt-1"
                     >
                       <span>View on Interactive Map</span>
-                      <span>â†’</span>
+                      <span>→</span>
                     </Link>
                   </div>
                 </div>
@@ -193,7 +180,7 @@ export default function ContactPage() {
 
           {/* RIGHT: Contact Form (lg:col-span-7) */}
           <div className="lg:col-span-7">
-            <div className="bg-brand-surface rounded-3xl border border-brand-border p-6 sm:p-10 space-y-6 shadow-2xl">
+            <div className="bg-brand-surface rounded-3xl zo-panel border border-brand-border p-6 sm:p-10 space-y-6 shadow-2xl">
               <div>
                 <h2 className="text-2xl font-black text-brand-text-main">Send Us A Message</h2>
                 <p className="text-xs sm:text-sm text-brand-text-muted mt-1">
@@ -277,7 +264,7 @@ export default function ContactPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-bold text-brand-text-muted uppercase tracking-wider mb-1.5">
-                      Email Address <span className="text-brand-text-muted/60 font-normal">(optional)</span>
+                      Email Address <span className="text-brand-text-muted font-normal">(optional)</span>
                     </label>
                     <input
                       type="email"
@@ -303,7 +290,7 @@ export default function ContactPage() {
                     <label className="block text-xs font-bold text-brand-text-muted uppercase tracking-wider mb-1.5">
                       Subject
                     </label>
-                    <select
+                    <select aria-label="Subject"
                       value={formData.subject}
                       onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
                       className="w-full px-4 py-3 rounded-xl bg-brand-bg border border-brand-border text-brand-text-main text-sm focus:outline-none focus:border-brand-primary transition-colors"

@@ -3,7 +3,7 @@
 import { useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
+import { BrandLogo } from '@/components/BrandLogo';
 import { resetPassword } from '@/lib/api';
 import { Icon } from '@/components/Icon';
 
@@ -55,6 +55,7 @@ function ResetPasswordContent() {
   if (!token) {
     return (
       <div className="text-center space-y-4">
+        <h1 className="zo-inner-title">Reset your password</h1>
         <div className="p-4 rounded-xl bg-brand-danger/20 border border-brand-danger/40 text-brand-text-main text-sm">
           No password reset token provided.
         </div>
@@ -62,7 +63,7 @@ function ResetPasswordContent() {
           href="/forgot-password"
           className="inline-block text-brand-primary font-bold hover:underline text-sm"
         >
-          Request a New Reset Link â†’
+          Request a New Reset Link →
         </Link>
       </div>
     );
@@ -72,22 +73,9 @@ function ResetPasswordContent() {
     <>
       <div className="text-center space-y-3 mb-8 relative">
           <Link href="/" className="inline-block group mb-2">
-            <Image
-              src="/logo-dark.png"
-              alt="ZEROONE Cue & Play"
-              width={200}
-              height={70}
-              className="h-11 w-auto object-contain mx-auto transition-transform duration-300 group-hover:scale-105 block dark:hidden"
-            />
-            <Image
-              src="/logo.png"
-              alt="ZEROONE Cue & Play"
-              width={200}
-              height={70}
-              className="h-11 w-auto object-contain mx-auto transition-transform duration-300 group-hover:scale-105 drop-shadow-[0_0_15px_rgba(255,255,255,0.15)] hidden dark:block"
-            />
+            <BrandLogo width={160} height={56} className="h-10 w-auto object-contain" />
           </Link>
-          <h1 className="text-2xl sm:text-3xl font-black text-brand-text-main tracking-tight font-display uppercase">
+          <h1 className="zo-inner-title text-2xl sm:text-3xl font-black text-brand-text-main tracking-tight font-display uppercase">
             Reset Password
           </h1>
           <p className="text-xs sm:text-sm text-brand-text-muted">
@@ -118,7 +106,7 @@ function ResetPasswordContent() {
             href="/login"
             className="inline-block w-full py-3.5 px-4 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-brand-primary via-brand-primary-hover to-brand-accent hover:opacity-90 shadow-lg shadow-brand-primary/30 transition-all text-center"
           >
-            Go to Login Now â†’
+            Go to Login Now →
           </Link>
         </div>
       ) : (
@@ -130,7 +118,7 @@ function ResetPasswordContent() {
             <input
               type="password"
               required
-              placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+              placeholder="••••••••"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               className="w-full px-4 py-3 bg-brand-bg border border-brand-border rounded-xl text-brand-text-main font-medium focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary text-sm placeholder:text-brand-text-muted/50"
@@ -144,7 +132,7 @@ function ResetPasswordContent() {
             <input
               type="password"
               required
-              placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+              placeholder="••••••••"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               className="w-full px-4 py-3 bg-brand-bg border border-brand-border rounded-xl text-brand-text-main font-medium focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary text-sm placeholder:text-brand-text-muted/50"
@@ -162,7 +150,7 @@ function ResetPasswordContent() {
                 <span>Updating Password...</span>
               </>
             ) : (
-              <span>Reset Password â†’</span>
+              <span>Reset Password →</span>
             )}
           </button>
         </form>
@@ -170,7 +158,7 @@ function ResetPasswordContent() {
 
       <div className="mt-8 pt-6 border-t border-brand-border text-center text-xs text-brand-text-muted relative">
         <Link href="/login" className="text-brand-primary font-bold hover:underline">
-          â† Back to Login
+          ← Back to Login
         </Link>
       </div>
     </>
@@ -179,8 +167,8 @@ function ResetPasswordContent() {
 
 export default function ResetPasswordPage() {
   return (
-    <div className="min-h-[70vh] flex items-center justify-center px-4 pb-16 pt-24 sm:pt-28">
-      <div className="w-full max-w-md bg-brand-surface border border-brand-border rounded-3xl p-8 sm:p-10 shadow-2xl relative overflow-hidden">
+    <div className="min-h-[70vh] flex items-center justify-center px-4 zo-page-spacing">
+      <div className="w-full max-w-md bg-brand-surface border border-brand-border rounded-3xl zo-panel p-8 sm:p-10 shadow-2xl relative overflow-hidden">
         {/* Glow decoration */}
         <div className="absolute top-0 right-0 -mr-16 -mt-16 w-48 h-48 bg-brand-primary/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 left-0 -ml-16 -mb-16 w-48 h-48 bg-brand-accent/10 rounded-full blur-3xl pointer-events-none" />

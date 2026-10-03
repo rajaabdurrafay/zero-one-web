@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "../styles/redesign.css";
+@import "../styles/customer-pages.css";
 
 :root {
   --theme-primary: #111111;

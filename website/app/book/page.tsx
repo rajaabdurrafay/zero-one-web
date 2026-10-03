@@ -42,7 +42,7 @@ const ACTIVITY_ICON_NAMES: Record<string, IconName> = {
 
 const STORAGE_KEY = 'zeroone-booking-draft';
 
-// â”€â”€â”€ GROUP BOOKING TYPES â”€â”€â”€
+// ─── GROUP BOOKING TYPES ───
 interface GroupCartItem {
   id: string;
   activityId: string;
@@ -148,12 +148,12 @@ function BookingContent() {
   const [isExpired, setIsExpired] = useState(false);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
-  // â”€â”€â”€ GROUP BOOKING MODE â”€â”€â”€
+  // ─── GROUP BOOKING MODE ───
   const [isGroupMode, setIsGroupMode] = useState(false);
   const [groupCart, setGroupCart] = useState<GroupCartItem[]>([]);
   const [confirmedGroupBooking, setConfirmedGroupBooking] = useState<CreateGroupBookingResponse | null>(null);
 
-  // â”€â”€â”€ ADDONS STATE â”€â”€â”€
+  // ─── ADDONS STATE ───
   const [addonsList, setAddonsList] = useState<AddonItem[]>([]);
   const [loadingAddons, setLoadingAddons] = useState(false);
   const [selectedAddons, setSelectedAddons] = useState<Record<string, number>>({});
@@ -286,7 +286,7 @@ function BookingContent() {
             success: `Deal Auto-Applied: ${matchedOffer.title} (${
               matchedOffer.discountType === 'PERCENTAGE'
                 ? `${matchedOffer.discountValue}% OFF`
-                : `â‚¨${matchedOffer.discountValue} OFF`
+                : `₨${matchedOffer.discountValue} OFF`
             })`,
           });
 
@@ -661,7 +661,7 @@ function BookingContent() {
     return formatDateTimeRange(times.start, times.end);
   }, [selectedTimeSlot, currentActivity, duration, selectedDate]);
 
-  // â”€â”€â”€ GROUP BOOKING HELPERS â”€â”€â”€
+  // ─── GROUP BOOKING HELPERS ───
   const groupTotalPrice = useMemo(() => money(groupCart.reduce((sum, item) => sum + item.payablePrice, 0)+addonsTotalCost), [groupCart,addonsTotalCost]);
 
   const addToGroupCart = () => {
@@ -771,15 +771,15 @@ function BookingContent() {
   };
 
   return (
-    <div className="max-w-5xl lg:max-w-6xl xl:max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 pb-16 pt-24 sm:pt-28">
-      {/* ONLINE BOOKINGS PAUSED â€” ENTIRE BOOKING FLOW BLOCKED */}
+    <div className="zo-page-container zo-page-spacing">
+      {/* ONLINE BOOKINGS PAUSED — ENTIRE BOOKING FLOW BLOCKED */}
       {systemSettings && !systemSettings.bookingsEnabled && step <= 5 ? (
-        <div className="min-h-[55vh] flex flex-col items-center justify-center text-center p-8 rounded-3xl bg-brand-surface border border-amber-500/30 text-brand-text-main shadow-2xl space-y-6">
+        <div className="min-h-[55vh] flex flex-col items-center justify-center text-center p-8 rounded-3xl zo-panel bg-brand-surface border border-amber-500/30 text-brand-text-main shadow-2xl space-y-6">
           <div className="w-16 h-16 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center shadow-inner">
             <Icon name="pause" size={28} />
           </div>
           <div className="space-y-3 max-w-md mx-auto">
-            <h1 className="text-2xl sm:text-3xl font-black text-white font-display">
+            <h1 className="zo-inner-title text-2xl sm:text-3xl font-black text-white font-display">
               Online Bookings Paused
             </h1>
             <p className="text-sm sm:text-base text-brand-text-muted leading-relaxed">
@@ -809,12 +809,12 @@ function BookingContent() {
           </p>
         </div>
       ) : systemSettings && systemSettings.emergencyClosedToday && step <= 5 ? (
-        <div className="min-h-[55vh] flex flex-col items-center justify-center text-center p-8 rounded-3xl bg-brand-surface border border-rose-500/30 text-brand-text-main shadow-2xl space-y-6">
+        <div className="min-h-[55vh] flex flex-col items-center justify-center text-center p-8 rounded-3xl zo-panel bg-brand-surface border border-rose-500/30 text-brand-text-main shadow-2xl space-y-6">
           <div className="w-16 h-16 rounded-2xl bg-rose-500/20 text-rose-400 border border-rose-500/30 flex items-center justify-center shadow-inner">
             <Icon name="siren" size={28} />
           </div>
           <div className="space-y-3 max-w-md mx-auto">
-            <h1 className="text-2xl sm:text-3xl font-black text-white font-display">
+            <h1 className="zo-inner-title text-2xl sm:text-3xl font-black text-white font-display">
               Venue Closed Today
             </h1>
             <p className="text-sm sm:text-base text-brand-text-muted leading-relaxed">
@@ -891,7 +891,7 @@ function BookingContent() {
                 <span className="bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 font-mono text-[10px] font-bold px-2 py-0.5 rounded">
                   {appliedOffer.discountType === 'PERCENTAGE'
                     ? `${appliedOffer.discountValue}% OFF`
-                    : `â‚¨${appliedOffer.discountValue} OFF`}
+                    : `₨${appliedOffer.discountValue} OFF`}
                 </span>
               </div>
               <p className="text-sm font-black text-brand-text-main mt-0.5">{appliedOffer.title}</p>
@@ -908,7 +908,7 @@ function BookingContent() {
       {step === 1 && (
         <div className="space-y-6">
           <div className="text-center space-y-2">
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-brand-text-main">Select an Arena</h1>
+            <h1 className="zo-inner-title text-2xl sm:text-3xl font-extrabold text-brand-text-main">Select an Arena</h1>
             <p className="text-brand-text-muted text-sm">Choose what game or suite you would like to book</p>
           </div>
 
@@ -951,11 +951,11 @@ function BookingContent() {
                         </div>
                         {hasTiered ? (
                           <div className="text-xs text-emerald-400 mt-0.5 font-medium">
-                            â‚¨{activity.halfHourPrice} /30m â€¢ â‚¨{activity.fullHourPrice} /1h
+                            ₨{activity.halfHourPrice} /30m • ₨{activity.fullHourPrice} /1h
                           </div>
                         ) : (
                           <div className="text-xs text-brand-text-muted mt-0.5">
-                            â‚¨{activity.basePrice} /{isHourly ? 'hour' : 'min'}
+                            ₨{activity.basePrice} /{isHourly ? 'hour' : 'min'}
                           </div>
                         )}
                       </div>
@@ -983,7 +983,7 @@ function BookingContent() {
               </div>
               <div>
                 <span className="text-sm font-bold text-brand-text-main block">Book Multiple Activities (Group Cart)</span>
-                <span className="text-xs text-brand-text-muted">Select multiple arenas & slots â€” single checkout & single receipt</span>
+                <span className="text-xs text-brand-text-muted">Select multiple arenas & slots — single checkout & single receipt</span>
               </div>
             </div>
             <button
@@ -1045,7 +1045,7 @@ function BookingContent() {
                             </span>
                           </div>
                           <span className="text-[11px] text-brand-text-muted block truncate">
-                            {formatDateReadable(item.date)} â€¢ {formatDateTimeRange(itemStart, itemEnd)}
+                            {formatDateReadable(item.date)} • {formatDateTimeRange(itemStart, itemEnd)}
                           </span>
                           <span className="text-[11px] text-brand-accent font-medium block">
                             {item.duration}m ({item.resourceName})
@@ -1055,7 +1055,7 @@ function BookingContent() {
 
                       <div className="flex items-center gap-3 shrink-0">
                         <span className="text-sm font-black text-emerald-400">
-                          â‚¨{item.payablePrice.toLocaleString()}
+                          ₨{item.payablePrice.toLocaleString()}
                         </span>
                         <button
                           type="button"
@@ -1074,7 +1074,7 @@ function BookingContent() {
               <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-brand-border">
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-brand-text-muted font-medium">Group Subtotal:</span>
-                  <span className="text-lg font-black text-brand-primary">â‚¨{groupTotalPrice.toLocaleString()}</span>
+                  <span className="text-lg font-black text-brand-primary">₨{groupTotalPrice.toLocaleString()}</span>
                 </div>
                 <button
                   type="button"
@@ -1107,7 +1107,7 @@ function BookingContent() {
                   onClick={() => setStep(4)}
                   className="w-full sm:w-auto px-6 py-3.5 rounded-xl font-bold text-sm text-emerald-400 bg-emerald-950/40 border border-emerald-500/40 hover:bg-emerald-900/50 transition-all"
                 >
-                  Checkout {groupCart.length} {groupCart.length === 1 ? 'Activity' : 'Activities'} (â‚¨{groupTotalPrice.toLocaleString()}) â†’
+                  Checkout {groupCart.length} {groupCart.length === 1 ? 'Activity' : 'Activities'} (₨{groupTotalPrice.toLocaleString()}) →
                 </button>
               )}
 
@@ -1117,7 +1117,7 @@ function BookingContent() {
                 onClick={() => setStep(2)}
                 className="w-full sm:w-auto px-8 py-3.5 rounded-xl font-bold text-sm text-white bg-gradient-to-r from-brand-primary via-brand-primary-hover to-brand-accent hover:opacity-90 disabled:opacity-40 shadow-lg shadow-brand-primary/25 active:scale-95 transition-all"
               >
-                {isGroupMode && groupCart.length > 0 ? 'Configure Selected Arena â†’' : 'Continue to Date & Duration â†’'}
+                {isGroupMode && groupCart.length > 0 ? 'Configure Selected Arena →' : 'Continue to Date & Duration →'}
               </button>
             </div>
           </div>
@@ -1128,9 +1128,9 @@ function BookingContent() {
       {step === 2 && currentActivity && (
         <div className="space-y-6">
           <div className="text-center space-y-2">
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-brand-text-main">Date & Duration</h1>
+            <h1 className="zo-inner-title text-2xl sm:text-3xl font-extrabold text-brand-text-main">Date & Duration</h1>
             <p className="text-brand-text-muted text-sm">
-              {currentActivity.name} â€¢ â‚¨{currentActivity.basePrice}/{currentActivity.pricingUnit === 'PER_HOUR' ? 'hr' : 'min'}
+              {currentActivity.name} • ₨{currentActivity.basePrice}/{currentActivity.pricingUnit === 'PER_HOUR' ? 'hr' : 'min'}
             </p>
           </div>
 
@@ -1214,7 +1214,7 @@ function BookingContent() {
 
                               <div className="mt-2.5 pt-2 border-t border-white/10 flex items-baseline justify-between">
                                 <span className={`text-base font-black ${isSelected ? 'text-white' : 'text-emerald-400'}`}>
-                                  â‚¨{slabPrice.toLocaleString()}
+                                  ₨{slabPrice.toLocaleString()}
                                 </span>
                                 {savings > 0 ? (
                                   <span
@@ -1225,7 +1225,7 @@ function BookingContent() {
                                     }`}
                                   >
                                     <Icon name="flame" size={11} />
-                                    <span>Save â‚¨{savings}</span>
+                                    <span>Save ₨{savings}</span>
                                   </span>
                                 ) : (
                                   <span className="text-[10px] text-brand-text-muted font-medium">Standard</span>
@@ -1379,7 +1379,7 @@ function BookingContent() {
             {/* Estimated Subtotal */}
             <div className="pt-4 border-t border-brand-border flex items-center justify-between">
               <span className="text-sm text-brand-text-muted">Estimated Total:</span>
-              <span className="text-xl font-extrabold text-brand-primary">â‚¨{totalPrice}</span>
+              <span className="text-xl font-extrabold text-brand-primary">₨{totalPrice}</span>
             </div>
           </div>
 
@@ -1389,7 +1389,7 @@ function BookingContent() {
               onClick={() => setStep(1)}
               className="px-6 py-3 rounded-xl font-semibold text-sm text-brand-text-muted hover:text-brand-text-main bg-brand-surface border border-brand-border"
             >
-              â† Back
+              ← Back
             </button>
             <button
               type="button"
@@ -1402,7 +1402,7 @@ function BookingContent() {
               onClick={() => setStep(3)}
               className="px-8 py-3.5 rounded-xl font-bold text-sm text-white bg-gradient-to-r from-brand-primary via-brand-primary-hover to-brand-accent hover:opacity-90 disabled:opacity-40 shadow-lg shadow-brand-primary/25 active:scale-95 transition-all"
             >
-              Find Available Slots â†’
+              Find Available Slots →
             </button>
           </div>
         </div>
@@ -1412,9 +1412,9 @@ function BookingContent() {
       {step === 3 && currentActivity && (
         <div className="space-y-6">
           <div className="text-center space-y-2">
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-brand-text-main">Choose a Time Slot</h1>
+            <h1 className="zo-inner-title text-2xl sm:text-3xl font-extrabold text-brand-text-main">Choose a Time Slot</h1>
             <p className="text-brand-text-muted text-sm">
-              {currentActivity.name} â€¢ {formatDateReadable(selectedDate)} â€¢{' '}
+              {currentActivity.name} • {formatDateReadable(selectedDate)} •{' '}
               {duration} mins ({duration >= 60 ? `${(duration / 60).toFixed(duration % 60 === 0 ? 0 : 1)}h` : '0.5h'})
             </p>
           </div>
@@ -1478,7 +1478,7 @@ function BookingContent() {
               onClick={() => setStep(2)}
               className="px-6 py-3 rounded-xl font-semibold text-sm text-brand-text-muted hover:text-brand-text-main bg-brand-surface border border-brand-border"
             >
-              â† Back
+              ← Back
             </button>
             <button
               type="button"
@@ -1492,7 +1492,7 @@ function BookingContent() {
               }}
               className="px-8 py-3.5 rounded-xl font-bold text-sm text-white bg-gradient-to-r from-brand-primary via-brand-primary-hover to-brand-accent hover:opacity-90 disabled:opacity-40 shadow-lg shadow-brand-primary/25 active:scale-95 transition-all"
             >
-              {isGroupMode ? 'Add to Group Cart +' : 'Enter Customer Details â†’'}
+              {isGroupMode ? 'Add to Group Cart +' : 'Enter Customer Details →'}
             </button>
           </div>
         </div>
@@ -1502,7 +1502,7 @@ function BookingContent() {
       {step === 4 && (
         <div className="space-y-6">
           <div className="text-center space-y-2">
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-brand-text-main">Your Contact Details</h1>
+            <h1 className="zo-inner-title text-2xl sm:text-3xl font-extrabold text-brand-text-main">Your Contact Details</h1>
             <p className="text-brand-text-muted text-sm">We&apos;ll use this to verify and confirm your slot</p>
           </div>
 
@@ -1588,7 +1588,7 @@ function BookingContent() {
               onClick={() => setStep(isGroupMode ? 1 : 3)}
               className="px-6 py-3 rounded-xl font-semibold text-sm text-brand-text-muted hover:text-brand-text-main bg-brand-surface border border-brand-border"
             >
-              â† Back
+              ← Back
             </button>
             <button
               type="button"
@@ -1601,7 +1601,7 @@ function BookingContent() {
               }}
               className="px-8 py-3.5 rounded-xl font-bold text-sm text-white bg-gradient-to-r from-brand-primary via-brand-primary-hover to-brand-accent hover:opacity-90 disabled:opacity-40 shadow-lg shadow-brand-primary/25 active:scale-95 transition-all"
             >
-              Review Booking â†’
+              Review Booking →
             </button>
           </div>
         </div>
@@ -1611,7 +1611,7 @@ function BookingContent() {
       {step === 5 && (isGroupMode ? groupCart.length > 0 : currentActivity) && (
         <div className="space-y-6">
           <div className="text-center space-y-2">
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-brand-text-main">Review & Confirm</h1>
+            <h1 className="zo-inner-title text-2xl sm:text-3xl font-extrabold text-brand-text-main">Review & Confirm</h1>
             <p className="text-brand-text-muted text-sm">Please verify your booking summary before confirming</p>
           </div>
 
@@ -1625,7 +1625,7 @@ function BookingContent() {
                       <Icon name="layers" size={20} />
                     </div>
                     <div>
-                      <h3 className="text-lg font-bold text-brand-text-main">Group Booking â€” {groupCart.length} {groupCart.length === 1 ? 'Activity' : 'Activities'}</h3>
+                      <h3 className="text-lg font-bold text-brand-text-main">Group Booking — {groupCart.length} {groupCart.length === 1 ? 'Activity' : 'Activities'}</h3>
                       <span className="text-xs text-brand-primary font-semibold">ZeroOne Gaming Lounge</span>
                     </div>
                   </div>
@@ -1642,15 +1642,15 @@ function BookingContent() {
                           </div>
                           <div className="min-w-0">
                             <span className="text-sm font-bold text-brand-text-main block truncate">{idx + 1}. {item.activityName}</span>
-                            <span className="text-xs text-brand-text-muted block">{formatDateReadable(item.date)} â€¢ {formatDateTimeRange(itemStart, itemEnd)}</span>
-                            <span className="text-xs text-brand-text-muted block">{item.duration} mins â€¢ {item.resourceName}</span>
+                            <span className="text-xs text-brand-text-muted block">{formatDateReadable(item.date)} • {formatDateTimeRange(itemStart, itemEnd)}</span>
+                            <span className="text-xs text-brand-text-muted block">{item.duration} mins • {item.resourceName}</span>
                           </div>
                         </div>
                         <div className="text-right shrink-0">
                           {item.discountAmount > 0 && (
-                            <span className="text-xs text-brand-text-muted line-through block">â‚¨{item.originalPrice.toLocaleString()}</span>
+                            <span className="text-xs text-brand-text-muted line-through block">₨{item.originalPrice.toLocaleString()}</span>
                           )}
-                          <span className="text-sm font-bold text-emerald-400">â‚¨{item.payablePrice.toLocaleString()}</span>
+                          <span className="text-sm font-bold text-emerald-400">₨{item.payablePrice.toLocaleString()}</span>
                         </div>
                       </div>
                     );
@@ -1668,7 +1668,7 @@ function BookingContent() {
                 <div className="pt-4 border-t border-brand-border space-y-2">
                   <div className="flex items-center justify-between text-sm text-brand-text-muted">
                     <span>{groupCart.length} {groupCart.length === 1 ? 'Activity' : 'Activities'} Total:</span>
-                    <span className="text-brand-text-main font-semibold">â‚¨{groupCart.reduce((s, i) => s + i.originalPrice, 0).toLocaleString()}</span>
+                    <span className="text-brand-text-main font-semibold">₨{groupCart.reduce((s, i) => s + i.originalPrice, 0).toLocaleString()}</span>
                   </div>
                   {groupCart.reduce((s, i) => s + i.discountAmount, 0) > 0 && (
                     <div className="flex items-center justify-between text-sm text-emerald-400 font-bold">
@@ -1676,7 +1676,7 @@ function BookingContent() {
                         <Icon name="tag" size={13} />
                         <span>Total Discounts:</span>
                       </span>
-                      <span>-â‚¨{groupCart.reduce((s, i) => s + i.discountAmount, 0).toLocaleString()}</span>
+                      <span>-₨{groupCart.reduce((s, i) => s + i.discountAmount, 0).toLocaleString()}</span>
                     </div>
                   )}
                   <div className="pt-2 border-t border-brand-border flex items-center justify-between">
@@ -1684,7 +1684,7 @@ function BookingContent() {
                       <span className="text-xs text-brand-text-muted uppercase tracking-wider block">Total Payable</span>
                       <span className="text-xs text-amber-400/90 font-medium">Advance payment required to confirm</span>
                     </div>
-                    <span className="text-3xl font-black text-brand-primary">â‚¨{groupTotalPrice.toLocaleString()}</span>
+                    <span className="text-3xl font-black text-brand-primary">₨{groupTotalPrice.toLocaleString()}</span>
                   </div>
                 </div>
               </>
@@ -1725,7 +1725,7 @@ function BookingContent() {
               </div>
             </div>
 
-            {/* Optional Snacks & CafÃ© Add-ons Section */}
+            {/* Optional Snacks & Café Add-ons Section */}
             {addonsList.length > 0 && (
               <div className="pt-4 border-t border-brand-border space-y-3">
                 <div className="flex items-center justify-between">
@@ -1735,12 +1735,12 @@ function BookingContent() {
                     </div>
                     <div>
                       <h4 className="text-sm font-bold text-brand-text-main">Add Snacks & Drinks (Optional)</h4>
-                      <p className="text-[11px] text-brand-text-muted">Enjoy cafÃ© refreshments during your gaming session</p>
+                      <p className="text-[11px] text-brand-text-muted">Enjoy café refreshments during your gaming session</p>
                     </div>
                   </div>
                   {addonsTotalCost > 0 && (
                     <span className="text-xs font-bold text-emerald-400 bg-emerald-950/40 border border-emerald-500/30 px-2 py-0.5 rounded-md">
-                      +â‚¨{addonsTotalCost.toLocaleString()}
+                      +₨{addonsTotalCost.toLocaleString()}
                     </span>
                   )}
                 </div>
@@ -1770,7 +1770,7 @@ function BookingContent() {
                             )}
                           </div>
                           <div className="flex items-center gap-2 mt-0.5">
-                            <span className="text-xs font-extrabold text-brand-accent">â‚¨{addon.price.toLocaleString()}</span>
+                            <span className="text-xs font-extrabold text-brand-accent">₨{addon.price.toLocaleString()}</span>
                             {addon.stock !== null && addon.stock !== undefined && (
                               <span className="text-[10px] text-brand-text-muted">
                                 ({addon.stock} left)
@@ -1853,7 +1853,7 @@ function BookingContent() {
               <div className="flex items-center justify-between text-sm text-brand-text-muted">
                 <span>Activity Subtotal:</span>
                 <span className={discountAmount > 0 ? 'line-through text-brand-text-muted/60' : 'text-brand-text-main font-semibold'}>
-                  â‚¨{originalPrice.toLocaleString()}
+                  ₨{originalPrice.toLocaleString()}
                 </span>
               </div>
 
@@ -1863,7 +1863,7 @@ function BookingContent() {
                     <Icon name="tag" size={13} />
                     <span>Discount Applied ({appliedOffer?.title}):</span>
                   </span>
-                  <span>-â‚¨{discountAmount.toLocaleString()}</span>
+                  <span>-₨{discountAmount.toLocaleString()}</span>
                 </div>
               )}
 
@@ -1871,9 +1871,9 @@ function BookingContent() {
                 <div className="flex items-center justify-between text-sm text-brand-accent font-bold">
                   <span className="flex items-center gap-1.5">
                     <Icon name="coffee" size={13} />
-                    <span>CafÃ© Add-ons Subtotal:</span>
+                    <span>Café Add-ons Subtotal:</span>
                   </span>
-                  <span>+â‚¨{addonsTotalCost.toLocaleString()}</span>
+                  <span>+₨{addonsTotalCost.toLocaleString()}</span>
                 </div>
               )}
 
@@ -1882,7 +1882,7 @@ function BookingContent() {
                   <span className="text-xs text-brand-text-muted uppercase tracking-wider block">Total Payable</span>
                   <span className="text-xs text-amber-400/90 font-medium">Advance payment required to confirm</span>
                 </div>
-                <span className="text-3xl font-black text-brand-primary">â‚¨{totalPrice.toLocaleString()}</span>
+                <span className="text-3xl font-black text-brand-primary">₨{totalPrice.toLocaleString()}</span>
               </div>
             </div>
               </>
@@ -1896,7 +1896,7 @@ function BookingContent() {
               onClick={() => setStep(4)}
               className="px-6 py-3 rounded-xl font-semibold text-sm text-brand-text-muted hover:text-brand-text-main bg-brand-surface border border-brand-border"
             >
-              â† Back
+              ← Back
             </button>
             <button
               type="button"
@@ -1910,7 +1910,7 @@ function BookingContent() {
                   {isGroupMode ? 'Securing Group Slots...' : 'Securing Slot...'}
                 </>
               ) : (
-                'Proceed to Payment (Hold Slot) â†’'
+                'Proceed to Payment (Hold Slot) →'
               )}
             </button>
           </div>
@@ -1973,7 +1973,7 @@ function BookingContent() {
                 }}
                 className="mt-2 px-6 py-2.5 rounded-xl font-bold text-xs text-white bg-brand-danger hover:opacity-90 shadow-lg shadow-brand-danger/30"
               >
-                â† Pick Another Slot
+                ← Pick Another Slot
               </button>
             </div>
           )}
@@ -1988,7 +1988,7 @@ function BookingContent() {
                       Advance Payable
                     </span>
                     <span className="text-2xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-brand-primary via-brand-primary-hover to-brand-accent">
-                      â‚¨{(isGroupMode && confirmedGroupBooking ? confirmedGroupBooking.totalAmount : confirmedBooking?.totalPrice || 0).toLocaleString()}
+                      ₨{(isGroupMode && confirmedGroupBooking ? confirmedGroupBooking.totalAmount : confirmedBooking?.totalPrice || 0).toLocaleString()}
                     </span>
                   </div>
                   <div className="text-right">
@@ -2153,14 +2153,14 @@ function BookingContent() {
                       Amount Paid (PKR):
                     </label>
                     <span className="text-[11px] text-brand-text-muted">
-                      Default: â‚¨{(isGroupMode && confirmedGroupBooking ? confirmedGroupBooking.totalAmount : confirmedBooking?.totalPrice || 0).toLocaleString()}
+                      Default: ₨{(isGroupMode && confirmedGroupBooking ? confirmedGroupBooking.totalAmount : confirmedBooking?.totalPrice || 0).toLocaleString()}
                     </span>
                   </div>
                   <input
                     type="number"
                     value={amountPaidInput}
                     onChange={(e) => setAmountPaidInput(e.target.value)}
-                    placeholder={`â‚¨ ${isGroupMode && confirmedGroupBooking ? confirmedGroupBooking.totalAmount : confirmedBooking?.totalPrice || 0}`}
+                    placeholder={`₨ ${isGroupMode && confirmedGroupBooking ? confirmedGroupBooking.totalAmount : confirmedBooking?.totalPrice || 0}`}
                     className="w-full px-4 py-2.5 bg-brand-bg border border-brand-border rounded-xl text-brand-text-main font-bold text-sm focus:outline-none focus:border-brand-primary"
                   />
                 </div>
@@ -2188,7 +2188,7 @@ function BookingContent() {
                         />
                         <span className="text-xs font-semibold text-emerald-400 block flex items-center justify-center gap-1">
                           <Icon name="check" size={13} />
-                          <span>Screenshot selected ({selectedFile?.name}) â€” Click to change</span>
+                          <span>Screenshot selected ({selectedFile?.name}) — Click to change</span>
                         </span>
                       </div>
                     ) : (
@@ -2215,7 +2215,7 @@ function BookingContent() {
                   onClick={() => setStep(5)}
                   className="w-full sm:w-auto px-6 py-3 rounded-xl font-semibold text-sm text-brand-text-muted hover:text-brand-text-main bg-brand-surface border border-brand-border min-h-[44px] flex items-center justify-center"
                 >
-                  â† Back to Details
+                  ← Back to Details
                 </button>
                 <button
                   type="button"
@@ -2249,7 +2249,7 @@ function BookingContent() {
           </div>
 
           <div className="space-y-2">
-            <h1 className="text-2xl sm:text-3xl font-black text-brand-text-main tracking-tight">
+            <h1 className="zo-inner-title text-2xl sm:text-3xl font-black text-brand-text-main tracking-tight">
               Payment Under Verification!
             </h1>
             <p className="text-brand-text-muted text-xs sm:text-sm max-w-md mx-auto">
@@ -2280,7 +2280,7 @@ function BookingContent() {
               href="/my-bookings"
               className="w-full sm:w-auto px-8 py-3.5 rounded-xl font-bold text-xs sm:text-sm text-white bg-gradient-to-r from-brand-accent to-brand-primary hover:opacity-90 shadow-lg shadow-brand-primary/30 transition-all"
             >
-              View in My Bookings â†’
+              View in My Bookings →
             </Link>
             <Link
               href="/"
@@ -2317,7 +2317,7 @@ function BookingContent() {
             </div>
 
             <div className="space-y-1.5">
-              <h1 className="text-3xl sm:text-4xl font-black text-brand-text-main tracking-tight">
+              <h1 className="zo-inner-title text-3xl sm:text-4xl font-black text-brand-text-main tracking-tight">
                 Booking Request Sent!
               </h1>
               <p className="text-brand-text-muted text-xs sm:text-sm max-w-md mx-auto">
@@ -2331,7 +2331,7 @@ function BookingContent() {
 
           {/* Premium Digital Receipt / Ticket Card */}
           <div className="max-w-lg mx-auto printable-slip-wrapper">
-            <div className="relative bg-brand-surface border border-brand-border rounded-3xl overflow-hidden shadow-2xl printable-slip-card ring-1 ring-brand-primary/20">
+            <div className="relative bg-brand-surface border border-brand-border rounded-3xl zo-panel overflow-hidden shadow-2xl printable-slip-card ring-1 ring-brand-primary/20">
               {/* Glowing Top Edge */}
               <div className="h-1.5 w-full bg-gradient-to-r from-brand-primary via-emerald-400 to-brand-accent" />
 
@@ -2341,7 +2341,7 @@ function BookingContent() {
                   01
                 </div>
                 <h2 className="text-xl font-black tracking-wider text-brand-text-main">ZERO ONE GAMING ZONE</h2>
-                <p className="text-xs text-brand-text-muted mt-0.5">Islamabad F-7 â€¢ Official Digital Receipt</p>
+                <p className="text-xs text-brand-text-muted mt-0.5">Islamabad F-7 • Official Digital Receipt</p>
 
                 {/* Status Badge */}
                 <div className="mt-3.5 inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-bold shadow-sm">
@@ -2377,10 +2377,10 @@ function BookingContent() {
                               </div>
                               <div className="min-w-0">
                                 <span className="text-sm font-bold text-brand-text-main block truncate">{cartItem?.activityName || bk.resource.name}</span>
-                                <span className="text-xs text-brand-text-muted block">{bk.resource.name} â€¢ {formatDateTimeRange(new Date(bk.startTime), new Date(bk.endTime))}</span>
+                                <span className="text-xs text-brand-text-muted block">{bk.resource.name} • {formatDateTimeRange(new Date(bk.startTime), new Date(bk.endTime))}</span>
                               </div>
                             </div>
-                            <span className="text-sm font-bold text-emerald-400 shrink-0">â‚¨{bk.totalPrice.toLocaleString()}</span>
+                            <span className="text-sm font-bold text-emerald-400 shrink-0">₨{bk.totalPrice.toLocaleString()}</span>
                           </div>
                         );
                       })}
@@ -2464,16 +2464,16 @@ function BookingContent() {
                     <div className="p-3.5 rounded-xl bg-brand-bg border border-brand-border col-span-1 sm:col-span-2 space-y-1.5">
                       <span className="text-[11px] font-semibold text-brand-text-muted uppercase tracking-wider block flex items-center gap-1">
                         <Icon name="coffee" size={13} />
-                        <span>CafÃ© Add-ons Included</span>
+                        <span>Café Add-ons Included</span>
                       </span>
                       <div className="space-y-1 pt-1">
                         {confirmedBooking.addons.map((addon) => (
                           <div key={addon.id} className="flex items-center justify-between text-xs">
                             <span className="text-brand-text-main">
-                              {addon.addonItem?.name || 'Add-on'} <span className="text-brand-text-muted font-bold">Ã— {addon.quantity}</span>
+                              {addon.addonItem?.name || 'Add-on'} <span className="text-brand-text-muted font-bold">× {addon.quantity}</span>
                             </span>
                             <span className="font-bold text-brand-accent">
-                              â‚¨{(addon.priceAtBooking * addon.quantity).toLocaleString()}
+                              ₨{(addon.priceAtBooking * addon.quantity).toLocaleString()}
                             </span>
                           </div>
                         ))}
@@ -2492,7 +2492,7 @@ function BookingContent() {
                     <span className="text-[11px] text-brand-text-muted">Pay at counter upon arrival</span>
                   </div>
                   <span className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-brand-primary via-brand-primary-hover to-brand-accent">
-                    â‚¨{(isGroupMode && confirmedGroupBooking ? confirmedGroupBooking.totalAmount : confirmedBooking?.totalPrice || 0).toLocaleString()}
+                    ₨{(isGroupMode && confirmedGroupBooking ? confirmedGroupBooking.totalAmount : confirmedBooking?.totalPrice || 0).toLocaleString()}
                   </span>
                 </div>
 
@@ -2566,7 +2566,7 @@ function BookingContent() {
                   Group Cart ({groupCart.length} {groupCart.length === 1 ? 'activity' : 'activities'})
                 </span>
                 <span className="text-xs font-extrabold text-emerald-400">
-                  Total: â‚¨{groupTotalPrice.toLocaleString()}
+                  Total: ₨{groupTotalPrice.toLocaleString()}
                 </span>
               </div>
             </div>
@@ -2584,7 +2584,7 @@ function BookingContent() {
                 onClick={() => setStep(4)}
                 className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:opacity-95 shadow-md shadow-emerald-600/20 flex items-center gap-1.5 transition-all"
               >
-                <span>Checkout Now â†’</span>
+                <span>Checkout Now →</span>
               </button>
             </div>
           </div>

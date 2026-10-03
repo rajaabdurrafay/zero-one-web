@@ -28,7 +28,7 @@ export function FeatureCard({
           <Arrow />
         </span>
       </div>
-      <div className="zo-feature-photo">
+      <div className="zo-feature-photo" data-photo-shape={variant === 'accent' ? '01' : undefined}>
         <Image
           src={image}
           alt={alt}

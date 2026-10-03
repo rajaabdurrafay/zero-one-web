@@ -61,7 +61,7 @@ export default function SubmitReviewPage() {
         <div className="w-20 h-20 mx-auto rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
           <Icon name="check" size={40} />
         </div>
-        <h1 className="text-3xl sm:text-4xl font-black text-brand-text-main tracking-tight">
+        <h1 className="zo-inner-title text-3xl sm:text-4xl font-black text-brand-text-main tracking-tight">
           Thank You!
         </h1>
         <p className="text-brand-text-muted text-sm sm:text-base leading-relaxed max-w-md mx-auto">
@@ -94,7 +94,7 @@ export default function SubmitReviewPage() {
             <Icon name="star" size={13} className="text-amber-500 fill-amber-500" />
             <span>Share Your Experience</span>
           </div>
-          <h1 className="text-3xl sm:text-5xl font-black text-brand-text-main tracking-tight leading-tight">
+          <h1 className="zo-inner-title text-3xl sm:text-5xl font-black text-brand-text-main tracking-tight leading-tight">
             Leave a Review
           </h1>
           <p className="text-brand-text-muted text-sm max-w-md mx-auto leading-relaxed">
@@ -105,7 +105,7 @@ export default function SubmitReviewPage() {
         {/* Review Form Card */}
         <form
           onSubmit={handleSubmit}
-          className="p-8 sm:p-10 rounded-3xl bg-brand-surface border border-brand-border shadow-xs space-y-6"
+          className="p-8 sm:p-10 rounded-3xl zo-panel bg-brand-surface border border-brand-border shadow-xs space-y-6"
         >
           {/* Name Field */}
           <div>

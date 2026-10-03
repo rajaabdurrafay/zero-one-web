@@ -249,7 +249,7 @@ export default function MyBookingsPage() {
   const displayedBookings = activeTab === 'upcoming' ? bookingsData?.upcoming || [] : bookingsData?.past || [];
 
   return (
-    <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 pb-16 pt-24 sm:pt-28 space-y-8">
+    <div className="zo-page-container zo-page-spacing space-y-8">
       {/* Real-time Toasts Stack */}
       <div className="fixed top-20 right-4 z-50 flex flex-col gap-2.5 max-w-md w-full pointer-events-none">
         {toasts.map((t) => (
@@ -286,7 +286,7 @@ export default function MyBookingsPage() {
       </div>
 
       {/* Account Header Banner */}
-      <div className="bg-brand-surface border border-brand-border rounded-3xl p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-6 shadow-xl relative overflow-hidden">
+      <div className="bg-brand-surface border border-brand-border rounded-3xl zo-panel p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-6 shadow-xl relative overflow-hidden">
         <div className="absolute top-0 right-0 -mr-16 -mt-16 w-48 h-48 bg-brand-primary/10 rounded-full blur-3xl pointer-events-none" />
         <div className="flex items-center gap-4 relative">
           <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-tr from-brand-primary via-brand-primary-hover to-brand-accent flex items-center justify-center font-black text-2xl text-white shadow-lg shadow-brand-primary/30">
@@ -294,7 +294,7 @@ export default function MyBookingsPage() {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-xl sm:text-2xl font-black text-brand-text-main">{customer?.name}</h1>
+              <h1 className="zo-inner-title text-xl sm:text-2xl font-black text-brand-text-main">{customer?.name}</h1>
               <span className="text-[10px] uppercase font-extrabold bg-brand-primary/20 text-brand-primary border border-brand-primary/30 px-2 py-0.5 rounded-full">
                 Member
               </span>
@@ -388,7 +388,7 @@ export default function MyBookingsPage() {
           <p className="text-xs font-semibold">Loading your reservations...</p>
         </div>
       ) : displayedBookings.length === 0 ? (
-        <div className="bg-brand-surface border border-brand-border rounded-3xl p-12 text-center space-y-4">
+        <div className="bg-brand-surface border border-brand-border rounded-3xl zo-panel p-12 text-center space-y-4">
           <div className="w-12 h-12 rounded-2xl bg-brand-bg border border-brand-border flex items-center justify-center mx-auto text-brand-text-muted">
             <Icon name="gamepad" size={24} />
           </div>
@@ -405,7 +405,7 @@ export default function MyBookingsPage() {
               href="/book"
               className="inline-flex mt-2 px-6 py-3 min-h-[44px] items-center justify-center rounded-xl font-bold text-xs text-white bg-gradient-to-r from-brand-primary via-brand-primary-hover to-brand-accent shadow-md shadow-brand-primary/30"
             >
-              Book a Slot Now â†’
+              Book a Slot Now →
             </Link>
           )}
         </div>
@@ -521,7 +521,7 @@ export default function MyBookingsPage() {
                   </div>
                   <div className="bg-brand-bg p-3 rounded-xl border border-brand-border/70">
                     <span className="text-brand-text-muted block mb-0.5 uppercase tracking-wider text-[10px]">Total Bill</span>
-                    <span className="font-black text-brand-text-main text-sm">â‚¨{booking.totalPrice.toLocaleString()}</span>
+                    <span className="font-black text-brand-text-main text-sm">₨{booking.totalPrice.toLocaleString()}</span>
                   </div>
                   <div className="bg-brand-bg p-3 rounded-xl border border-brand-border/70">
                     <span className="text-brand-text-muted block mb-0.5 uppercase tracking-wider text-[10px]">Channel</span>
@@ -574,12 +574,12 @@ export default function MyBookingsPage() {
       {/* Re-upload Screenshot Modal */}
       {reuploadBooking && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-brand-surface border border-brand-border rounded-3xl max-w-md w-full p-6 sm:p-7 space-y-5 shadow-2xl relative">
+          <div className="bg-brand-surface border border-brand-border rounded-3xl zo-panel max-w-md w-full p-6 sm:p-7 space-y-5 shadow-2xl relative">
             <div className="flex items-center justify-between border-b border-brand-border pb-3">
               <div>
                 <h3 className="text-lg font-black text-brand-text-main">Re-upload Payment Proof</h3>
                 <p className="text-xs text-brand-text-muted">
-                  Ref: #{reuploadBooking.id.slice(-8).toUpperCase()} â€¢ â‚¨{reuploadBooking.totalPrice.toLocaleString()}
+                  Ref: #{reuploadBooking.id.slice(-8).toUpperCase()} • ₨{reuploadBooking.totalPrice.toLocaleString()}
                 </p>
               </div>
               <button

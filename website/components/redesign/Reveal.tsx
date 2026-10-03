@@ -53,7 +53,7 @@ export function Reveal({ children }: { children: ReactNode }) {
     const animations: Animation[] = [];
     // A short opening sequence, then stagger only siblings in each section.
     const opening = root.current.querySelectorAll<HTMLElement>(
-      '.zo-hero-copy > *, .zo-hero-chips > div',
+      '.zo-hero-copy > *, .zo-hero-chips > div, .zo-page-intro-copy > *',
     );
     opening.forEach((element, index) => {
       animations.push(

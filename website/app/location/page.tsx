@@ -1,9 +1,10 @@
-﻿import Link from 'next/link';
+﻿import { PageIntro } from '@/components/redesign/PageIntro';
+import Link from 'next/link';
 import Image from 'next/image';
 import { Icon } from '@/components/Icon';
 
 export const metadata = {
-  title: 'Location & Hours â€” ZeroOne Cue & Play Karachi',
+  title: 'Location & Hours — ZeroOne Cue & Play Karachi',
   description: 'Find ZeroOne Cue & Play at Kamran Chowrangi, Gulistan-e-Jauhar, Karachi. Open 24 hours every day with dedicated parking.',
 };
 
@@ -13,30 +14,16 @@ export default function LocationPage() {
   const email = 'info@cueandplay.pk';
 
   return (
-    <div className="space-y-16 sm:space-y-24 pb-16 pt-24 sm:pt-28">
+    <div className="space-y-16 sm:space-y-24 zo-page-spacing">
       {/* Header */}
-      <section className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-brand-primary/10 border border-brand-primary/30 text-xs font-bold text-brand-primary uppercase tracking-widest">
-          <Icon name="target" size={13} />
-          <span>Location &amp; Visiting Guide</span>
-        </div>
-        <h1 className="text-4xl sm:text-6xl font-black text-brand-text-main tracking-tight">
-          Find Us in <br />
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-primary via-brand-accent to-brand-primary-hover">
-            Gulistan-e-Jauhar, Karachi
-          </span>
-        </h1>
-        <p className="text-brand-text-muted text-base sm:text-lg max-w-2xl mx-auto leading-relaxed">
-          Centrally situated at Kamran Chowrangi. Fully air-conditioned, 24/7 power backup, dedicated parking, and open round the clock every single day.
-        </p>
-      </section>
+      <PageIntro label="Location" title="Your local gaming spot." description="Find us at Kamran Chowrangi, Gulistan-e-Jauhar, Karachi. Open 24/7, whenever you are ready to play." image="/images/waiting.webp" />
 
       {/* Main Grid: Details + Map Embed */}
-      <section className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="zo-page-container">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* LEFT: Venue Details (lg:col-span-5) */}
           <div className="lg:col-span-5 space-y-6">
-            <div className="bg-brand-surface rounded-3xl border border-brand-border p-6 sm:p-8 space-y-6">
+            <div className="bg-brand-surface rounded-3xl zo-panel border border-brand-border p-6 sm:p-8 space-y-6">
               <h2 className="text-xl font-black text-brand-text-main flex items-center gap-2.5">
                 <Icon name="target" size={20} className="text-brand-primary" />
                 <span>Venue Information</span>
@@ -52,7 +39,7 @@ export default function LocationPage() {
                 </div>
 
                 <div className="p-4 rounded-2xl bg-brand-bg border border-brand-border space-y-1">
-                  <span className="text-xs text-brand-success font-bold uppercase tracking-wider block">
+                  <span className="text-xs text-brand-primary font-bold uppercase tracking-wider block">
                     Operating Schedule
                   </span>
                   <p className="text-brand-text-main font-black text-base flex items-center gap-2">
@@ -91,13 +78,13 @@ export default function LocationPage() {
                   className="w-full py-3 px-4 rounded-xl text-center text-sm font-bold text-brand-text-muted bg-brand-bg hover:bg-brand-card border border-brand-border hover:text-brand-text-main transition-all flex items-center justify-center gap-1.5"
                 >
                   <span>Book a Slot Online First</span>
-                  <span>â†’</span>
+                  <span>→</span>
                 </Link>
               </div>
             </div>
 
             {/* Venue Amenities */}
-            <div className="bg-brand-surface rounded-3xl border border-brand-border p-6 space-y-4">
+            <div className="bg-brand-surface rounded-3xl zo-panel border border-brand-border p-6 space-y-4">
               <h3 className="text-sm font-bold text-brand-text-main uppercase tracking-wider">
                 Venue Amenities &amp; Facilities
               </h3>
@@ -130,7 +117,7 @@ export default function LocationPage() {
             </div>
 
             {/* Venue Entrance */}
-            <div className="relative h-64 sm:h-72 rounded-3xl overflow-hidden border border-brand-border">
+            <div className="relative h-64 sm:h-72 rounded-3xl zo-panel overflow-hidden border border-brand-border">
               <Image
                 src="/images/receipon gate.webp"
                 alt="ZeroOne Cue and Play Venue Entrance with Green LED Framing"
@@ -144,7 +131,7 @@ export default function LocationPage() {
           {/* RIGHT: Map Box & Directions (lg:col-span-7) */}
           <div className="lg:col-span-7 space-y-6">
             {/* Interactive Map Embed Container */}
-            <div className="rounded-3xl bg-brand-surface border border-brand-border overflow-hidden shadow-2xl">
+            <div className="rounded-3xl zo-panel bg-brand-surface border border-brand-border overflow-hidden shadow-2xl">
               <div className="p-4 bg-brand-bg border-b border-brand-border flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="w-3 h-3 rounded-full bg-brand-danger inline-block" />
@@ -167,7 +154,7 @@ export default function LocationPage() {
             </div>
 
             {/* How to Reach Us */}
-            <div className="rounded-3xl bg-brand-surface border border-brand-border p-6 sm:p-8 space-y-4">
+            <div className="rounded-3xl zo-panel bg-brand-surface border border-brand-border p-6 sm:p-8 space-y-4">
               <h3 className="text-lg font-black text-brand-text-main">How To Reach Us</h3>
               <div className="space-y-3 text-sm text-brand-text-muted leading-relaxed">
                 <p>

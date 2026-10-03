@@ -1,5 +1,6 @@
 ﻿'use client';
 
+import { PageIntro } from '@/components/redesign/PageIntro';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { getPublicReviews, type Review } from '@/lib/api';
@@ -20,25 +21,14 @@ export default function ReviewsPage() {
   }, []);
 
   return (
-    <div className="space-y-12 sm:space-y-16 pb-20 pt-24 sm:pt-28">
+    <div className="space-y-12 sm:space-y-16 zo-page-spacing">
       {/* Top Banner Header */}
-      <section className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-4">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-surface-raised border border-brand-border text-xs font-semibold text-brand-text-muted">
-          <Icon name="star" size={13} className="text-amber-500 fill-amber-500" />
-          <span>Ratings & Testimonials</span>
-        </div>
-        <h1 className="text-4xl sm:text-6xl font-black text-brand-text-main tracking-tight leading-[0.95]">
-          Customer Experiences at <br />
-          <span className="text-brand-primary">ZeroOne Cue & Play</span>
-        </h1>
-        <p className="text-brand-text-muted text-base sm:text-lg max-w-2xl mx-auto leading-relaxed">
-          Real feedback from snooker players, console squads, and movie lovers in Karachi.
-        </p>
-
+      <PageIntro label="Reviews" title="Good times. Real stories." description="Hear from the players, console squads and movie lovers who have spent time at ZeroOne." />
+      <section className="zo-container">
         {/* Global Average Rating Card */}
         {stats.totalReviews > 0 && (
           <div className="pt-4 flex items-center justify-center">
-            <div className="inline-flex flex-col sm:flex-row items-center gap-4 p-5 sm:p-6 rounded-3xl bg-brand-surface border border-brand-border shadow-xs">
+            <div className="inline-flex flex-col sm:flex-row items-center gap-4 p-5 sm:p-6 rounded-3xl zo-panel bg-brand-surface border border-brand-border shadow-xs">
               <div className="flex items-center gap-2">
                 <span className="text-4xl sm:text-5xl font-black text-brand-text-main tracking-tight">
                   {stats.averageRating}
@@ -73,13 +63,13 @@ export default function ReviewsPage() {
       </section>
 
       {/* Reviews Grid */}
-      <section className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="zo-page-container">
         {loading ? (
           <div className="py-20 flex justify-center">
             <div className="w-8 h-8 rounded-full border-2 border-brand-primary border-t-transparent animate-spin" />
           </div>
         ) : reviews.length === 0 ? (
-          <div className="text-center py-20 bg-brand-surface border border-brand-border rounded-3xl text-brand-text-muted text-sm space-y-4">
+          <div className="text-center py-20 bg-brand-surface border border-brand-border rounded-3xl zo-panel text-brand-text-muted text-sm space-y-4">
             <p>No customer reviews have been published yet.</p>
             <div>
               <Link
@@ -95,7 +85,7 @@ export default function ReviewsPage() {
             {reviews.map((review) => (
               <div
                 key={review.id}
-                className="p-7 rounded-3xl bg-brand-surface border border-brand-border flex flex-col justify-between space-y-6 shadow-xs"
+                className="p-7 rounded-3xl zo-panel bg-brand-surface border border-brand-border flex flex-col justify-between space-y-6 shadow-xs"
               >
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
