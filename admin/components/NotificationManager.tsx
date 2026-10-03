@@ -31,7 +31,7 @@ export function NotificationManager() {
 
   // Poll active live sessions every 5s for time triggers
   const { data: activeSessions } = useSWR<LiveSession[]>(
-    'global-active-sessions-poll',
+    'zeroone-active-sessions',
     () => getActiveSessionsList(),
     {
       refreshInterval: 5000,
@@ -42,8 +42,8 @@ export function NotificationManager() {
 
   // Poll recent bookings every 5 seconds (sorted by createdAt: desc)
   const { data: recentBookings } = useSWR<Booking[]>(
-    'global-recent-bookings-poll',
-    () => getBookings({ sortBy: 'createdAt', sortOrder: 'desc' }),
+    'zeroone-recent-bookings',
+    () => getBookings({ sortBy: 'createdAt', sortOrder: 'desc',limit:20 }),
     {
       refreshInterval: 5000,
       revalidateOnFocus: true,
@@ -53,7 +53,7 @@ export function NotificationManager() {
 
   // Poll pending payment verifications every 5 seconds
   const { data: pendingVerifications } = useSWR<Booking[]>(
-    'global-pending-verifications-poll',
+    'zeroone-pending-verifications',
     () => getBookings({ status: 'AWAITING_VERIFICATION', sortBy: 'paymentSubmittedAt', sortOrder: 'desc' }),
     {
       refreshInterval: 5000,
@@ -64,7 +64,7 @@ export function NotificationManager() {
 
   // Poll pending reviews every 5 seconds
   const { data: pendingReviews } = useSWR<Review[]>(
-    'global-pending-reviews-poll',
+    'zeroone-pending-reviews',
     () => getReviews('pending'),
     {
       refreshInterval: 5000,

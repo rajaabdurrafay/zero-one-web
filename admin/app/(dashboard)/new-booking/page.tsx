@@ -1,5 +1,6 @@
 ﻿'use client';
 
+import { activityPrice, money, businessInstant, businessDate } from '@zeroone/domain';
 import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import {
@@ -55,7 +56,7 @@ export default function NewBookingPage() {
   const [resources, setResources] = useState<Resource[]>([]);
   const [selectedActivity, setSelectedActivity] = useState('');
   const [selectedResource, setSelectedResource] = useState('');
-  const [date, setDate] = useState(next7Days[0]?.dateStr || new Date().toISOString().split('T')[0]);
+  const [date, setDate] = useState(next7Days[0]?.dateStr || businessDate());
   const [startTime, setStartTime] = useState(() => {
     const now = new Date();
     const hours = String(now.getHours()).padStart(2, '0');
@@ -158,24 +159,7 @@ export default function NewBookingPage() {
   const estimatedPrice = useMemo(() => {
     if (!selectedActivityData) return 0;
 
-    const hasTieredPrices =
-      selectedActivityData.halfHourPrice != null && selectedActivityData.fullHourPrice != null;
-
-    const baseActivityPrice = hasTieredPrices
-      ? (() => {
-          const totalHours = Math.floor(duration / 60);
-          const remainingMinutes = duration % 60;
-          let price = totalHours * selectedActivityData.fullHourPrice!;
-          if (remainingMinutes === 30) {
-            price += selectedActivityData.halfHourPrice!;
-          } else if (remainingMinutes > 0) {
-            price += (selectedActivityData.halfHourPrice! / 30) * remainingMinutes;
-          }
-          return Math.round(price);
-        })()
-      : selectedActivityData.pricingUnit === 'PER_MINUTE'
-      ? Math.round(duration * selectedActivityData.basePrice)
-      : Math.round((duration / 60) * selectedActivityData.basePrice);
+    const baseActivityPrice = activityPrice(selectedActivityData,duration);
 
     return baseActivityPrice + addonsTotalCost;
   }, [selectedActivityData, duration, addonsTotalCost]);
@@ -209,7 +193,7 @@ export default function NewBookingPage() {
       date,
       startTime,
       duration,
-      price: estimatedPrice,
+      price: activityPrice(selectedActivityData,duration),
     };
 
     setGroupCart((prev) => [...prev, newItem]);
@@ -235,7 +219,7 @@ export default function NewBookingPage() {
       setLoading(true);
       try {
         const items = groupCart.map((item) => {
-          const startDateTime = new Date(`${item.date}T${item.startTime}:00`);
+          const startDateTime = businessInstant(item.date,item.startTime);
           const endDateTime = new Date(startDateTime);
           endDateTime.setMinutes(endDateTime.getMinutes() + item.duration);
           return {
@@ -303,7 +287,7 @@ export default function NewBookingPage() {
     setLoading(true);
 
     try {
-      const startDateTime = new Date(`${date}T${startTime}:00`);
+      const startDateTime = businessInstant(date,startTime);
       const endDateTime = new Date(startDateTime);
       endDateTime.setMinutes(endDateTime.getMinutes() + duration);
 

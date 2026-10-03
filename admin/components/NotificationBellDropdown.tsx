@@ -82,14 +82,14 @@ export function NotificationBellDropdown() {
 
   // Poll recent bookings (last 10)
   const { data: bookingsData } = useSWR<Booking[]>(
-    'bell-bookings-list',
-    () => getBookings({ sortBy: 'createdAt', sortOrder: 'desc' }),
+    'zeroone-recent-bookings',
+    () => getBookings({ sortBy: 'createdAt', sortOrder: 'desc',limit:20 }),
     { refreshInterval: 10000, revalidateOnFocus: true }
   );
 
   // Poll pending payment verifications
   const { data: verificationsData } = useSWR<Booking[]>(
-    'bell-verifications-list',
+    'zeroone-pending-verifications',
     () => getBookings({ status: 'AWAITING_VERIFICATION', sortBy: 'paymentSubmittedAt', sortOrder: 'desc' }),
     { refreshInterval: 10000, revalidateOnFocus: true }
   );
@@ -103,7 +103,7 @@ export function NotificationBellDropdown() {
 
   // Poll pending reviews
   const { data: reviewsData } = useSWR<Review[]>(
-    'bell-reviews-list',
+    'zeroone-pending-reviews',
     () => getReviews('pending'),
     { refreshInterval: 10000, revalidateOnFocus: true }
   );

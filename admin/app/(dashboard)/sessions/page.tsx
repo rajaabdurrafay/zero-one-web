@@ -1,9 +1,12 @@
 'use client';
 
-import { useEffect, useState, useMemo, useCallback } from 'react';
+import Link from 'next/link';
+import { quote, elapsedSeconds, Snapshot } from '@zeroone/domain';
+import { useEffect, useState, useMemo, useCallback, memo } from 'react';
 import useSWR from 'swr';
 import {
   getLiveSessions,
+  getSessionHistory,
   startLiveSession,
   updateLiveSessionAction,
   stopLiveSession,
@@ -52,11 +55,11 @@ function formatSeconds(totalSec: number) {
 
 export default function LiveSessionsPage() {
   const [filterType, setFilterType] = useState<string>('ALL');
-  const [currentTime, setCurrentTime] = useState<number>(() => Date.now());
 
   // Modal Dialog States
   const [startModalResource, setStartModalResource] = useState<{ id: string; name: string; type: string } | null>(null);
   const [startMode, setStartMode] = useState<SessionMode>('COUNTDOWN');
+  const openStart=useCallback((item:ResourceSessionMatrix)=>{setStartModalResource({id:item.resourceId,name:item.resourceName,type:item.resourceType});setStartMode(item.resourceType==='SNOOKER' ? 'COUNT_UP':'COUNTDOWN')},[]);
   const [startDuration, setStartDuration] = useState<number>(60);
   const [startCustomerName, setStartCustomerName] = useState<string>('');
   const [startSubmitting, setStartSubmitting] = useState<boolean>(false);
@@ -69,8 +72,11 @@ export default function LiveSessionsPage() {
   // Checkout / Stop Modal
   const [stopModalSession, setStopModalSession] = useState<LiveSession | null>(null);
   const [stopPaymentMethod, setStopPaymentMethod] = useState<PaymentMethod>('CASH');
+  const [lastBill,setLastBill]=useState<{session:LiveSession;finalAmount:number;totalElapsedMinutes:number}|null>(null);
+  const [receivedAmount,setReceivedAmount]=useState('');
   const [stopSubmitting, setStopSubmitting] = useState<boolean>(false);
 
+  const {data:history,mutate:refreshHistory}=useSWR('session-history',getSessionHistory,{refreshInterval:15000});
   // Poll live sessions matrix every 4 seconds
   const { data: matrix, mutate: refreshMatrix, isLoading } = useSWR<ResourceSessionMatrix[]>(
     'admin-live-sessions-matrix',
@@ -81,12 +87,6 @@ export default function LiveSessionsPage() {
       dedupingInterval: 2000,
     }
   );
-
-  // Local chronometer tick every 1 second for smooth digital clock
-  useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(Date.now()), 1000);
-    return () => clearInterval(timer);
-  }, []);
 
   const resourceTypes = useMemo(() => {
     if (!matrix) return [];
@@ -120,7 +120,7 @@ export default function LiveSessionsPage() {
         inUse++;
         if (s.mode === 'COUNTDOWN') {
           const totalAllowed = ((s.plannedMinutes || 60) + s.extendedMinutes) * 60;
-          const elapsed = Math.floor((currentTime - new Date(s.startedAt).getTime()) / 1000) - s.totalPausedSeconds;
+          const elapsed = elapsedSeconds(s,Date.parse(s.serverTime || s.updatedAt));
           if (totalAllowed - elapsed <= 0) {
             timeUp++;
           }
@@ -129,7 +129,7 @@ export default function LiveSessionsPage() {
     });
 
     return { total, inUse, free, paused, timeUp };
-  }, [matrix, currentTime]);
+  }, [matrix]);
 
   // Actions
   async function handleStartSession(e: React.FormEvent) {
@@ -191,7 +191,8 @@ export default function LiveSessionsPage() {
     if (!stopModalSession) return;
     setStopSubmitting(true);
     try {
-      const res = await stopLiveSession(stopModalSession.id, stopPaymentMethod);
+      const res = await stopLiveSession(stopModalSession.id, stopPaymentMethod,receivedAmount.trim() ? Number(receivedAmount):undefined);
+      setLastBill(res);setReceivedAmount('');void refreshHistory();
       toast.success(
         `Session ended! Bill: ₨ ${res.finalAmount.toLocaleString()} (${res.totalElapsedMinutes} mins)`
       );
@@ -206,6 +207,7 @@ export default function LiveSessionsPage() {
 
   return (
     <div className="space-y-6">
+      {lastBill && <div className="panel p-5 space-y-2"><h2 className="font-bold">Final bill: Rs {lastBill.finalAmount.toLocaleString()}</h2><p>{lastBill.totalElapsedMinutes} billable minutes</p>{lastBill.session.bookingId && <Link className="btn btn-primary" href={'/bookings/'+lastBill.session.bookingId}>Open final booking and receipt</Link>}<button className="btn btn-ghost ml-3" onClick={()=>setLastBill(null)}>Close</button></div>}
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-line-soft pb-5">
         <div>
@@ -326,256 +328,11 @@ export default function LiveSessionsPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {filteredMatrix.map((item) => {
-            const session = item.activeSession;
-            const isFree = !session;
-            const isPaused = session?.status === 'PAUSED';
-
-            // Calculate timing for active session
-            let elapsedSec = 0;
-            let remainingSec = 0;
-            let totalAllowedSec = 0;
-            let progressPercent = 0;
-            let isTimeUp = false;
-
-            if (session) {
-              const startTs = new Date(session.startedAt).getTime();
-              let extraPaused = 0;
-              if (isPaused && session.pausedAt) {
-                extraPaused = Math.floor((currentTime - new Date(session.pausedAt).getTime()) / 1000);
-              }
-              const totalPaused = session.totalPausedSeconds + extraPaused;
-              elapsedSec = Math.max(0, Math.floor((currentTime - startTs) / 1000) - totalPaused);
-
-              if (session.mode === 'COUNTDOWN') {
-                totalAllowedSec = ((session.plannedMinutes || 60) + session.extendedMinutes) * 60;
-                remainingSec = totalAllowedSec - elapsedSec;
-                isTimeUp = remainingSec <= 0;
-                progressPercent = Math.min(100, Math.max(0, (elapsedSec / totalAllowedSec) * 100));
-              }
-            }
-
-            return (
-              <div
-                key={item.resourceId}
-                className={`panel p-5 rounded-2xl flex flex-col justify-between transition-all relative overflow-hidden border ${
-                  isFree
-                    ? 'border-line hover:border-emerald-500/40 bg-panel'
-                    : isPaused
-                    ? 'border-blue-500/40 bg-blue-950/10'
-                    : isTimeUp
-                    ? 'border-rose-500 bg-rose-950/20 shadow-[0_0_20px_rgba(244,63,94,0.15)] ring-1 ring-rose-500'
-                    : 'border-brass/40 bg-panel hover:border-brass'
-                }`}
-              >
-                {/* Top Header: Resource Name & Icon & Status Pill */}
-                <div>
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 border ${
-                          isFree
-                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                            : isPaused
-                            ? 'bg-blue-500/10 text-blue-400 border-blue-500/20'
-                            : isTimeUp
-                            ? 'bg-rose-500/20 text-rose-400 border-rose-500/40 animate-pulse'
-                            : 'bg-brass/10 text-brass border-brass/20'
-                        }`}
-                      >
-                        <Icon name={RESOURCE_ICONS[item.resourceType] || 'grid'} size={20} />
-                      </div>
-                      <div>
-                        <h3 className="text-[15px] font-bold text-text leading-tight">{item.resourceName}</h3>
-                        <span className="text-[11px] text-muted font-medium">
-                          {RESOURCE_TYPE_LABELS[item.resourceType] || item.resourceType}
-                        </span>
-                      </div>
-                    </div>
-
-                    <span
-                      className={`pill text-[10.5px] font-bold shrink-0 ${
-                        isFree
-                          ? 'pill-live bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
-                          : isPaused
-                          ? 'bg-blue-500/20 text-blue-300 border border-blue-500/40'
-                          : isTimeUp
-                          ? 'pill-stop bg-rose-600 text-white font-mono animate-bounce'
-                          : 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
-                      }`}
-                    >
-                      {isFree
-                        ? 'AVAILABLE'
-                        : isPaused
-                        ? 'PAUSED'
-                        : isTimeUp
-                        ? 'TIME EXPIRED'
-                        : session?.mode === 'COUNTDOWN'
-                        ? 'COUNTDOWN'
-                        : 'OPEN TIMER'}
-                    </span>
-                  </div>
-
-                  {/* Body Content */}
-                  {isFree ? (
-                    <div className="my-8 text-center py-3 rounded-xl bg-raised/40 border border-line-soft">
-                      <p className="text-[13px] text-muted">Bay is currently vacant &amp; ready</p>
-                    </div>
-                  ) : (
-                    <div className="mt-4 space-y-3">
-                      {/* Customer Info */}
-                      <div className="flex items-center justify-between p-2.5 rounded-xl bg-raised/60 border border-line-soft">
-                        <div className="min-w-0">
-                          <span className="eyebrow text-[9px]">Active Player / Booking</span>
-                          <p className="text-[13px] font-bold text-text truncate">
-                            {session?.customerDisplay}
-                          </p>
-                        </div>
-                        {session?.bookingId && (
-                          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-panel border border-line-soft text-brass font-bold">
-                            Online Res
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Main Timer Display */}
-                      <div
-                        className={`p-4 rounded-2xl border text-center relative overflow-hidden ${
-                          isTimeUp
-                            ? 'bg-rose-500/15 border-rose-500/50'
-                            : isPaused
-                            ? 'bg-blue-500/10 border-blue-500/30'
-                            : 'bg-ink/50 border-line-soft'
-                        }`}
-                      >
-                        <span className="eyebrow text-[9.5px]">
-                          {session?.mode === 'COUNTDOWN'
-                            ? isTimeUp
-                              ? 'Overtime Elapsed'
-                              : 'Time Remaining'
-                            : 'Elapsed Playing Time'}
-                        </span>
-                        <div
-                          className={`display text-[32px] font-bold tracking-tight font-mono mt-0.5 ${
-                            isTimeUp
-                              ? 'text-rose-400 animate-pulse'
-                              : isPaused
-                              ? 'text-blue-300'
-                              : 'text-text'
-                          }`}
-                        >
-                          {session?.mode === 'COUNTDOWN'
-                            ? isTimeUp
-                              ? `+${formatSeconds(Math.abs(remainingSec))}`
-                              : formatSeconds(remainingSec)
-                            : formatSeconds(elapsedSec)}
-                        </div>
-
-                        {/* Progress Bar for Countdown Mode */}
-                        {session?.mode === 'COUNTDOWN' && (
-                          <div className="mt-3 w-full bg-raised rounded-full h-2 overflow-hidden border border-line-soft">
-                            <div
-                              className={`h-full transition-all duration-500 ${
-                                isTimeUp
-                                  ? 'bg-rose-500'
-                                  : progressPercent > 80
-                                  ? 'bg-amber-500'
-                                  : 'bg-brass'
-                              }`}
-                              style={{ width: `${progressPercent}%` }}
-                            />
-                          </div>
-                        )}
-
-                        <div className="flex items-center justify-between text-[11px] text-muted mt-2 px-1">
-                          <span>
-                            Started:{' '}
-                            {new Date(session!.startedAt).toLocaleTimeString('en-PK', {
-                              hour: '2-digit',
-                              minute: '2-digit',
-                              hour12: true,
-                            })}
-                          </span>
-                          {session?.extendedMinutes ? (
-                            <span className="text-amber-400 font-bold">
-                              +{session.extendedMinutes}m added
-                            </span>
-                          ) : null}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Card Actions Footer */}
-                <div className="mt-4 pt-3 border-t border-line-soft">
-                  {isFree ? (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setStartModalResource({
-                          id: item.resourceId,
-                          name: item.resourceName,
-                          type: item.resourceType,
-                        });
-                        setStartMode(item.resourceType === 'SNOOKER' ? 'COUNT_UP' : 'COUNTDOWN');
-                      }}
-                      className="btn btn-primary w-full py-2.5 text-[13px] font-bold flex items-center justify-center gap-2 cursor-pointer shadow-sm"
-                    >
-                      <Icon name="play" size={15} />
-                      <span>Start Session</span>
-                    </button>
-                  ) : (
-                    <div className="space-y-2">
-                      {/* Controller Row */}
-                      <div className="grid grid-cols-3 gap-2">
-                        {isPaused ? (
-                          <button
-                            type="button"
-                            onClick={() => handleQuickAction(session!, 'RESUME')}
-                            className="btn btn-secondary py-2 text-[12px] font-bold flex items-center justify-center gap-1.5 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/10 cursor-pointer"
-                          >
-                            <Icon name="play" size={13} />
-                            <span>Resume</span>
-                          </button>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => handleQuickAction(session!, 'PAUSE')}
-                            className="btn btn-secondary py-2 text-[12px] font-bold flex items-center justify-center gap-1.5 text-blue-400 border-blue-500/30 hover:bg-blue-500/10 cursor-pointer"
-                          >
-                            <Icon name="pause" size={13} />
-                            <span>Pause</span>
-                          </button>
-                        )}
-
-                        <button
-                          type="button"
-                          onClick={() => setExtendModalSession(session)}
-                          className="btn btn-secondary py-2 text-[12px] font-bold flex items-center justify-center gap-1.5 text-amber-400 border-amber-500/30 hover:bg-amber-500/10 cursor-pointer"
-                        >
-                          <Icon name="plus" size={13} />
-                          <span>+ Extend</span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => setStopModalSession(session)}
-                          className="btn btn-danger py-2 text-[12px] font-bold flex items-center justify-center gap-1.5 cursor-pointer"
-                        >
-                          <Icon name="check" size={13} />
-                          <span>Stop &amp; Bill</span>
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
+          {filteredMatrix.map(item=><SessionCard key={item.resourceId} item={item} onStart={openStart} onExtend={setExtendModalSession} onStop={setStopModalSession} onQuickAction={handleQuickAction} />)}
         </div>
       )}
 
+      <section className="panel p-5 space-y-3"><h2 className="font-bold">Recent final bills</h2>{!history?.length && <p className="text-muted">No completed sessions yet.</p>}{history?.map(session=><div className="flex items-center justify-between" key={session.id}><span>{session.resource?.name || 'Station'} · Rs {(session.finalAmount || 0).toLocaleString()}</span>{session.bookingId && <Link className="text-brass" href={'/bookings/'+session.bookingId}>Receipt</Link>}</div>)}</section>
       {/* 1. START SESSION MODAL */}
       {startModalResource && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/85 backdrop-blur-xs animate-in fade-in duration-150">
@@ -794,6 +551,8 @@ export default function LiveSessionsPage() {
             </div>
 
             <form onSubmit={handleStopSubmit} className="mt-5 space-y-4">
+              <SessionAmount session={stopModalSession} />
+              <label className="field-label">Total amount received (optional)</label><input className="field" type="number" min="0" step="0.01" value={receivedAmount} onChange={event=>setReceivedAmount(event.target.value)} placeholder="Preserve recorded payment" />
               <div className="p-4 rounded-xl bg-raised border border-line-soft space-y-2">
                 <div className="flex items-center justify-between text-[13px]">
                   <span className="text-muted">Player / Reservation:</span>
@@ -848,3 +607,254 @@ export default function LiveSessionsPage() {
     </div>
   );
 }
+
+function SessionAmount({session}:{session:LiveSession}) {
+  const [now,setNow]=useState(Date.now);
+  useEffect(()=>{if(session.status!=='RUNNING')return;const timer=setInterval(()=>setNow(Date.now()),1000);return()=>clearInterval(timer)},[session.status]);
+  const snapshot=session.pricingSnapshot;
+  if(!snapshot)return <p className="text-muted">Bill available at checkout</p>;
+  const minutes=session.mode==='COUNT_UP' ? Math.max(1,Math.ceil(elapsedSeconds(session,now)/60)) : (session.plannedMinutes || 60)+session.extendedMinutes;
+  const bill=quote(snapshot.rate,minutes,snapshot.offer,session.booking?.addons || []);
+  return <p className="text-brass font-bold">Live bill: Rs {bill.payablePrice.toLocaleString()} <span className="text-muted text-xs">({minutes} min)</span></p>;
+}
+
+const SessionCard=memo(function SessionCard({item,onStart,onExtend,onStop,onQuickAction}:{item:ResourceSessionMatrix;onStart:(item:ResourceSessionMatrix)=>void;onExtend:(s:LiveSession|null)=>void;onStop:(s:LiveSession|null)=>void;onQuickAction:(s:LiveSession,a:SessionAction)=>void}) {
+  const [currentTime,setCurrentTime]=useState(Date.now);
+  useEffect(()=>{if(!item.activeSession || item.activeSession.status!=='RUNNING')return;const timer=setInterval(()=>setCurrentTime(Date.now()),1000);return()=>clearInterval(timer)},[item.activeSession]);
+
+            const session = item.activeSession;
+            const isFree = !session;
+            const isPaused = session?.status === 'PAUSED';
+
+            // Calculate timing for active session
+            let elapsedSec = 0;
+            let remainingSec = 0;
+            let totalAllowedSec = 0;
+            let progressPercent = 0;
+            let isTimeUp = false;
+
+            if (session) {
+              elapsedSec=elapsedSeconds(session,currentTime);
+
+              if (session.mode === 'COUNTDOWN') {
+                totalAllowedSec = ((session.plannedMinutes || 60) + session.extendedMinutes) * 60;
+                remainingSec = totalAllowedSec - elapsedSec;
+                isTimeUp = remainingSec <= 0;
+                progressPercent = Math.min(100, Math.max(0, (elapsedSec / totalAllowedSec) * 100));
+              }
+            }
+
+            return (
+              <div
+                key={item.resourceId}
+                className={`panel p-5 rounded-2xl flex flex-col justify-between transition-all relative overflow-hidden border ${
+                  isFree
+                    ? 'border-line hover:border-emerald-500/40 bg-panel'
+                    : isPaused
+                    ? 'border-blue-500/40 bg-blue-950/10'
+                    : isTimeUp
+                    ? 'border-rose-500 bg-rose-950/20 shadow-[0_0_20px_rgba(244,63,94,0.15)] ring-1 ring-rose-500'
+                    : 'border-brass/40 bg-panel hover:border-brass'
+                }`}
+              >
+                {/* Top Header: Resource Name & Icon & Status Pill */}
+                <div>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 border ${
+                          isFree
+                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                            : isPaused
+                            ? 'bg-blue-500/10 text-blue-400 border-blue-500/20'
+                            : isTimeUp
+                            ? 'bg-rose-500/20 text-rose-400 border-rose-500/40 animate-pulse'
+                            : 'bg-brass/10 text-brass border-brass/20'
+                        }`}
+                      >
+                        <Icon name={RESOURCE_ICONS[item.resourceType] || 'grid'} size={20} />
+                      </div>
+                      <div>
+                        <h3 className="text-[15px] font-bold text-text leading-tight">{item.resourceName}</h3>
+                        <span className="text-[11px] text-muted font-medium">
+                          {RESOURCE_TYPE_LABELS[item.resourceType] || item.resourceType}
+                        </span>
+                      </div>
+                    </div>
+
+                    <span
+                      className={`pill text-[10.5px] font-bold shrink-0 ${
+                        isFree
+                          ? 'pill-live bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+                          : isPaused
+                          ? 'bg-blue-500/20 text-blue-300 border border-blue-500/40'
+                          : isTimeUp
+                          ? 'pill-stop bg-rose-600 text-white font-mono animate-bounce'
+                          : 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                      }`}
+                    >
+                      {isFree
+                        ? 'AVAILABLE'
+                        : isPaused
+                        ? 'PAUSED'
+                        : isTimeUp
+                        ? 'TIME EXPIRED'
+                        : session?.mode === 'COUNTDOWN'
+                        ? 'COUNTDOWN'
+                        : 'OPEN TIMER'}
+                    </span>
+                  </div>
+
+                  {/* Body Content */}
+                  {isFree ? (
+                    <div className="my-8 text-center py-3 rounded-xl bg-raised/40 border border-line-soft">
+                      <p className="text-[13px] text-muted">Bay is currently vacant &amp; ready</p>
+                    </div>
+                  ) : (
+                    <div className="mt-4 space-y-3">
+                      {/* Customer Info */}
+                      <div className="flex items-center justify-between p-2.5 rounded-xl bg-raised/60 border border-line-soft">
+                        <div className="min-w-0">
+                          <span className="eyebrow text-[9px]">Active Player / Booking</span>
+                          <p className="text-[13px] font-bold text-text truncate">
+                            {session?.customerDisplay}
+                          </p>
+                        </div>
+                        {session?.bookingId && (
+                          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-panel border border-line-soft text-brass font-bold">
+                            Online Res
+                          </span>
+                        )}
+                      </div>
+
+                      <SessionAmount session={session!} />
+                      {/* Main Timer Display */}
+                      <div
+                        className={`p-4 rounded-2xl border text-center relative overflow-hidden ${
+                          isTimeUp
+                            ? 'bg-rose-500/15 border-rose-500/50'
+                            : isPaused
+                            ? 'bg-blue-500/10 border-blue-500/30'
+                            : 'bg-ink/50 border-line-soft'
+                        }`}
+                      >
+                        <span className="eyebrow text-[9.5px]">
+                          {session?.mode === 'COUNTDOWN'
+                            ? isTimeUp
+                              ? 'Overtime Elapsed'
+                              : 'Time Remaining'
+                            : 'Elapsed Playing Time'}
+                        </span>
+                        <div
+                          className={`display text-[32px] font-bold tracking-tight font-mono mt-0.5 ${
+                            isTimeUp
+                              ? 'text-rose-400 animate-pulse'
+                              : isPaused
+                              ? 'text-blue-300'
+                              : 'text-text'
+                          }`}
+                        >
+                          {session?.mode === 'COUNTDOWN'
+                            ? isTimeUp
+                              ? `+${formatSeconds(Math.abs(remainingSec))}`
+                              : formatSeconds(remainingSec)
+                            : formatSeconds(elapsedSec)}
+                        </div>
+
+                        {/* Progress Bar for Countdown Mode */}
+                        {session?.mode === 'COUNTDOWN' && (
+                          <div className="mt-3 w-full bg-raised rounded-full h-2 overflow-hidden border border-line-soft">
+                            <div
+                              className={`h-full transition-all duration-500 ${
+                                isTimeUp
+                                  ? 'bg-rose-500'
+                                  : progressPercent > 80
+                                  ? 'bg-amber-500'
+                                  : 'bg-brass'
+                              }`}
+                              style={{ width: `${progressPercent}%` }}
+                            />
+                          </div>
+                        )}
+
+                        <div className="flex items-center justify-between text-[11px] text-muted mt-2 px-1">
+                          <span>
+                            Started:{' '}
+                            {new Date(session!.startedAt).toLocaleTimeString('en-PK', {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                              hour12: true,timeZone:'Asia/Karachi',
+                                              })}
+                          </span>
+                          {session?.extendedMinutes ? (
+                            <span className="text-amber-400 font-bold">
+                              +{session.extendedMinutes}m added
+                            </span>
+                          ) : null}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Card Actions Footer */}
+                <div className="mt-4 pt-3 border-t border-line-soft">
+                  {isFree ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onStart(item);
+                      }}
+                      className="btn btn-primary w-full py-2.5 text-[13px] font-bold flex items-center justify-center gap-2 cursor-pointer shadow-sm"
+                    >
+                      <Icon name="play" size={15} />
+                      <span>Start Session</span>
+                    </button>
+                  ) : (
+                    <div className="space-y-2">
+                      {/* Controller Row */}
+                      <div className="grid grid-cols-3 gap-2">
+                        {isPaused ? (
+                          <button
+                            type="button"
+                            onClick={() => onQuickAction(session!, 'RESUME')}
+                            className="btn btn-secondary py-2 text-[12px] font-bold flex items-center justify-center gap-1.5 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/10 cursor-pointer"
+                          >
+                            <Icon name="play" size={13} />
+                            <span>Resume</span>
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => onQuickAction(session!, 'PAUSE')}
+                            className="btn btn-secondary py-2 text-[12px] font-bold flex items-center justify-center gap-1.5 text-blue-400 border-blue-500/30 hover:bg-blue-500/10 cursor-pointer"
+                          >
+                            <Icon name="pause" size={13} />
+                            <span>Pause</span>
+                          </button>
+                        )}
+
+                        <button
+                          type="button"
+                          onClick={() => onExtend(session)}
+                          className="btn btn-secondary py-2 text-[12px] font-bold flex items-center justify-center gap-1.5 text-amber-400 border-amber-500/30 hover:bg-amber-500/10 cursor-pointer"
+                        >
+                          <Icon name="plus" size={13} />
+                          <span>+ Extend</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => onStop(session)}
+                          className="btn btn-danger py-2 text-[12px] font-bold flex items-center justify-center gap-1.5 cursor-pointer"
+                        >
+                          <Icon name="check" size={13} />
+                          <span>Stop &amp; Bill</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+});

@@ -1,5 +1,6 @@
 ﻿'use client';
 
+import { quote, money } from '@zeroone/domain';
 import { Suspense, useEffect, useState, useMemo, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -175,6 +176,10 @@ function BookingContent() {
       if (draft.duration) setDuration(draft.duration);
       if (draft.selectedTimeSlot) setSelectedTimeSlot(draft.selectedTimeSlot);
       if (draft.selectedResourceId) setSelectedResourceId(draft.selectedResourceId);
+      if (draft.isGroupMode) setIsGroupMode(true);
+      if (Array.isArray(draft.groupCart)) setGroupCart(draft.groupCart);
+      if (draft.confirmedGroupBooking) setConfirmedGroupBooking(draft.confirmedGroupBooking);
+      if (draft.selectedAddons) setSelectedAddons(draft.selectedAddons);
       if (draft.customerName) setCustomerName(draft.customerName);
       if (draft.customerPhone) setCustomerPhone(draft.customerPhone);
       if (draft.customerEmail) setCustomerEmail(draft.customerEmail);
@@ -211,6 +216,7 @@ function BookingContent() {
         appliedOffer,
         promoCodeInput,
         confirmedBooking,
+        isGroupMode,groupCart,confirmedGroupBooking,selectedAddons,
       };
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify(draftData));
     } catch {
@@ -229,7 +235,7 @@ function BookingContent() {
     customerEmail,
     appliedOffer,
     promoCodeInput,
-    confirmedBooking,
+    confirmedBooking,isGroupMode,groupCart,confirmedGroupBooking,selectedAddons,
   ]);
 
   // 1. Fetch available activities and active deals
@@ -472,44 +478,7 @@ function BookingContent() {
   const { originalPrice, discountAmount, payablePrice } = useMemo(() => {
     if (!currentActivity) return { originalPrice: 0, discountAmount: 0, payablePrice: 0 };
 
-    let base = 0;
-    // Check for Tiered / Slab Pricing
-    if (
-      currentActivity.halfHourPrice != null &&
-      currentActivity.fullHourPrice != null
-    ) {
-      const durationInMinutes = duration;
-      const totalHours = Math.floor(durationInMinutes / 60);
-      const remainingMinutes = durationInMinutes % 60;
-      let price = totalHours * currentActivity.fullHourPrice;
-
-      if (remainingMinutes === 30) {
-        price += currentActivity.halfHourPrice;
-      } else if (remainingMinutes > 0) {
-        price += (currentActivity.halfHourPrice / 30) * remainingMinutes;
-      }
-      base = Math.round(price);
-    } else if (currentActivity.pricingUnit === 'PER_MINUTE') {
-      base = Math.round(duration * currentActivity.basePrice);
-    } else {
-      // PER_HOUR: exact prorated calculation
-      base = Math.round((duration / 60) * currentActivity.basePrice);
-    }
-
-    let discount = 0;
-    if (appliedOffer) {
-      if (appliedOffer.discountType === 'PERCENTAGE') {
-        discount = Math.round((base * appliedOffer.discountValue) / 100);
-      } else {
-        discount = Math.min(base, Math.round(appliedOffer.discountValue));
-      }
-    }
-
-    return {
-      originalPrice: base,
-      discountAmount: discount,
-      payablePrice: Math.max(0, base - discount),
-    };
+    return quote(currentActivity,duration,appliedOffer);
   }, [currentActivity, duration, appliedOffer]);
 
   const handleAddonQtyChange = (addonId: string, delta: number) => {
@@ -693,7 +662,7 @@ function BookingContent() {
   }, [selectedTimeSlot, currentActivity, duration, selectedDate]);
 
   // â”€â”€â”€ GROUP BOOKING HELPERS â”€â”€â”€
-  const groupTotalPrice = useMemo(() => groupCart.reduce((sum, item) => sum + item.payablePrice, 0), [groupCart]);
+  const groupTotalPrice = useMemo(() => money(groupCart.reduce((sum, item) => sum + item.payablePrice, 0)+addonsTotalCost), [groupCart,addonsTotalCost]);
 
   const addToGroupCart = () => {
     if (!currentActivity || !selectedTimeSlot || !selectedResourceId) return;
@@ -753,6 +722,7 @@ function BookingContent() {
           email: customerEmail || undefined,
         },
         isWalkIn: false,
+        addons:Object.entries(selectedAddons).map(([addonItemId,quantity])=>({addonItemId,quantity})),
         items: groupCart.map(item => {
           const startDt = getPKTDateTime(item.date, item.timeSlot);
           const endDt = new Date(startDt);

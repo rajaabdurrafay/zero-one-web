@@ -1,4 +1,4 @@
-const API_BASE = '/api/backend';
+const API_BASE = typeof window === 'undefined' ? (process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001') : '/api/backend';
 
 function getClientAdminToken(): null { return null; }
 
@@ -167,6 +167,7 @@ export interface GetBookingsParams {
   search?: string;
   sortBy?: 'date' | 'amount' | 'customer' | 'paymentSubmittedAt' | 'createdAt';
   sortOrder?: 'asc' | 'desc';
+  page?:number;limit?:number;
 }
 
 export function getBookings(paramsOrDate?: string | GetBookingsParams, status?: string) {
@@ -176,6 +177,8 @@ export function getBookings(paramsOrDate?: string | GetBookingsParams, status?: 
     if (paramsOrDate) query.set('date', paramsOrDate);
     if (status) query.set('status', status);
   } else if (paramsOrDate && typeof paramsOrDate === 'object') {
+    if(paramsOrDate.page)query.set('page',String(paramsOrDate.page));
+    if(paramsOrDate.limit)query.set('limit',String(paramsOrDate.limit));
     if (paramsOrDate.date) query.set('date', paramsOrDate.date);
     if (paramsOrDate.dateFrom) query.set('dateFrom', paramsOrDate.dateFrom);
     if (paramsOrDate.dateTo) query.set('dateTo', paramsOrDate.dateTo);
@@ -1276,6 +1279,10 @@ export interface SessionLog {
 }
 
 export interface LiveSession {
+  pricingSnapshot?: import('@zeroone/domain').Snapshot | null;
+  accruedAmount?: number | null;
+  serverTime?: string;
+
   id: string;
   bookingId?: string | null;
   booking?: {
@@ -1283,6 +1290,7 @@ export interface LiveSession {
     startTime: string;
     endTime: string;
     totalPrice: number;
+    amountPaid?:number|null;
     customer?: Customer;
     addons?: Array<{
       id: string;
@@ -1357,7 +1365,8 @@ export function updateLiveSessionAction(
 
 export function stopLiveSession(
   sessionId: string,
-  paymentMethod: PaymentMethod = 'CASH'
+  paymentMethod: PaymentMethod = 'CASH',
+  amountPaid?:number
 ): Promise<{
   message: string;
   session: LiveSession;
@@ -1371,7 +1380,7 @@ export function stopLiveSession(
     finalAmount: number;
   }>(`/api/admin/sessions/${sessionId}/stop`, {
     method: 'POST',
-    body: JSON.stringify({ paymentMethod }),
+    body: JSON.stringify({ paymentMethod,amountPaid }),
   });
 }
 
@@ -1384,3 +1393,12 @@ export function stopLiveSession(
 
 
 
+
+export interface Page<T>{success:true;data:T[];meta:{pagination:{page:number;limit:number;total:number;totalPages:number}}}
+export function getBookingsPage(params:GetBookingsParams):Promise<Page<Booking>>{
+  const query=new URLSearchParams();for(const [key,value] of Object.entries(params))if(value!==undefined && value!=='' && value!=='both')query.set(key,String(value));
+  return apiFetch<Page<Booking>>('/api/v1/bookings?'+query);
+}
+
+export function getSessionHistory():Promise<LiveSession[]>{return apiFetch<LiveSession[]>('/api/admin/sessions/history?limit=20');}
+export function claimGuestBookings(guestId:string,accountId:string,verificationNote:string){return apiFetch<{claimedBookings:number}>('/api/admin/customers/'+guestId+'/claim-bookings',{method:'POST',body:JSON.stringify({accountId,verificationNote})});}

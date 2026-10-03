@@ -1,10 +1,11 @@
 ﻿'use client';
 
+import { businessDate, businessInstant } from '@zeroone/domain';
 import { useState, useEffect, useMemo, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import useSWR from 'swr';
-import { getBookings, updateBooking, downloadBookingReceiptPdf, startLiveSession, type Booking, type GetBookingsParams } from '@/lib/api';
+import { getBookingsPage, type Page, updateBooking, downloadBookingReceiptPdf, startLiveSession, type Booking, type GetBookingsParams } from '@/lib/api';
 import { formatDateReadable, formatTimeRange12h } from '@/lib/timeUtils';
 import { generateWhatsAppBookingUrl } from '@/lib/whatsapp';
 import { Icon } from '@/components/Icon';
@@ -62,6 +63,7 @@ function BookingsContent() {
   const urlStatus = searchParams.get('status') || '';
   const urlDate = searchParams.get('date');
 
+  const [page,setPage]=useState(1);
   const [dateTab, setDateTab] = useState<string>(urlStatus ? 'all' : urlDate ? 'custom' : 'today');
   const [customFrom, setCustomFrom] = useState<string>(urlDate || '');
   const [customTo, setCustomTo] = useState<string>(urlDate || '');
@@ -148,7 +150,7 @@ function BookingsContent() {
 
   const dateRangeParams = useMemo(() => {
     const now = new Date();
-    const toISODate = (d: Date) => d.toISOString().split('T')[0];
+    const toISODate = (d: Date) => businessDate(d);
     const daysBack = (n: number) => {
       const start = new Date(now);
       start.setDate(start.getDate() - n);
@@ -182,19 +184,20 @@ function BookingsContent() {
     [dateRangeParams, selectedStatus, selectedActivities, bookingType, searchQuery, sortBy, sortOrder]
   );
 
+  useEffect(()=>setPage(1),[dateRangeParams,selectedStatus,selectedActivities,bookingType,searchQuery,sortBy,sortOrder]);
   const {
     data: rawBookingsData,
     error: swrError,
     isLoading,
     mutate,
-  } = useSWR<Booking[]>(
-    ['admin-bookings-list', JSON.stringify(apiQueryParams)],
-    () => getBookings(apiQueryParams),
+  } = useSWR<Page<Booking>>(
+    ['admin-bookings-list', JSON.stringify(apiQueryParams),page],
+    () => getBookingsPage({...apiQueryParams,page,limit:50}),
     { refreshInterval: 5000, revalidateOnFocus: true, dedupingInterval: 2000 }
   );
 
   const filteredBookings = useMemo(() => {
-    const list = rawBookingsData || [];
+    const list = rawBookingsData?.data || [];
     if (whatsappFilter === 'all') return list;
     return list.filter((b) => {
       const isSent = !!whatsappSentMap[b.id];
@@ -273,6 +276,7 @@ function BookingsContent() {
 
   return (
     <div className="space-y-5">
+      <div className="flex items-center gap-3"><button className="btn btn-secondary" disabled={page<=1} onClick={()=>setPage(value=>value-1)}>Previous</button><span>Page {page} of {Math.max(1,rawBookingsData?.meta.pagination.totalPages || 1)} · {rawBookingsData?.meta.pagination.total || 0} bookings</span><button className="btn btn-secondary" disabled={!rawBookingsData || page>=rawBookingsData.meta.pagination.totalPages} onClick={()=>setPage(value=>value+1)}>Next</button>{whatsappFilter!=='all' && <span className="text-muted">WhatsApp filter applies to this page</span>}</div>
       {toastMessage && (
         <div className="fixed top-[72px] right-4 sm:right-7 z-50 panel border-live/45 px-4 py-3 flex items-center gap-3 no-print">
           <Icon name="check" size={14} className="text-live" />

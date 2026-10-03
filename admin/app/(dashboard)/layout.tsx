@@ -94,7 +94,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   // Poll pending payment verifications count for persistent header pill and sidebar badge
   const { data: pendingVerificationsList } = useSWR<Booking[]>(
-    'global-pending-verifications-count',
+    'zeroone-pending-verifications',
     () => getBookings({ status: 'AWAITING_VERIFICATION', sortBy: 'paymentSubmittedAt', sortOrder: 'desc' }),
     {
       refreshInterval: 5000,
@@ -116,7 +116,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   // Poll active live sessions count for sidebar badge
   const { data: activeSessionsList } = useSWR<LiveSession[]>(
-    'global-active-sessions-count',
+    'zeroone-active-sessions',
     () => getActiveSessionsList(),
     {
       refreshInterval: 5000,
@@ -127,7 +127,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   // Poll pending reviews count for sidebar badge
   const { data: pendingReviewsList } = useSWR(
-    'global-pending-reviews-count',
+    'zeroone-pending-reviews',
     () => getReviews('pending'),
     {
       refreshInterval: 10000,

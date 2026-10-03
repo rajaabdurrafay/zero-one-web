@@ -1,5 +1,6 @@
 ﻿'use client';
 
+import { businessDate, businessInstant } from '@zeroone/domain';
 import { useState } from 'react';
 import useSWR from 'swr';
 import Link from 'next/link';
@@ -28,7 +29,7 @@ const STATUS_PILL: Record<string, string> = {
 };
 
 export default function DashboardPage() {
-  const today = new Date().toISOString().split('T')[0];
+  const today = businessDate();
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [activeProofUrl, setActiveProofUrl] = useState<string | null>(null);
 
@@ -65,7 +66,7 @@ export default function DashboardPage() {
     error: recentError,
     isLoading: recentLoading,
     mutate: mutateRecent,
-  } = useSWR<Booking[]>(['dashboard-recent-bookings'], () => getBookings(), swrOpts);
+  } = useSWR<Booking[]>(['dashboard-recent-bookings'], () => getBookings({limit:5,sortBy:'createdAt',sortOrder:'desc'}), swrOpts);
 
   const {
     data: activeSessions,
@@ -92,8 +93,9 @@ export default function DashboardPage() {
   } = useSWR<Resource[]>(
     ['dashboard-availability', today],
     async () => {
-      const results = await Promise.all(RESOURCE_TYPES.map((type) => getAvailability(today, type)));
-      return results.flatMap((r) => r.resources);
+      const result=await getAvailability(today);
+      return result.resources;
+
     },
     swrOpts
   );
@@ -468,7 +470,7 @@ export default function DashboardPage() {
                         onClick={() => {
                           const fullUrl = booking.paymentScreenshotUrl?.startsWith('http')
                             ? booking.paymentScreenshotUrl
-                            : `http://localhost:3001${booking.paymentScreenshotUrl}`;
+                            : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}${booking.paymentScreenshotUrl}`;
                           setActiveProofUrl(fullUrl);
                         }}
                         className="btn btn-ghost w-full min-h-[44px] mt-3.5 text-[12px] py-2"

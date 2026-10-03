@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
 
     const backendRes = await fetch(`${API_BASE}/api/auth/admin/login`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json','User-Agent':request.headers.get('user-agent') || '',...(process.env.TRUST_FRONTEND_PROXY_HEADERS==='true' && request.headers.get('x-forwarded-for') ? {'X-Forwarded-For':request.headers.get('x-forwarded-for')!}:{}) },
       signal: AbortSignal.timeout(15_000),
       body: JSON.stringify({ username, password }),
     });
