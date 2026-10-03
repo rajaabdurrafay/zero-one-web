@@ -1,3 +1,4 @@
+import { businessDate } from '@zeroone/domain';
 import { customerSelect } from '../utils/customerSelect';
 import { Router } from 'express';
 import PDFDocument from 'pdfkit';
@@ -52,37 +53,15 @@ router.get('/summary', async (req, res, next) => {
     // Active revenue statuses
     const validStatuses = [BookingStatus.CONFIRMED, BookingStatus.COMPLETED];
 
-    // Query all bookings in range
-    const allBookings = await prisma.booking.findMany({
-      where: {
-        startTime: { gte: lastMonthStart }
-      },
-      select: {
-        totalPrice: true,
-        startTime: true,
-        status: true,
-        isWalkIn: true
-      }
-    });
-
-    // Helper calculators
-    const calculateStats = (start: Date, end: Date) => {
-      const filtered = allBookings.filter(
-        b => b.startTime >= start && b.startTime <= end
-      );
-      const valid = filtered.filter(b => b.status === BookingStatus.CONFIRMED || b.status === BookingStatus.COMPLETED);
-      const revenue = valid.reduce((sum, b) => sum + b.totalPrice, 0);
-      const totalBookings = filtered.length;
-      const confirmedBookings = valid.length;
-      return { revenue, totalBookings, confirmedBookings };
+    // Aggregate in MySQL rather than transferring every historical booking.
+    const calculateStats=async(start:Date,end:Date)=>{
+      const where={startTime:{gte:start,lte:end}};
+      const [totalBookings,valid]=await Promise.all([prisma.booking.count({where}),prisma.booking.aggregate({where:{...where,status:{in:validStatuses}},_sum:{totalPrice:true},_count:{_all:true}})]);
+      return {revenue:valid._sum.totalPrice || 0,totalBookings,confirmedBookings:valid._count._all};
     };
-
-    const todayStats = calculateStats(todayStart, todayEnd);
-    const yesterdayStats = calculateStats(yesterdayStart, yesterdayEnd);
-    const thisWeekStats = calculateStats(thisWeekStart, todayEnd);
-    const lastWeekStats = calculateStats(lastWeekStart, lastWeekEnd);
-    const thisMonthStats = calculateStats(thisMonthStart, todayEnd);
-    const lastMonthStats = calculateStats(lastMonthStart, lastMonthEnd);
+    const [todayStats,yesterdayStats,thisWeekStats,lastWeekStats,thisMonthStats,lastMonthStats]=await Promise.all([
+      calculateStats(todayStart,todayEnd),calculateStats(yesterdayStart,yesterdayEnd),calculateStats(thisWeekStart,todayEnd),calculateStats(lastWeekStart,lastWeekEnd),calculateStats(thisMonthStart,todayEnd),calculateStats(lastMonthStart,lastMonthEnd)
+    ]);
 
     const calcGrowth = (current: number, previous: number) => {
       if (previous === 0) return current > 0 ? 100 : 0;
@@ -160,7 +139,7 @@ router.get('/revenue', async (req, res, next) => {
     for (let i = 0; i < daysCount; i++) {
       const d = new Date(startDate);
       d.setDate(d.getDate() + i);
-      const isoDate = d.toISOString().split('T')[0];
+      const isoDate = businessDate(d);
       const label = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
       trendMap[isoDate] = {
         date: isoDate,
@@ -173,7 +152,7 @@ router.get('/revenue', async (req, res, next) => {
     }
 
     bookings.forEach((b) => {
-      const dateKey = new Date(b.startTime).toISOString().split('T')[0];
+      const dateKey = businessDate(b.startTime);
       if (trendMap[dateKey]) {
         trendMap[dateKey].revenue += b.totalPrice;
         trendMap[dateKey].bookings += 1;
@@ -505,7 +484,7 @@ async function getFullAnalyticsData(period: string = 'daily') {
   for (let i = 0; i < daysCount; i++) {
     const d = new Date(startDate);
     d.setDate(d.getDate() + i);
-    const isoDate = d.toISOString().split('T')[0];
+    const isoDate = businessDate(d);
     const label = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     trendMap[isoDate] = {
       date: isoDate,
@@ -523,7 +502,7 @@ async function getFullAnalyticsData(period: string = 'daily') {
   let totalWalkInRevenue = 0;
 
   periodBookings.forEach((b) => {
-    const dateKey = new Date(b.startTime).toISOString().split('T')[0];
+    const dateKey = businessDate(b.startTime);
     if (trendMap[dateKey]) {
       trendMap[dateKey].revenue += b.totalPrice;
       trendMap[dateKey].bookings += 1;
@@ -649,7 +628,7 @@ router.get('/export-pdf', async (req, res, next) => {
     const period = (req.query.period as string) || 'daily';
     const data = await getFullAnalyticsData(period);
 
-    const todayDate = new Date().toISOString().split('T')[0];
+    const todayDate = businessDate();
     const filename = `ZeroOne-Analytics-${data.periodSlug}-${todayDate}.pdf`;
 
     const doc = new PDFDocument({
@@ -695,7 +674,7 @@ router.get('/export-pdf', async (req, res, next) => {
         },
       });
       const customLogo = theme?.logoUrlDark || theme?.logoUrlLight;
-      if (customLogo) {
+      if (customLogo && /^\/uploads\/branding\/[a-zA-Z0-9_-]+\.(png|jpg|jpeg|webp|gif)$/.test(customLogo)) {
         const cleanPath = customLogo.replace(/^\//, '');
         const fullCustomLogoPath = path.join(process.cwd(), cleanPath);
         if (fs.existsSync(fullCustomLogoPath)) {
@@ -854,7 +833,7 @@ router.get('/export-excel', async (req, res, next) => {
     const period = (req.query.period as string) || 'daily';
     const data = await getFullAnalyticsData(period);
 
-    const todayDate = new Date().toISOString().split('T')[0];
+    const todayDate = businessDate();
     const filename = `ZeroOne-Analytics-${data.periodSlug}-${todayDate}.xlsx`;
 
     const workbook = new ExcelJS.Workbook();

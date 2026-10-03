@@ -1,3 +1,4 @@
+import {pagination,pageResult} from '../middleware/apiContract';
 import { Router } from 'express';
 import { AdminRole } from '@prisma/client';
 import { prisma } from '../db';
@@ -31,7 +32,7 @@ router.get('/', async (req: AuthenticatedAdminRequest, res, next) => {
       }
     }
 
-    const logs = await prisma.attendanceLog.findMany({
+    const listQuery:any = {
       where: whereClause,
       include: {
         adminUser: {
@@ -47,7 +48,10 @@ router.get('/', async (req: AuthenticatedAdminRequest, res, next) => {
       orderBy: {
         loginAt: 'desc',
       },
-    });
+    };
+      const pager=pagination(req,res);
+      const logs=await prisma.attendanceLog.findMany({...listQuery,...(pager.requested ? {skip:pager.skip,take:pager.limit}:{})});
+      if(pager.requested)pageResult(res,await prisma.attendanceLog.count({where:listQuery.where}),pager.page,pager.limit);
 
     return res.json(logs);
   } catch (error) {

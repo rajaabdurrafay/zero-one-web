@@ -1,3 +1,9 @@
+import {versionedApi} from './middleware/apiContract';
+import {publicCache} from './middleware/publicCache';
+import {validateQueries} from './middleware/queryValidation';
+import {z} from 'zod';
+// Business date boundaries are Karachi, independent of the host OS timezone.
+process.env.TZ='Asia/Karachi';
 import 'dotenv/config';
 import helmet from 'helmet';
 import compression from 'compression';
@@ -39,6 +45,8 @@ const PORT = process.env.PORT || 3001;
 
 validateAuthConfiguration();
 app.disable('x-powered-by');
+app.use(versionedApi);
+app.use(validateQueries);
 // Configure exact proxy addresses/subnets at deployment; never trust arbitrary forwarding headers.
 if (process.env.TRUST_PROXY) app.set('trust proxy', process.env.TRUST_PROXY.split(',').map(value => value.trim()));
 const allowedOrigins = (process.env.CORS_ORIGINS || [process.env.WEBSITE_URL, process.env.ADMIN_URL, ...(process.env.NODE_ENV !== 'production' ? ['http://localhost:3000', 'http://localhost:3002'] : [])].filter(Boolean).join(',')).split(',').map(origin => origin.trim()).filter(Boolean);
@@ -81,22 +89,24 @@ app.use('/uploads', (req, res, next) => {
 // Serve static uploads
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads'), { dotfiles: 'deny', index: false, maxAge: '1d', setHeaders: res => { res.setHeader('X-Content-Type-Options', 'nosniff'); if (/^(?:payment_|grp_payment_|reupload_|pos_)/.test(path.basename(res.req.path))) res.setHeader('Cache-Control', 'private, no-store'); } }));
 
+app.use('/api',publicCache);
+
 // Public Payment / Setting details
 app.get('/api/public-settings', (req, res) => {
   res.json({
     easypaisa: {
-      number: process.env.PAYMENT_EASYPAISA_NO || '0312-3456789',
-      title: process.env.PAYMENT_EASYPAISA_TITLE || 'Zero One Gaming Zone',
+      number: process.env.PAYMENT_EASYPAISA_NO || '',
+      title: process.env.PAYMENT_EASYPAISA_TITLE || '',
     },
     jazzcash: {
-      number: process.env.PAYMENT_JAZZCASH_NO || '0300-1234567',
-      title: process.env.PAYMENT_JAZZCASH_TITLE || 'Zero One Gaming Zone',
+      number: process.env.PAYMENT_JAZZCASH_NO || '',
+      title: process.env.PAYMENT_JAZZCASH_TITLE || '',
     },
     bank: {
-      bankName: process.env.PAYMENT_BANK_NAME || 'Meezan Bank Ltd',
-      accountNumber: process.env.PAYMENT_BANK_ACCOUNT || '01010101010101',
-      iban: process.env.PAYMENT_BANK_IBAN || 'PK00MEZN0001010101010101',
-      title: process.env.PAYMENT_BANK_TITLE || 'Zero One Gaming Lounge',
+      bankName: process.env.PAYMENT_BANK_NAME || '',
+      accountNumber: process.env.PAYMENT_BANK_ACCOUNT || '',
+      iban: process.env.PAYMENT_BANK_IBAN || '',
+      title: process.env.PAYMENT_BANK_TITLE || '',
     }
   });
 });
@@ -149,6 +159,7 @@ app.use((_req, res) => { res.status(404).json({ error: 'Route not found.' }); })
 // Do not return SQL, filesystem paths or stack traces to production clients.
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   if (res.headersSent) return next(err);
+  if(err instanceof z.ZodError)return void res.status(400).json({error:'Invalid input',details:err.errors});
   const status = Number.isInteger(err.status) && err.status >= 400 && err.status <= 599 ? err.status : 500;
   console.error('[API error]', req.method, req.path, err.message);
   res.status(status).json({ error: status >= 500 ? 'Internal Server Error' : status === 413 ? 'Request body exceeds size limit.' : err.message || 'Invalid request.' });

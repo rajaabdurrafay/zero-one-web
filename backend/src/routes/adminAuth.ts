@@ -1,3 +1,4 @@
+import {businessDate,businessInstant} from '@zeroone/domain';
 import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../db';
@@ -55,15 +56,6 @@ router.post('/login', async (req, res, next) => {
     await prisma.adminUser.update({
       where: { id: adminUser.id },
       data: { lastLoginAt: new Date() },
-    });
-
-    // Create Attendance Log
-    await prisma.attendanceLog.create({
-      data: {
-        adminUserId: adminUser.id,
-        loginAt: new Date(),
-        date: new Date(),
-      },
     });
 
     // ──────── NEW DEVICE DETECTION ────────
@@ -143,6 +135,13 @@ router.post('/login', async (req, res, next) => {
       });
     }
 
+    // A login closes only this device's previous open shift.
+    const loginAt=new Date();
+    await prisma.$transaction(async tx=>{
+      const open=await tx.attendanceLog.findMany({where:{adminUserId:adminUser.id,loginSessionId:sessionId!,logoutAt:null},select:{id:true,loginAt:true}});
+      for(const log of open)await tx.attendanceLog.update({where:{id:log.id},data:{logoutAt:loginAt,durationMinutes:Math.max(0,Math.floor((loginAt.getTime()-log.loginAt.getTime())/60000))}});
+      await tx.attendanceLog.create({data:{adminUserId:adminUser.id,loginSessionId:sessionId!,loginAt,date:businessInstant(businessDate(loginAt))}});
+    });
     const token = signAdminToken({
       id: adminUser.id,
       username: adminUser.username,
@@ -217,6 +216,7 @@ router.post('/logout', requireAdminAuth(), async (req: AuthenticatedAdminRequest
     const latestLog = await prisma.attendanceLog.findFirst({
       where: {
         adminUserId: adminId,
+        loginSessionId:req.admin!.sessionId,
         logoutAt: null,
       },
       orderBy: { loginAt: 'desc' },

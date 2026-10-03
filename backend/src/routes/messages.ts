@@ -1,3 +1,4 @@
+import {pagination,pageResult} from '../middleware/apiContract';
 import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../db';
@@ -113,10 +114,13 @@ router.get(
       // Sorting order
       const orderDirection: 'asc' | 'desc' = sortOrder === 'asc' ? 'asc' : 'desc';
 
-      const messages = await prisma.contactMessage.findMany({
+      const listQuery:any = {
         where,
         orderBy: { createdAt: orderDirection },
-      });
+      };
+      const pager=pagination(req,res);
+      const messages=await prisma.contactMessage.findMany({...listQuery,...(pager.requested ? {skip:pager.skip,take:pager.limit}:{})});
+      if(pager.requested)pageResult(res,await prisma.contactMessage.count({where:listQuery.where}),pager.page,pager.limit);
 
       return res.json(messages);
     } catch (error) {
