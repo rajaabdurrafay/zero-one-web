@@ -791,14 +791,14 @@ function BookingContent() {
           <div className="pt-2 flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
             <a
               href={`tel:${(systemSettings.contactPhone || '+92 300 1234567').replace(/\s+/g, '')}`}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-ink font-bold text-sm uppercase tracking-wider shadow-lg transition-all"
+              className="zo-action w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-ink font-bold text-sm uppercase tracking-wider shadow-lg transition-all"
             >
               <Icon name="phone" size={16} />
               <span>Call Venue Directly ({systemSettings.contactPhone || '+92 300 1234567'})</span>
             </a>
             <Link
               href="/"
-              className="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3.5 rounded-xl bg-brand-bg hover:bg-brand-card border border-brand-border text-brand-text-muted hover:text-white font-semibold text-sm transition-all"
+              className="zo-action w-full sm:w-auto inline-flex items-center justify-center px-6 py-3.5 rounded-xl bg-brand-bg hover:bg-brand-card border border-brand-border text-brand-text-muted hover:text-white font-semibold text-sm transition-all"
             >
               Explore Activities
             </Link>
@@ -826,7 +826,7 @@ function BookingContent() {
           <div className="pt-2">
             <Link
               href="/"
-              className="inline-flex items-center justify-center px-6 py-3.5 rounded-xl bg-brand-primary hover:bg-brand-primary-hover text-white font-bold text-sm shadow-lg transition-all"
+              className="zo-action inline-flex items-center justify-center px-6 py-3.5 rounded-xl bg-brand-primary hover:bg-brand-primary-hover text-white font-bold text-sm shadow-lg transition-all"
             >
               Return to Homepage
             </Link>
@@ -1079,7 +1079,7 @@ function BookingContent() {
                 <button
                   type="button"
                   onClick={() => setStep(4)}
-                  className="w-full sm:w-auto px-6 py-2.5 rounded-xl font-bold text-xs sm:text-sm text-white zo-solid-accent bg-brand-primary hover:opacity-95 shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 transition-all active:scale-95"
+                  className="zo-action w-full sm:w-auto px-6 py-2.5 rounded-xl font-bold text-xs sm:text-sm text-white zo-solid-accent bg-brand-primary hover:opacity-95 shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 transition-all active:scale-95"
                 >
                   <span>Proceed to Contact Details ({groupCart.length} {groupCart.length === 1 ? 'Item' : 'Items'})</span>
                   <Icon name="check" size={14} />
@@ -1105,7 +1105,7 @@ function BookingContent() {
                 <button
                   type="button"
                   onClick={() => setStep(4)}
-                  className="w-full sm:w-auto px-6 py-3.5 rounded-xl font-bold text-sm text-emerald-400 bg-emerald-950/40 border border-emerald-500/40 hover:bg-emerald-900/50 transition-all"
+                  className="zo-action w-full sm:w-auto px-6 py-3.5 rounded-xl font-bold text-sm text-emerald-400 bg-emerald-950/40 border border-emerald-500/40 hover:bg-emerald-900/50 transition-all"
                 >
                   Checkout {groupCart.length} {groupCart.length === 1 ? 'Activity' : 'Activities'} (₨{groupTotalPrice.toLocaleString()}) →
                 </button>
@@ -1115,7 +1115,7 @@ function BookingContent() {
                 type="button"
                 disabled={!selectedActivityId}
                 onClick={() => setStep(2)}
-                className="w-full sm:w-auto px-8 py-3.5 rounded-xl font-bold text-sm text-white zo-solid-accent bg-brand-primary hover:opacity-90 disabled:opacity-40 shadow-lg shadow-brand-primary/25 active:scale-95 transition-all"
+                className="zo-action w-full sm:w-auto px-8 py-3.5 rounded-xl font-bold text-sm text-white zo-solid-accent bg-brand-primary hover:opacity-90 disabled:opacity-40 shadow-lg shadow-brand-primary/25 active:scale-95 transition-all"
               >
                 {isGroupMode && groupCart.length > 0 ? 'Configure Selected Arena →' : 'Continue to Date & Duration →'}
               </button>
@@ -1193,7 +1193,7 @@ function BookingContent() {
                               key={slab.mins}
                               type="button"
                               onClick={() => setDuration(slab.mins)}
-                              className={`p-3.5 rounded-xl border text-left transition-all relative flex flex-col justify-between ${
+                              className={`zo-booking-option p-3.5 rounded-xl border text-left transition-all relative flex flex-col justify-between ${
                                 isSelected
                                   ? 'zo-solid-accent bg-brand-primary border-brand-primary text-white shadow-lg shadow-brand-primary/30 scale-[1.02]'
                                   : 'bg-brand-bg border-brand-border text-brand-text-muted hover:border-brand-border-light hover:bg-brand-card hover:text-brand-text-main'
@@ -1288,7 +1288,7 @@ function BookingContent() {
                               key={chip.mins}
                               type="button"
                               onClick={() => setDuration(chip.mins)}
-                              className={`px-3.5 py-2 rounded-lg border text-xs font-semibold transition-all ${
+                              className={`zo-booking-option px-3.5 py-2 rounded-lg border text-xs font-semibold transition-all ${
                                 duration === chip.mins
                                   ? 'zo-solid-accent bg-brand-primary border-brand-primary text-white shadow-sm'
                                   : 'bg-brand-bg border-brand-border text-brand-text-muted hover:text-brand-text-main hover:border-brand-border-light'
@@ -1353,7 +1353,7 @@ function BookingContent() {
                             key={mins}
                             type="button"
                             onClick={() => setDuration(mins)}
-                            className={`px-3.5 py-1.5 rounded-lg border text-xs font-semibold transition-all ${
+                            className={`zo-booking-option px-3.5 py-1.5 rounded-lg border text-xs font-semibold transition-all ${
                               duration === mins
                                 ? 'zo-solid-accent bg-brand-primary border-brand-primary text-white shadow-sm'
                                 : 'bg-brand-bg border-brand-border text-brand-text-muted hover:text-brand-text-main hover:border-brand-border-light'
@@ -1387,7 +1387,7 @@ function BookingContent() {
             <button
               type="button"
               onClick={() => setStep(1)}
-              className="px-6 py-3 rounded-xl font-semibold text-sm text-brand-text-muted hover:text-brand-text-main bg-brand-surface border border-brand-border"
+              className="zo-action px-6 py-3 rounded-xl font-semibold text-sm text-brand-text-muted hover:text-brand-text-main bg-brand-surface border border-brand-border"
             >
               ← Back
             </button>
@@ -1400,7 +1400,7 @@ function BookingContent() {
                   : duration < 60)
               }
               onClick={() => setStep(3)}
-              className="px-8 py-3.5 rounded-xl font-bold text-sm text-white zo-solid-accent bg-brand-primary hover:opacity-90 disabled:opacity-40 shadow-lg shadow-brand-primary/25 active:scale-95 transition-all"
+              className="zo-action px-8 py-3.5 rounded-xl font-bold text-sm text-white zo-solid-accent bg-brand-primary hover:opacity-90 disabled:opacity-40 shadow-lg shadow-brand-primary/25 active:scale-95 transition-all"
             >
               Find Available Slots →
             </button>
@@ -1453,9 +1453,10 @@ function BookingContent() {
                         setSelectedTimeSlot(timeStr);
                         setSelectedResourceId(freeResourceId || '');
                       }}
-                      className={`py-3 px-3 rounded-xl text-xs sm:text-sm font-bold border transition-all flex flex-col items-center justify-center ${
+                      aria-pressed={isSelected}
+                      className={`zo-booking-option py-3 px-3 rounded-xl text-xs sm:text-sm font-bold border transition-all flex flex-col items-center justify-center ${
                         isSelected
-                          ? 'zo-solid-accent bg-brand-primary border-brand-primary text-white shadow-lg shadow-brand-primary/30 scale-105'
+                          ? 'zo-solid-accent bg-brand-primary border-brand-primary text-white ring-1 ring-brand-primary'
                           : available
                           ? 'bg-brand-bg border-brand-border text-emerald-400 hover:border-emerald-500/50 hover:bg-brand-card'
                           : 'bg-brand-bg/40 border-transparent text-brand-text-muted/40 cursor-not-allowed line-through'
@@ -1476,7 +1477,7 @@ function BookingContent() {
             <button
               type="button"
               onClick={() => setStep(2)}
-              className="px-6 py-3 rounded-xl font-semibold text-sm text-brand-text-muted hover:text-brand-text-main bg-brand-surface border border-brand-border"
+              className="zo-action px-6 py-3 rounded-xl font-semibold text-sm text-brand-text-muted hover:text-brand-text-main bg-brand-surface border border-brand-border"
             >
               ← Back
             </button>
@@ -1490,7 +1491,7 @@ function BookingContent() {
                   setStep(4);
                 }
               }}
-              className="px-8 py-3.5 rounded-xl font-bold text-sm text-white zo-solid-accent bg-brand-primary hover:opacity-90 disabled:opacity-40 shadow-lg shadow-brand-primary/25 active:scale-95 transition-all"
+              className="zo-action px-8 py-3.5 rounded-xl font-bold text-sm text-white zo-solid-accent bg-brand-primary hover:opacity-90 disabled:opacity-40 shadow-lg shadow-brand-primary/25 active:scale-95 transition-all"
             >
               {isGroupMode ? 'Add to Group Cart +' : 'Enter Customer Details →'}
             </button>
@@ -1586,7 +1587,7 @@ function BookingContent() {
             <button
               type="button"
               onClick={() => setStep(isGroupMode ? 1 : 3)}
-              className="px-6 py-3 rounded-xl font-semibold text-sm text-brand-text-muted hover:text-brand-text-main bg-brand-surface border border-brand-border"
+              className="zo-action px-6 py-3 rounded-xl font-semibold text-sm text-brand-text-muted hover:text-brand-text-main bg-brand-surface border border-brand-border"
             >
               ← Back
             </button>
@@ -1599,7 +1600,7 @@ function BookingContent() {
                   setStep(5);
                 }
               }}
-              className="px-8 py-3.5 rounded-xl font-bold text-sm text-white zo-solid-accent bg-brand-primary hover:opacity-90 disabled:opacity-40 shadow-lg shadow-brand-primary/25 active:scale-95 transition-all"
+              className="zo-action px-8 py-3.5 rounded-xl font-bold text-sm text-white zo-solid-accent bg-brand-primary hover:opacity-90 disabled:opacity-40 shadow-lg shadow-brand-primary/25 active:scale-95 transition-all"
             >
               Review Booking →
             </button>
@@ -1828,7 +1829,7 @@ function BookingContent() {
                   type="button"
                   disabled={!promoCodeInput.trim() || promoStatus.loading}
                   onClick={handleApplyPromoCode}
-                  className="px-5 py-2.5 zo-solid-accent bg-brand-primary hover:opacity-90 disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow transition-all"
+                  className="zo-action px-5 py-2.5 zo-solid-accent bg-brand-primary hover:opacity-90 disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow transition-all"
                 >
                   {promoStatus.loading ? '...' : 'Apply'}
                 </button>
@@ -1894,7 +1895,7 @@ function BookingContent() {
               type="button"
               disabled={submitting}
               onClick={() => setStep(4)}
-              className="px-6 py-3 rounded-xl font-semibold text-sm text-brand-text-muted hover:text-brand-text-main bg-brand-surface border border-brand-border"
+              className="zo-action px-6 py-3 rounded-xl font-semibold text-sm text-brand-text-muted hover:text-brand-text-main bg-brand-surface border border-brand-border"
             >
               ← Back
             </button>
@@ -1902,7 +1903,7 @@ function BookingContent() {
               type="button"
               disabled={submitting}
               onClick={isGroupMode ? handleConfirmGroupBooking : handleConfirmBooking}
-              className="w-full sm:w-auto px-10 py-4 rounded-xl font-bold text-sm text-white zo-solid-accent bg-brand-primary hover:opacity-90 shadow-xl shadow-brand-primary/30 active:scale-95 transition-all flex items-center justify-center gap-2"
+              className="zo-action w-full sm:w-auto px-10 py-4 rounded-xl font-bold text-sm text-white zo-solid-accent bg-brand-primary hover:opacity-90 shadow-xl shadow-brand-primary/30 active:scale-95 transition-all flex items-center justify-center gap-2"
             >
               {submitting ? (
                 <>
@@ -1971,7 +1972,7 @@ function BookingContent() {
                   setStep(3);
                   fetchSlotAvailability();
                 }}
-                className="mt-2 px-6 py-2.5 rounded-xl font-bold text-xs text-white bg-brand-danger hover:opacity-90 shadow-lg shadow-brand-danger/30"
+                className="zo-action mt-2 px-6 py-2.5 rounded-xl font-bold text-xs text-white bg-brand-danger hover:opacity-90 shadow-lg shadow-brand-danger/30"
               >
                 ← Pick Another Slot
               </button>
@@ -2035,7 +2036,7 @@ function BookingContent() {
                           e.stopPropagation();
                           copyToClipboard(paymentSettings?.easypaisa?.number || '03123456789', 'ep');
                         }}
-                        className="w-full py-2.5 px-3 rounded-lg text-xs font-bold bg-brand-card hover:bg-emerald-600 hover:text-white text-brand-text-main border border-brand-border transition-all flex items-center justify-center gap-1.5 min-h-[44px]"
+                        className="zo-action w-full py-2.5 px-3 rounded-lg text-xs font-bold bg-brand-card hover:bg-emerald-600 hover:text-white text-brand-text-main border border-brand-border transition-all flex items-center justify-center gap-1.5 min-h-[44px]"
                       >
                         {copiedKey === 'ep' ? (
                           <>
@@ -2080,7 +2081,7 @@ function BookingContent() {
                           e.stopPropagation();
                           copyToClipboard(paymentSettings?.jazzcash?.number || '03001234567', 'jc');
                         }}
-                        className="w-full py-2.5 px-3 rounded-lg text-xs font-bold bg-brand-card hover:bg-red-600 hover:text-white text-brand-text-main border border-brand-border transition-all flex items-center justify-center gap-1.5 min-h-[44px]"
+                        className="zo-action w-full py-2.5 px-3 rounded-lg text-xs font-bold bg-brand-card hover:bg-red-600 hover:text-white text-brand-text-main border border-brand-border transition-all flex items-center justify-center gap-1.5 min-h-[44px]"
                       >
                         {copiedKey === 'jc' ? (
                           <>
@@ -2128,7 +2129,7 @@ function BookingContent() {
                           e.stopPropagation();
                           copyToClipboard(paymentSettings?.bank?.accountNumber || '01010101010101', 'bank');
                         }}
-                        className="w-full py-2.5 px-3 rounded-lg text-xs font-bold bg-brand-card hover:bg-brand-primary hover:text-white text-brand-text-main border border-brand-border transition-all flex items-center justify-center gap-1.5 min-h-[44px]"
+                        className="zo-action w-full py-2.5 px-3 rounded-lg text-xs font-bold bg-brand-card hover:bg-brand-primary hover:text-white text-brand-text-main border border-brand-border transition-all flex items-center justify-center gap-1.5 min-h-[44px]"
                       >
                         {copiedKey === 'bank' ? (
                           <>
@@ -2213,7 +2214,7 @@ function BookingContent() {
                 <button
                   type="button"
                   onClick={() => setStep(5)}
-                  className="w-full sm:w-auto px-6 py-3 rounded-xl font-semibold text-sm text-brand-text-muted hover:text-brand-text-main bg-brand-surface border border-brand-border min-h-[44px] flex items-center justify-center"
+                  className="zo-action w-full sm:w-auto px-6 py-3 rounded-xl font-semibold text-sm text-brand-text-muted hover:text-brand-text-main bg-brand-surface border border-brand-border min-h-[44px] flex items-center justify-center"
                 >
                   ← Back to Details
                 </button>
@@ -2221,7 +2222,7 @@ function BookingContent() {
                   type="button"
                   disabled={!filePreview || uploadingPayment}
                   onClick={isGroupMode ? handleUploadGroupPayment : handleUploadPayment}
-                  className="w-full sm:w-auto px-10 py-4 rounded-xl font-black text-sm text-white zo-solid-accent bg-brand-primary hover:opacity-95 disabled:opacity-40 shadow-xl shadow-emerald-500/25 active:scale-95 transition-all flex items-center justify-center gap-2 min-h-[48px]"
+                  className="zo-action w-full sm:w-auto px-10 py-4 rounded-xl font-black text-sm text-white zo-solid-accent bg-brand-primary hover:opacity-95 disabled:opacity-40 shadow-xl shadow-emerald-500/25 active:scale-95 transition-all flex items-center justify-center gap-2 min-h-[48px]"
                 >
                   {uploadingPayment ? (
                     <>
@@ -2278,13 +2279,13 @@ function BookingContent() {
           <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3.5">
             <Link
               href="/my-bookings"
-              className="w-full sm:w-auto px-8 py-3.5 rounded-xl font-bold text-xs sm:text-sm text-white zo-solid-accent bg-brand-primary hover:opacity-90 shadow-lg shadow-brand-primary/30 transition-all"
+              className="zo-action w-full sm:w-auto px-8 py-3.5 rounded-xl font-bold text-xs sm:text-sm text-white zo-solid-accent bg-brand-primary hover:opacity-90 shadow-lg shadow-brand-primary/30 transition-all"
             >
               View in My Bookings →
             </Link>
             <Link
               href="/"
-              className="w-full sm:w-auto px-8 py-3.5 rounded-xl font-bold text-xs sm:text-sm text-brand-text-muted bg-brand-card hover:bg-brand-card-hover border border-brand-border transition-all"
+              className="zo-action w-full sm:w-auto px-8 py-3.5 rounded-xl font-bold text-xs sm:text-sm text-brand-text-muted bg-brand-card hover:bg-brand-card-hover border border-brand-border transition-all"
             >
               Return to Home
             </Link>
@@ -2514,13 +2515,13 @@ function BookingContent() {
             <button
               type="button"
               onClick={() => window.print()}
-              className="w-full sm:w-auto flex-1 px-6 py-3.5 rounded-xl font-bold text-xs sm:text-sm text-white bg-emerald-600 hover:bg-emerald-500 shadow-lg shadow-emerald-600/30 flex items-center justify-center gap-2 active:scale-95 transition-all"
+              className="zo-action w-full sm:w-auto flex-1 px-6 py-3.5 rounded-xl font-bold text-xs sm:text-sm text-white bg-emerald-600 hover:bg-emerald-500 shadow-lg shadow-emerald-600/30 flex items-center justify-center gap-2 active:scale-95 transition-all"
             >
               <Icon name="printer" size={14} /> <span>Print / Save Receipt</span>
             </button>
             <Link
               href="/"
-              className="w-full sm:w-auto flex-1 px-6 py-3.5 rounded-xl font-bold text-xs sm:text-sm text-brand-text-muted bg-brand-card hover:bg-brand-card-hover border border-brand-border text-center transition-all"
+              className="zo-action w-full sm:w-auto flex-1 px-6 py-3.5 rounded-xl font-bold text-xs sm:text-sm text-brand-text-muted bg-brand-card hover:bg-brand-card-hover border border-brand-border text-center transition-all"
             >
               Return to Home
             </Link>
@@ -2543,7 +2544,7 @@ function BookingContent() {
                 setAppliedOffer(null);
                 setPromoCodeInput('');
               }}
-              className="w-full sm:w-auto flex-1 px-6 py-3.5 rounded-xl font-bold text-xs sm:text-sm text-white bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-600/30 transition-all text-center"
+              className="zo-action w-full sm:w-auto flex-1 px-6 py-3.5 rounded-xl font-bold text-xs sm:text-sm text-white bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-600/30 transition-all text-center"
             >
               Book Another Activity +
             </button>
@@ -2582,7 +2583,7 @@ function BookingContent() {
               <button
                 type="button"
                 onClick={() => setStep(4)}
-                className="px-4 py-2 rounded-xl text-xs font-bold text-white zo-solid-accent bg-brand-primary hover:opacity-95 shadow-md shadow-emerald-600/20 flex items-center gap-1.5 transition-all"
+                className="zo-action px-4 py-2 rounded-xl text-xs font-bold text-white zo-solid-accent bg-brand-primary hover:opacity-95 shadow-md shadow-emerald-600/20 flex items-center gap-1.5 transition-all"
               >
                 <span>Checkout Now →</span>
               </button>

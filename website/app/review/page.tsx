@@ -70,13 +70,13 @@ export default function SubmitReviewPage() {
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4">
           <Link
             href="/"
-            className="inline-flex items-center justify-center px-7 py-3.5 rounded-full text-sm font-bold text-white bg-brand-primary hover:bg-brand-primary-hover shadow-xs transition-colors w-full sm:w-auto"
+            className="zo-action inline-flex items-center justify-center px-7 py-3.5 rounded-full text-sm font-bold text-white bg-brand-primary hover:bg-brand-primary-hover shadow-xs transition-colors w-full sm:w-auto"
           >
             Back to Home
           </Link>
           <Link
             href="/reviews"
-            className="inline-flex items-center justify-center px-6 py-3.5 rounded-full text-sm font-semibold border border-brand-border text-brand-text-main hover:bg-brand-surface-raised transition-colors w-full sm:w-auto"
+            className="zo-action inline-flex items-center justify-center px-6 py-3.5 rounded-full text-sm font-semibold border border-brand-border text-brand-text-main hover:bg-brand-surface-raised transition-colors w-full sm:w-auto"
           >
             Browse Reviews
           </Link>
@@ -183,7 +183,7 @@ export default function SubmitReviewPage() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full py-4 rounded-2xl bg-brand-primary text-white text-sm font-bold hover:bg-brand-primary-hover transition-colors shadow-xs active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+            className="zo-action w-full py-4 rounded-2xl bg-brand-primary text-white text-sm font-bold hover:bg-brand-primary-hover transition-colors shadow-xs active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSubmitting ? 'Submitting...' : 'Submit Review'}
           </button>

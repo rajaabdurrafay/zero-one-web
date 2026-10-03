@@ -159,7 +159,7 @@ export default function ProfilePage() {
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={uploading}
-                className="px-4 py-2 min-h-[44px] rounded-xl text-xs font-bold text-white bg-brand-primary hover:bg-brand-primary-hover transition-colors shadow-xs cursor-pointer disabled:opacity-50"
+                className="zo-action px-4 py-2 min-h-[44px] rounded-xl text-xs font-bold text-white bg-brand-primary hover:bg-brand-primary-hover transition-colors shadow-xs cursor-pointer disabled:opacity-50"
               >
                 {uploading ? 'Uploading…' : 'Upload Photo'}
               </button>
@@ -210,7 +210,7 @@ export default function ProfilePage() {
           </Link>
           <Link
             href="/book"
-            className="px-5 py-2 min-h-[44px] flex items-center justify-center rounded-full text-xs font-bold text-white bg-brand-primary hover:bg-brand-primary-hover transition-colors w-full sm:w-auto"
+            className="zo-action px-5 py-2 min-h-[44px] flex items-center justify-center rounded-full text-xs font-bold text-white bg-brand-primary hover:bg-brand-primary-hover transition-colors w-full sm:w-auto"
           >
             Book a Session
           </Link>

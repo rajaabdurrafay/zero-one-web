@@ -17,7 +17,7 @@ export function ConnectSection({ activities }: { activities: Activity[] }) {
           </p>
           <form action="/book" method="GET" className="zo-connect-form">
             <label htmlFor="zo-experience">Your preferred experience</label>
-            <select id="zo-experience" name="activity" defaultValue="">
+            <select className="zo-select" id="zo-experience" name="activity" defaultValue="">
               <option value="">Choose in the booking page</option>
               {activities.map((activity) => (
                 <option key={activity.id} value={activity.id}>

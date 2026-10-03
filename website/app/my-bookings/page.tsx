@@ -307,7 +307,7 @@ export default function MyBookingsPage() {
         <div className="flex flex-wrap items-center gap-3 self-start sm:self-auto relative">
           <Link
             href="/book"
-            className="px-5 py-2.5 min-h-[44px] flex items-center justify-center rounded-xl font-bold text-xs sm:text-sm text-white zo-solid-accent bg-brand-primary hover:opacity-90 shadow-md shadow-brand-primary/30 transition-all"
+            className="zo-action px-5 py-2.5 min-h-[44px] flex items-center justify-center rounded-xl font-bold text-xs sm:text-sm text-white zo-solid-accent bg-brand-primary hover:opacity-90 shadow-md shadow-brand-primary/30 transition-all"
           >
             + New Booking
           </Link>
@@ -403,7 +403,7 @@ export default function MyBookingsPage() {
           {activeTab === 'upcoming' && (
             <Link
               href="/book"
-              className="inline-flex mt-2 px-6 py-3 min-h-[44px] items-center justify-center rounded-xl font-bold text-xs text-white zo-solid-accent bg-brand-primary shadow-md shadow-brand-primary/30"
+              className="zo-action inline-flex mt-2 px-6 py-3 min-h-[44px] items-center justify-center rounded-xl font-bold text-xs text-white zo-solid-accent bg-brand-primary shadow-md shadow-brand-primary/30"
             >
               Book a Slot Now →
             </Link>
@@ -545,7 +545,7 @@ export default function MyBookingsPage() {
                           setSelectedFile(null);
                           setFilePreview(null);
                         }}
-                        className="px-3.5 py-1.5 min-h-[44px] rounded-xl text-xs font-bold text-white zo-solid-accent bg-brand-primary hover:opacity-90 shadow-md shadow-brand-primary/30 transition-all flex items-center gap-1.5 cursor-pointer"
+                        className="zo-action px-3.5 py-1.5 min-h-[44px] rounded-xl text-xs font-bold text-white zo-solid-accent bg-brand-primary hover:opacity-90 shadow-md shadow-brand-primary/30 transition-all flex items-center gap-1.5 cursor-pointer"
                       >
                         <Icon name="camera" size={13} />
                         <span>{isRejected ? 'Re-upload Screenshot' : 'Update Payment Proof'}</span>
@@ -644,7 +644,7 @@ export default function MyBookingsPage() {
                 type="button"
                 disabled={!filePreview || reuploadSubmitting}
                 onClick={handleReuploadSubmit}
-                className="px-6 py-2.5 min-h-[44px] rounded-xl text-xs font-black text-white zo-solid-accent bg-brand-primary hover:opacity-90 disabled:opacity-40 shadow-lg shadow-brand-primary/30 transition-all flex items-center gap-2 cursor-pointer"
+                className="zo-action px-6 py-2.5 min-h-[44px] rounded-xl text-xs font-black text-white zo-solid-accent bg-brand-primary hover:opacity-90 disabled:opacity-40 shadow-lg shadow-brand-primary/30 transition-all flex items-center gap-2 cursor-pointer"
               >
                 {reuploadSubmitting ? (
                   <>

@@ -235,7 +235,7 @@ export default async function ActivitiesPage() {
 
                   <Link
                     href={`/book?activity=${activity.id}`}
-                    className="inline-flex items-center justify-center px-6 py-3 rounded-full text-xs font-bold text-white bg-brand-primary hover:bg-brand-primary-hover shadow-xs active:scale-95 transition-all text-center whitespace-nowrap"
+                    className="zo-action inline-flex items-center justify-center px-6 py-3 rounded-full text-xs font-bold text-white bg-brand-primary hover:bg-brand-primary-hover shadow-xs active:scale-95 transition-all text-center whitespace-nowrap"
                   >
                     <span>Book Station</span>
                     <span className="ml-1.5">→</span>

@@ -287,13 +287,13 @@ export default function ContactPage() {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-brand-text-muted uppercase tracking-wider mb-1.5">
+                    <label htmlFor="contact-subject" className="block text-xs font-bold text-brand-text-muted uppercase tracking-wider mb-1.5">
                       Subject
                     </label>
-                    <select aria-label="Subject"
+                    <select id="contact-subject" aria-label="Subject"
                       value={formData.subject}
                       onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                      className="w-full px-4 py-3 rounded-xl bg-brand-bg border border-brand-border text-brand-text-main text-sm focus:outline-none focus:border-brand-primary transition-colors"
+                      className="zo-select w-full px-4 py-3 rounded-xl bg-brand-bg border border-brand-border text-brand-text-main text-sm focus:outline-none focus:border-brand-primary transition-colors"
                     >
                       <option value="General Inquiry">General Inquiry</option>
                       <option value="Private Cinema Booking">Private Cinema Booking</option>
@@ -332,7 +332,7 @@ export default function ContactPage() {
                 <button
                   type="submit"
                   disabled={loading || !isFormValid}
-                  className="w-full py-4 rounded-xl text-sm font-black text-white zo-solid-accent bg-brand-primary hover:opacity-90 shadow-lg shadow-brand-primary/30 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-40"
+                  className="zo-action w-full py-4 rounded-xl text-sm font-black text-white zo-solid-accent bg-brand-primary hover:opacity-90 shadow-lg shadow-brand-primary/30 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-40"
                 >
                   {loading ? (
                     <span>Sending message...</span>

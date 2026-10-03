@@ -181,7 +181,7 @@ export default function SignupPage() {
           <button
             type="submit"
             disabled={loading || !isFormValid}
-            className="w-full mt-2 py-3.5 px-4 min-h-[44px] rounded-xl text-sm font-bold text-white zo-solid-accent bg-brand-primary hover:opacity-90 disabled:opacity-40 shadow-lg shadow-brand-primary/30 active:scale-95 transition-all flex items-center justify-center gap-2"
+            className="zo-action w-full mt-2 py-3.5 px-4 min-h-[44px] rounded-xl text-sm font-bold text-white zo-solid-accent bg-brand-primary hover:opacity-90 disabled:opacity-40 shadow-lg shadow-brand-primary/30 active:scale-95 transition-all flex items-center justify-center gap-2"
           >
             {loading ? (
               <>

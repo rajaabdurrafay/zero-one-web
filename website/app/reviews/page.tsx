@@ -53,7 +53,7 @@ export default function ReviewsPage() {
               </div>
               <Link
                 href="/review"
-                className="px-5 py-2.5 rounded-full bg-brand-primary text-white text-xs font-bold hover:bg-brand-primary-hover transition-colors shadow-xs"
+                className="zo-action px-5 py-2.5 rounded-full bg-brand-primary text-white text-xs font-bold hover:bg-brand-primary-hover transition-colors shadow-xs"
               >
                 Write a Review
               </Link>
@@ -74,7 +74,7 @@ export default function ReviewsPage() {
             <div>
               <Link
                 href="/review"
-                className="inline-flex px-6 py-3 rounded-full bg-brand-primary text-white text-xs font-bold hover:bg-brand-primary-hover transition-colors shadow-xs"
+                className="zo-action inline-flex px-6 py-3 rounded-full bg-brand-primary text-white text-xs font-bold hover:bg-brand-primary-hover transition-colors shadow-xs"
               >
                 Be the First to Review
               </Link>
