@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { SESSION_TOKEN, ROLE_COOKIE, AdminRole } from '@/lib/auth';
+import { SESSION_TOKEN, AdminRole } from '@/lib/auth';
 
 // Route permissions mapping
 const SUPER_ADMIN_ONLY_PREFIXES = ['/staff', '/appearance'];
 const MANAGEMENT_ONLY_PREFIXES = ['/analytics', '/pricing', '/offers', '/messages'];
 
-export function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Allow login page, API routes, Next internal assets, and static files
@@ -21,7 +21,13 @@ export function middleware(request: NextRequest) {
 
   // Check session cookie
   const session = request.cookies.get(SESSION_TOKEN);
-  const role = request.cookies.get(ROLE_COOKIE)?.value as AdminRole | undefined;
+  let role: AdminRole;
+  try {
+    const api = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+    const response = await fetch(api + '/api/auth/admin/me', { headers: { Authorization: 'Bearer ' + (session?.value || '') }, cache: 'no-store', signal: AbortSignal.timeout(5000) });
+    if (!response.ok) return NextResponse.redirect(new URL('/login', request.url));
+    role = (await response.json()).user.role;
+  } catch { return NextResponse.redirect(new URL('/login', request.url)); }
 
   if (!session?.value) {
     return NextResponse.redirect(new URL('/login', request.url));

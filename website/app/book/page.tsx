@@ -233,6 +233,18 @@ function BookingContent() {
   ]);
 
   // 1. Fetch available activities and active deals
+  const loadAddonsList = async () => {
+    setLoadingAddons(true);
+    try {
+      const data = await getAddons();
+      setAddonsList(data.filter((item) => item.isAvailable));
+    } catch (e) {
+      console.error('Failed to load addons:', e);
+    } finally {
+      setLoadingAddons(false);
+    }
+  };
+
   useEffect(() => {
     async function load() {
       try {
@@ -299,17 +311,7 @@ function BookingContent() {
     loadAddonsList();
   }, [preSelectedActivityId, promoParam, offerIdParam]);
 
-  const loadAddonsList = async () => {
-    setLoadingAddons(true);
-    try {
-      const data = await getAddons();
-      setAddonsList(data.filter((item) => item.isAvailable));
-    } catch (e) {
-      console.error('Failed to load addons:', e);
-    } finally {
-      setLoadingAddons(false);
-    }
-  };
+
 
   const currentActivity = useMemo(() => {
     return activities.find((a) => a.id === selectedActivityId);
@@ -1531,7 +1533,7 @@ function BookingContent() {
         <div className="space-y-6">
           <div className="text-center space-y-2">
             <h1 className="text-2xl sm:text-3xl font-extrabold text-brand-text-main">Your Contact Details</h1>
-            <p className="text-brand-text-muted text-sm">We'll use this to verify and confirm your slot</p>
+            <p className="text-brand-text-muted text-sm">We&apos;ll use this to verify and confirm your slot</p>
           </div>
 
           <div className="bg-brand-surface border border-brand-border rounded-2xl p-6 space-y-4">

@@ -1,3 +1,4 @@
+import { customerSelect } from '../utils/customerSelect';
 import { Router } from 'express';
 import PDFDocument from 'pdfkit';
 import ExcelJS from 'exceljs';
@@ -482,7 +483,7 @@ async function getFullAnalyticsData(period: string = 'daily') {
       },
       include: {
         resource: true,
-        customer: true
+        customer: { select: customerSelect }
       },
       orderBy: { startTime: 'asc' }
     }),

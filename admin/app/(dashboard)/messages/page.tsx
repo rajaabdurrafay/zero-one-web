@@ -366,7 +366,7 @@ export default function MessagesPage() {
             {/* Search chip */}
             {search.trim() !== '' && (
               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-brass/10 border border-brass/30 text-brass">
-                <span className="truncate max-w-[150px]">Search: "{search.trim()}"</span>
+                <span className="truncate max-w-[150px]">Search: &quot;{search.trim()}&quot;</span>
                 <button onClick={() => setSearch('')} className="hover:text-white transition-colors">
                   <Icon name="close" size={12} />
                 </button>

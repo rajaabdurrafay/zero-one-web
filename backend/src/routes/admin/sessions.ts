@@ -1,3 +1,5 @@
+import { transactionalBooking } from '../../middleware/transactionalBooking';
+import { customerSelect } from '../../utils/customerSelect';
 import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../../db';
@@ -81,7 +83,7 @@ router.get('/', requireAdminAuth(), async (req, res, next) => {
           include: {
             booking: {
               include: {
-                customer: true,
+                customer: { select: customerSelect },
                 addons: {
                   include: {
                     addonItem: true
@@ -170,7 +172,7 @@ router.get('/active', requireAdminAuth(), async (req, res, next) => {
 });
 
 // 3. POST /api/admin/sessions -> Start a new live session
-router.post('/', requireAdminAuth(), async (req: AuthenticatedAdminRequest, res, next) => {
+router.post('/', requireAdminAuth(), transactionalBooking(async (req: AuthenticatedAdminRequest, res, next) => {
   try {
     const data = startSessionSchema.parse(req.body);
     const adminId = req.admin!.id;
@@ -198,13 +200,14 @@ router.post('/', requireAdminAuth(), async (req: AuthenticatedAdminRequest, res,
     if (data.bookingId) {
       booking = await prisma.booking.findUnique({
         where: { id: data.bookingId },
-        include: { customer: true }
+        include: { customer: { select: customerSelect } }
       });
 
       if (!booking) {
         return res.status(404).json({ error: 'Linked booking not found' });
       }
 
+      if (booking.resourceId !== data.resourceId || booking.status !== 'CONFIRMED') return res.status(400).json({ error: 'Live sessions require a confirmed booking for this resource.' });
       customerName = booking.customer.name;
 
       if (data.mode === SessionMode.COUNTDOWN && !plannedMinutes) {
@@ -242,7 +245,7 @@ router.post('/', requireAdminAuth(), async (req: AuthenticatedAdminRequest, res,
       include: {
         resource: true,
         booking: {
-          include: { customer: true }
+          include: { customer: { select: customerSelect } }
         },
         logs: true
       }
@@ -255,7 +258,7 @@ router.post('/', requireAdminAuth(), async (req: AuthenticatedAdminRequest, res,
     }
     next(error);
   }
-});
+}));
 
 // 4. PATCH /api/admin/sessions/:id/action -> Multi-tool action (PAUSE, RESUME, EXTEND)
 router.patch('/:id/action', requireAdminAuth(), async (req: AuthenticatedAdminRequest, res, next) => {
@@ -391,7 +394,7 @@ router.post('/:id/stop', requireAdminAuth(), async (req: AuthenticatedAdminReque
       include: {
         booking: {
           include: {
-            customer: true,
+            customer: { select: customerSelect },
             addons: true
           }
         },

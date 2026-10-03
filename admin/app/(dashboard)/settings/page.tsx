@@ -46,14 +46,7 @@ export default function SettingsPage() {
   const [walkInsEnabled, setWalkInsEnabled] = useState(true);
   const [contactPhone, setContactPhone] = useState('');
 
-  useEffect(() => {
-    fetchSettings();
-    fetchLoginSessions();
-    try {
-      const savedDate = localStorage.getItem('__zeroone_last_backup_date');
-      if (savedDate) setLastBackupDate(savedDate);
-    } catch { /* ignore */ }
-  }, []);
+
 
   async function fetchLoginSessions() {
     setLoadingSessions(true);
@@ -67,18 +60,6 @@ export default function SettingsPage() {
     }
   }
 
-  async function handleRevokeSession(sessionId: string) {
-    if (!confirm('Revoke this device? If this device signs in again, a new login alert will be triggered.')) {
-      return;
-    }
-    try {
-      await revokeAdminLoginSession(sessionId);
-      toast.success('Device session revoked successfully');
-      setLoginSessions((prev) => prev.filter((s) => s.id !== sessionId));
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to revoke device session');
-    }
-  }
 
   async function fetchSettings() {
     setLoading(true);
@@ -98,6 +79,28 @@ export default function SettingsPage() {
       setErrorMessage(err.message || 'Failed to load system settings');
     } finally {
       setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    fetchSettings();
+    fetchLoginSessions();
+    try {
+      const savedDate = localStorage.getItem('__zeroone_last_backup_date');
+      if (savedDate) setLastBackupDate(savedDate);
+    } catch { /* ignore */ }
+  }, []);
+
+  async function handleRevokeSession(sessionId: string) {
+    if (!confirm('Revoke this device? If this device signs in again, a new login alert will be triggered.')) {
+      return;
+    }
+    try {
+      await revokeAdminLoginSession(sessionId);
+      toast.success('Device session revoked successfully');
+      setLoginSessions((prev) => prev.filter((s) => s.id !== sessionId));
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to revoke device session');
     }
   }
 
@@ -161,7 +164,7 @@ export default function SettingsPage() {
       const now = new Date().toLocaleString('en-PK', { dateStyle: 'medium', timeStyle: 'short' });
       setLastBackupDate(now);
       localStorage.setItem('__zeroone_last_backup_date', now);
-      toast.success('Database backup downloaded successfully');
+      toast.success('Business data export downloaded successfully');
     } catch (err: any) {
       toast.error(err.message || 'Failed to download backup');
     } finally {
@@ -576,7 +579,7 @@ export default function SettingsPage() {
                 )}
               </div>
 
-              {/* Primary Download Full Backup CTA */}
+              {/* Primary Download Data Export CTA */}
               <button
                 type="button"
                 onClick={handleDownloadBackup}
@@ -591,7 +594,7 @@ export default function SettingsPage() {
                 ) : (
                   <>
                     <Icon name="download" size={15} />
-                    <span>Download Full Backup (JSON)</span>
+                    <span>Download Data Export (JSON)</span>
                   </>
                 )}
               </button>

@@ -52,7 +52,7 @@ function formatSeconds(totalSec: number) {
 
 export default function LiveSessionsPage() {
   const [filterType, setFilterType] = useState<string>('ALL');
-  const [currentTime, setCurrentTime] = useState<number>(Date.now());
+  const [currentTime, setCurrentTime] = useState<number>(() => Date.now());
 
   // Modal Dialog States
   const [startModalResource, setStartModalResource] = useState<{ id: string; name: string; type: string } | null>(null);
@@ -103,7 +103,7 @@ export default function LiveSessionsPage() {
   // Overall Statistics
   const stats = useMemo(() => {
     if (!matrix) return { total: 0, inUse: 0, free: 0, paused: 0, timeUp: 0 };
-    let total = matrix.length;
+    const total = matrix.length;
     let inUse = 0;
     let free = 0;
     let paused = 0;

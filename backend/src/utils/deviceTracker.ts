@@ -40,14 +40,7 @@ export function parseUserAgent(ua: string): { browser: string; os: string } {
  * Extracts and normalizes IP address from Express Request
  */
 export function extractClientIp(req: any): string {
-  const forwarded = req.headers['x-forwarded-for'];
-  if (typeof forwarded === 'string') {
-    return forwarded.split(',')[0].trim();
-  }
-  if (Array.isArray(forwarded)) {
-    return forwarded[0].trim();
-  }
-  return req.socket?.remoteAddress || req.ip || '127.0.0.1';
+  return req.ip || req.socket?.remoteAddress || '127.0.0.1';
 }
 
 /**
@@ -67,6 +60,7 @@ export function generateDeviceFingerprint(ipAddress: string, userAgent: string):
  * Attempts to resolve approximate location from IP
  */
 export async function getApproximateLocation(ip: string): Promise<string> {
+  if (process.env.ENABLE_IP_GEOLOCATION !== 'true') return 'Location lookup disabled';
   // Local or private IPs
   if (
     !ip ||

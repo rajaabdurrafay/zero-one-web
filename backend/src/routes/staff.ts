@@ -42,7 +42,7 @@ router.use(requireAdminAuth([AdminRole.SUPER_ADMIN]));
 const createStaffSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   username: z.string().min(3, 'Username must be at least 3 characters'),
-  password: z.string().min(4, 'Password must be at least 4 characters'),
+  password: z.string().min(8, 'Password must be at least 8 characters').max(128),
   role: z.nativeEnum(AdminRole),
   avatarBase64: z.string().optional().nullable(),
 });
@@ -50,7 +50,7 @@ const createStaffSchema = z.object({
 const updateStaffSchema = z.object({
   name: z.string().min(2).optional(),
   username: z.string().min(3).optional(),
-  password: z.string().min(4).optional(),
+  password: z.string().min(8).max(128).optional(),
   role: z.nativeEnum(AdminRole).optional(),
   isActive: z.boolean().optional(),
   avatarBase64: z.string().optional().nullable(),
@@ -108,7 +108,7 @@ router.post('/', async (req: AuthenticatedAdminRequest, res, next) => {
       }
     }
 
-    const hashedPassword = hashPassword(data.password);
+    const hashedPassword = await hashPassword(data.password);
 
     const newStaff = await prisma.adminUser.create({
       data: {
@@ -198,7 +198,7 @@ router.patch('/:id', async (req: AuthenticatedAdminRequest, res, next) => {
     if (data.username) updatePayload.username = data.username.trim().toLowerCase();
     if (data.role) updatePayload.role = data.role;
     if (typeof data.isActive === 'boolean') updatePayload.isActive = data.isActive;
-    if (data.password) updatePayload.password = hashPassword(data.password);
+    if (data.password) updatePayload.password = await hashPassword(data.password);
 
     if (data.avatarBase64 !== undefined) {
       if (data.avatarBase64 && data.avatarBase64.trim().length > 0) {

@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../db';
-import { comparePassword, signAdminToken } from '../utils/auth';
+import { comparePassword, signAdminToken, credentialTag, hashPassword } from '../utils/auth';
 import { requireAdminAuth, AuthenticatedAdminRequest } from '../middleware/adminAuth';
 import {
   extractClientIp,
@@ -15,7 +15,7 @@ const router = Router();
 
 const loginSchema = z.object({
   username: z.string().min(1, 'Username is required'),
-  password: z.string().min(1, 'Password is required'),
+  password: z.string().min(1, 'Password is required').max(128),
 });
 
 // POST /api/auth/admin/login
@@ -36,7 +36,7 @@ router.post('/login', async (req, res, next) => {
       return res.status(401).json({ error: 'Invalid username or password.' });
     }
 
-    const isMatch = comparePassword(data.password, adminUser.password);
+    const isMatch = await comparePassword(data.password, adminUser.password);
     if (!isMatch) {
       return res.status(401).json({ error: 'Invalid username or password.' });
     }
@@ -47,6 +47,10 @@ router.post('/login', async (req, res, next) => {
       });
     }
 
+    if (!adminUser.password.startsWith('scrypt:')) {
+      adminUser.password = await hashPassword(data.password);
+      await prisma.adminUser.update({ where: { id: adminUser.id }, data: { password: adminUser.password } });
+    }
     // Update lastLoginAt
     await prisma.adminUser.update({
       where: { id: adminUser.id },
@@ -78,12 +82,13 @@ router.post('/login', async (req, res, next) => {
       },
     });
 
+    let sessionId = existingSession?.id;
     if (!existingSession) {
       // NEW unrecognized device/browser
       isNewDevice = true;
       deviceLocation = await getApproximateLocation(ipAddress);
 
-      await prisma.loginSession.create({
+      const createdSession = await prisma.loginSession.create({
         data: {
           adminUserId: adminUser.id,
           deviceFingerprint,
@@ -92,6 +97,8 @@ router.post('/login', async (req, res, next) => {
           location: deviceLocation,
         },
       });
+
+      sessionId = createdSession.id;
 
       // Only fire alerts for SUPER_ADMIN role
       if (adminUser.role === 'SUPER_ADMIN') {
@@ -141,6 +148,8 @@ router.post('/login', async (req, res, next) => {
       username: adminUser.username,
       name: adminUser.name,
       role: adminUser.role,
+      credentialTag: credentialTag(adminUser.password),
+      sessionId: sessionId!,
     });
 
     return res.json({
@@ -227,6 +236,7 @@ router.post('/logout', requireAdminAuth(), async (req: AuthenticatedAdminRequest
       });
     }
 
+    await prisma.loginSession.deleteMany({ where: { id: req.admin!.sessionId, adminUserId: adminId } });
     return res.json({ message: 'Logged out from backend tracking successfully' });
   } catch (error) {
     next(error);

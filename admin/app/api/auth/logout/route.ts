@@ -4,7 +4,8 @@ import { SESSION_TOKEN, TOKEN_COOKIE, ROLE_COOKIE, USER_COOKIE } from '@/lib/aut
 
 const API_BASE = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
-export async function POST() {
+export async function POST(request: Request) {
+  if (request.headers.get('origin') !== new URL(request.url).origin) return NextResponse.json({ error: 'Invalid origin' }, { status: 403 });
   const cookieStore = await cookies();
   const token = cookieStore.get(SESSION_TOKEN)?.value;
 
@@ -13,6 +14,7 @@ export async function POST() {
     try {
       await fetch(`${API_BASE}/api/auth/admin/logout`, {
         method: 'POST',
+        signal: AbortSignal.timeout(10_000),
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,

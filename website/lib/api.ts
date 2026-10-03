@@ -1,4 +1,4 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const API_BASE = typeof window === 'undefined' ? (process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001') : '/api/backend';
 
 export interface Offer {
   id: string;
@@ -90,6 +90,7 @@ export interface BookingAddon {
 }
 
 export interface BookingResponse {
+  accessToken?: string;
   id: string;
   resourceId: string;
   customerId: string;
@@ -140,13 +141,18 @@ export interface PublicPaymentSettings {
 }
 
 async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
+  const headers = new Headers(options?.headers);
+  headers.set('Content-Type', 'application/json');
+  const bookingMatch = path.match(/^\/api\/bookings\/(?:group\/)?([^/?]+)/);
+  if (bookingMatch && typeof window !== 'undefined') {
+    const access = sessionStorage.getItem('zeroone-booking-' + bookingMatch[1]);
+    if (access) headers.set('x-booking-token', access);
+  }
   const res = await fetch(`${API_BASE}${path}`, {
     cache: 'no-store',
+    signal: AbortSignal.timeout(15_000),
     ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
+    headers,
   });
 
   if (!res.ok) {
@@ -157,7 +163,13 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
     throw error;
   }
 
-  return res.json();
+  const result = await res.json();
+  if (typeof window !== 'undefined') {
+    for (const booking of [result, result.group, ...(Array.isArray(result.bookings) ? result.bookings : [])]) {
+      if (booking?.id && booking.accessToken) sessionStorage.setItem('zeroone-booking-' + booking.id, booking.accessToken);
+    }
+  }
+  return result;
 }
 
 export function getPricing(): Promise<Activity[]> {
@@ -208,6 +220,7 @@ export interface CreateGroupBookingPayload {
 }
 
 export interface BookingGroupResponse {
+  accessToken?: string;
   id: string;
   customerId: string;
   totalAmount: number;
@@ -480,7 +493,10 @@ export interface ThemeSettings {
 
 export function getTheme(target: 'WEBSITE' | 'ADMIN' = 'WEBSITE', mode?: 'LIGHT' | 'DARK'): Promise<ThemeSettings> {
   const query = mode ? `target=${target}&mode=${mode}` : `target=${target}`;
-  return apiFetch<ThemeSettings>(`/api/theme?${query}`).catch(() => ({
+  return apiFetch<ThemeSettings>(`/api/theme?${query}`).then(theme => {
+    if (!theme || ['primaryColor', 'primaryDarkColor', 'accentColor', 'accentDarkColor', 'backgroundColor', 'textColor'].some(field => typeof (theme as unknown as Record<string, unknown>)[field] !== 'string' || !/^#[0-9a-f]{3}(?:[0-9a-f]{3})?$/i.test(String((theme as unknown as Record<string, unknown>)[field])))) throw new Error('Invalid theme response');
+    return theme;
+  }).catch(() => ({
     target: 'WEBSITE',
     mode: mode || 'DARK',
     primaryColor: '#8b5cf6',

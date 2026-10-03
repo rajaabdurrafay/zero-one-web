@@ -1,3 +1,4 @@
+import { decodeImage } from '../utils/uploads';
 import { Router, Request, Response } from 'express';
 import { prisma } from '../db';
 import { z } from 'zod';
@@ -10,7 +11,7 @@ const router = Router();
 
 const createReelSchema = z.object({
   platform: z.string().optional().default('INSTAGRAM'),
-  url: z.string().url('A valid URL is required'),
+  url: z.string().url('A valid URL is required').refine(value => /^https?:\/\//i.test(value), 'Use an HTTP or HTTPS URL'),
   thumbnailBase64: z.string().optional(),
   thumbnailUrl: z.string().optional(),
   caption: z.string().nullable().optional(),
@@ -20,7 +21,7 @@ const createReelSchema = z.object({
 
 const updateReelSchema = z.object({
   platform: z.string().optional(),
-  url: z.string().url().optional(),
+  url: z.string().url().refine(value => /^https?:\/\//i.test(value), 'Use an HTTP or HTTPS URL').optional(),
   thumbnailBase64: z.string().optional(),
   thumbnailUrl: z.string().optional(),
   caption: z.string().nullable().optional(),
@@ -52,18 +53,7 @@ function saveBase64Thumbnail(base64Data: string): string {
     fs.mkdirSync(uploadsDir, { recursive: true });
   }
 
-  const matches = base64Data.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
-  let ext = 'jpg';
-  let buffer: Buffer;
-
-  if (matches && matches.length === 3) {
-    const mime = matches[1];
-    if (mime.includes('png')) ext = 'png';
-    else if (mime.includes('webp')) ext = 'webp';
-    buffer = Buffer.from(matches[2], 'base64');
-  } else {
-    buffer = Buffer.from(base64Data, 'base64');
-  }
+  const { buffer, extension: ext } = decodeImage(base64Data);
 
   const fileName = `reel-${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${ext}`;
   const filePath = path.join(uploadsDir, fileName);
@@ -75,7 +65,7 @@ function saveBase64Thumbnail(base64Data: string): string {
 // GET /api/reels (Public - only active reels, optional ?limit=N)
 router.get('/', async (req: Request, res: Response) => {
   try {
-    const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : undefined;
+    const limit = Math.max(1, Math.min(100, Number(req.query.limit) || 50));
     const reels = await prisma.socialReel.findMany({
       where: { isActive: true },
       orderBy: [

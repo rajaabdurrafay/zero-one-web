@@ -47,7 +47,7 @@ router.get('/', async (req, res, next) => {
 });
 
 // 2. GET /api/addons/top -> Analytics for top purchased addons
-router.get('/top', async (req, res, next) => {
+router.get('/top', requireAdminAuth(['SUPER_ADMIN', 'MANAGER']), async (req, res, next) => {
   try {
     const items = await prisma.addonItem.findMany({
       include: {

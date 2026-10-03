@@ -1,3 +1,4 @@
+import { decodeImage, deleteLocalUpload } from '../utils/uploads';
 import { Router, Request, Response } from 'express';
 import { prisma } from '../db';
 import { z } from 'zod';
@@ -48,20 +49,13 @@ router.get('/', async (req: Request, res: Response) => {
     const reviews = await prisma.review.findMany({
       where: whereClause,
       orderBy: { createdAt: 'desc' },
-      take: req.query.limit ? parseInt(req.query.limit as string, 10) : 50,
+      take: Math.max(1, Math.min(100, Number(req.query.limit) || 50)),
     });
 
     // Calculate summary statistics over ALL approved reviews
-    const allApproved = await prisma.review.findMany({
-      where: { isApproved: true },
-      select: { rating: true },
-    });
-
-    const totalCount = allApproved.length;
-    const averageRating =
-      totalCount > 0
-        ? Number((allApproved.reduce((acc, curr) => acc + curr.rating, 0) / totalCount).toFixed(1))
-        : 5.0;
+    const summary = await prisma.review.aggregate({ where: { isApproved: true }, _count: { _all: true }, _avg: { rating: true } });
+    const totalCount = summary._count._all;
+    const averageRating = Number((summary._avg.rating ?? 5).toFixed(1));
 
     res.json({
       reviews,
@@ -141,19 +135,7 @@ router.post('/admin', requireAdminAuth([AdminRole.SUPER_ADMIN, AdminRole.MANAGER
         fs.mkdirSync(uploadsDir, { recursive: true });
       }
 
-      const matches = validatedData.avatarBase64.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
-      let buffer: Buffer;
-      let extension = 'png';
-
-      if (matches && matches.length === 3) {
-        const mime = matches[1];
-        if (mime.includes('jpeg') || mime.includes('jpg')) extension = 'jpg';
-        else if (mime.includes('webp')) extension = 'webp';
-        else if (mime.includes('gif')) extension = 'gif';
-        buffer = Buffer.from(matches[2], 'base64');
-      } else {
-        buffer = Buffer.from(validatedData.avatarBase64, 'base64');
-      }
+      const { buffer, extension } = decodeImage(validatedData.avatarBase64);
 
       const uniqueName = `review_avatar_${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${extension}`;
       const filePath = path.join(uploadsDir, uniqueName);
@@ -197,19 +179,7 @@ router.patch('/admin/:id', requireAdminAuth([AdminRole.SUPER_ADMIN, AdminRole.MA
         fs.mkdirSync(uploadsDir, { recursive: true });
       }
 
-      const matches = validatedData.avatarBase64.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
-      let buffer: Buffer;
-      let extension = 'png';
-
-      if (matches && matches.length === 3) {
-        const mime = matches[1];
-        if (mime.includes('jpeg') || mime.includes('jpg')) extension = 'jpg';
-        else if (mime.includes('webp')) extension = 'webp';
-        else if (mime.includes('gif')) extension = 'gif';
-        buffer = Buffer.from(matches[2], 'base64');
-      } else {
-        buffer = Buffer.from(validatedData.avatarBase64, 'base64');
-      }
+      const { buffer, extension } = decodeImage(validatedData.avatarBase64);
 
       const uniqueName = `review_avatar_${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${extension}`;
       const filePath = path.join(uploadsDir, uniqueName);
@@ -242,17 +212,7 @@ router.delete('/admin/:id', requireAdminAuth([AdminRole.SUPER_ADMIN, AdminRole.M
       return res.status(404).json({ error: 'Review not found' });
     }
 
-    if (review.customerAvatarUrl?.startsWith('/uploads/reviews/')) {
-      const relativePath = review.customerAvatarUrl.replace('/uploads/reviews/', '');
-      const filePath = path.join(process.cwd(), 'uploads', 'reviews', relativePath);
-      if (fs.existsSync(filePath)) {
-        try {
-          fs.unlinkSync(filePath);
-        } catch (e) {
-          console.error('Failed to delete physical avatar file:', e);
-        }
-      }
-    }
+    if (review.customerAvatarUrl) deleteLocalUpload(review.customerAvatarUrl, 'reviews');
 
     await prisma.review.delete({ where: { id } });
     res.json({ message: 'Review deleted successfully' });

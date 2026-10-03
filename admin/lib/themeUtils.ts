@@ -1,4 +1,5 @@
 export function getLuminance(hex: string): number {
+  if (typeof hex !== 'string' || !/^#[0-9a-f]{3}(?:[0-9a-f]{3})?$/i.test(hex.trim())) return 0;
   const cleanHex = hex.replace('#', '').trim();
   if (cleanHex.length !== 6 && cleanHex.length !== 3) return 0;
   const fullHex =

@@ -39,11 +39,16 @@ export function CustomerAuthProvider({ children }: { children: React.ReactNode }
 
   useEffect(() => {
     try {
-      const savedToken = localStorage.getItem(TOKEN_KEY);
+      const stored = localStorage.getItem(TOKEN_KEY);
+      const savedToken = stored === 'cookie-session' ? stored : null;
+      if (stored && !savedToken) localStorage.removeItem(TOKEN_KEY);
       const savedCustomer = localStorage.getItem(CUSTOMER_KEY);
       if (savedToken && savedCustomer) {
         setToken(savedToken);
         setCustomer(JSON.parse(savedCustomer));
+        void fetch('/api/backend/api/auth/me').then(async response => {
+          if (!response.ok) { setToken(null); setCustomer(null); localStorage.removeItem(TOKEN_KEY); localStorage.removeItem(CUSTOMER_KEY); }
+        }).catch(() => {});
       }
     } catch (e) {
       console.error('Failed to load customer auth from storage:', e);
@@ -53,6 +58,7 @@ export function CustomerAuthProvider({ children }: { children: React.ReactNode }
   }, []);
 
   const login = (newToken: string, newCustomer: CustomerUser) => {
+    newToken = 'cookie-session';
     setToken(newToken);
     setCustomer(newCustomer);
     try {
@@ -77,6 +83,7 @@ export function CustomerAuthProvider({ children }: { children: React.ReactNode }
   };
 
   const logout = () => {
+    void fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
     setToken(null);
     setCustomer(null);
     try {

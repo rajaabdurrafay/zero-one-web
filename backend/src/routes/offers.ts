@@ -25,7 +25,7 @@ const createOfferSchema = z.object({
 const updateOfferSchema = createOfferSchema.partial();
 
 // GET /api/offers - List all offers (Admin / query filter)
-router.get('/', async (req, res, next) => {
+router.get('/', requireAdminAuth(['SUPER_ADMIN', 'MANAGER']), async (req, res, next) => {
   try {
     const { activeOnly, promoCode, visibleOnly } = req.query;
     const now = new Date();

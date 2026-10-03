@@ -1,3 +1,4 @@
+import { decodeImage, deleteLocalUpload } from '../utils/uploads';
 import { Router, Request, Response } from 'express';
 import { prisma } from '../db';
 import { z } from 'zod';
@@ -137,19 +138,7 @@ router.post('/upload-image', requireAdminAuth([AdminRole.SUPER_ADMIN]), async (r
     }
 
     // Strip metadata prefix if data uri
-    const matches = imageBase64.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
-    let buffer: Buffer;
-    let extension = 'png';
-
-    if (matches && matches.length === 3) {
-      const mime = matches[1];
-      if (mime.includes('jpeg') || mime.includes('jpg')) extension = 'jpg';
-      else if (mime.includes('webp')) extension = 'webp';
-      else if (mime.includes('gif')) extension = 'gif';
-      buffer = Buffer.from(matches[2], 'base64');
-    } else {
-      buffer = Buffer.from(imageBase64, 'base64');
-    }
+    const { buffer, extension } = decodeImage(imageBase64);
 
     const uniqueName = `popup_${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${extension}`;
     const filePath = path.join(uploadsDir, uniqueName);

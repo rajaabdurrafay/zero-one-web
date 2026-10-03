@@ -143,7 +143,8 @@ router.post('/admin/clear-cache', requireAdminAuth([AdminRole.SUPER_ADMIN, Admin
     try {
       const response = await fetch(`${websiteUrl}/api/revalidate`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + (process.env.REVALIDATE_SECRET || '') },
+        signal: AbortSignal.timeout(10_000),
       });
       if (response.ok) {
         websiteRevalidated = true;
@@ -154,7 +155,7 @@ router.post('/admin/clear-cache', requireAdminAuth([AdminRole.SUPER_ADMIN, Admin
 
     res.json({
       success: true,
-      message: 'Cache cleared! Changes will now appear immediately.',
+      message: websiteRevalidated ? 'Website cache refreshed.' : 'Website cache refresh failed. Check website availability and REVALIDATE_SECRET.',
       websiteRevalidated,
       timestamp: new Date().toISOString(),
     });

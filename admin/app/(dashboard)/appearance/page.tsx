@@ -819,7 +819,7 @@ export default function AppearancePage() {
                         <input
                           ref={darkLogoInputRef}
                           type="file"
-                          accept="image/*,.svg"
+                          accept="image/png,image/jpeg,image/webp,image/gif"
                           onChange={(e) => {
                             const file = e.target.files?.[0];
                             if (file) handleLogoUpload('DARK', file);
@@ -894,7 +894,7 @@ export default function AppearancePage() {
                         <input
                           ref={lightLogoInputRef}
                           type="file"
-                          accept="image/*,.svg"
+                          accept="image/png,image/jpeg,image/webp,image/gif"
                           onChange={(e) => {
                             const file = e.target.files?.[0];
                             if (file) handleLogoUpload('LIGHT', file);
@@ -1104,7 +1104,7 @@ export default function AppearancePage() {
 
               {/* Status Header */}
               <div className="flex items-center justify-between pb-3 border-b border-white/10 mb-4 text-[10px] font-mono uppercase tracking-widest text-muted">
-                <span>// VISITOR POPUP PREVIEW</span>
+                <span>{'// VISITOR POPUP PREVIEW'}</span>
                 <span className={popupSettings.isEnabled ? 'text-emerald-400 font-bold' : 'text-zinc-500'}>
                   {popupSettings.isEnabled ? '● ACTIVE' : '○ DISABLED'}
                 </span>
@@ -1223,7 +1223,7 @@ export default function AppearancePage() {
                     )}
                   </div>
                   <span className="text-[10px] font-mono font-bold tracking-widest uppercase opacity-75">
-                    // {activeTarget} MODE: {activeMode} {currentTheme.glassEffectEnabled ? '• LIQUID GLASS' : ''}
+                    {'// '} {activeTarget} MODE: {activeMode} {currentTheme.glassEffectEnabled ? '• LIQUID GLASS' : ''}
                   </span>
                 </div>
                 <span

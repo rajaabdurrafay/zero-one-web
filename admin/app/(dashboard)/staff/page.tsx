@@ -63,12 +63,12 @@ export default function StaffManagementPage() {
 
   const isAddNameValid = formData.name.trim().length > 0;
   const isAddUsernameValid = /^[a-zA-Z0-9_-]{3,30}$/.test(formData.username.trim());
-  const isAddPasswordValid = formData.password.length >= 4;
+  const isAddPasswordValid = formData.password.length >= 8;
   const isAddFormValid = isAddNameValid && isAddUsernameValid && isAddPasswordValid;
 
   const isEditNameValid = editFormData.name.trim().length > 0;
   const isEditUsernameValid = /^[a-zA-Z0-9_-]{3,30}$/.test(editFormData.username.trim());
-  const isEditPasswordValid = !editFormData.password ? true : editFormData.password.length >= 4;
+  const isEditPasswordValid = !editFormData.password ? true : editFormData.password.length >= 8;
   const isEditFormValid = isEditNameValid && isEditUsernameValid && isEditPasswordValid;
 
   function showToast(type: 'success' | 'error', message: string) {
@@ -747,7 +747,7 @@ export default function StaffManagementPage() {
                 {addTouched.password && !isAddPasswordValid && (
                   <p className="text-[11px] text-stop mt-1 flex items-center gap-1">
                     <Icon name="alert" size={12} />
-                    <span>Password must be at least 4 characters</span>
+                    <span>Password must be at least 8 characters</span>
                   </p>
                 )}
               </div>
@@ -926,7 +926,7 @@ export default function StaffManagementPage() {
                 {editTouched.password && !isEditPasswordValid && (
                   <p className="text-[11px] text-stop mt-1 flex items-center gap-1">
                     <Icon name="alert" size={12} />
-                    <span>Password must be at least 4 characters</span>
+                    <span>Password must be at least 8 characters</span>
                   </p>
                 )}
               </div>

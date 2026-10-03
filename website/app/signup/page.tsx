@@ -24,7 +24,7 @@ export default function SignupPage() {
   const isNameValid = name.trim().length > 0;
   const isPhoneValid = !phone.trim() ? false : isValidPakistaniPhone(phone);
   const isEmailValid = !email.trim() ? true : isValidEmail(email);
-  const isPasswordValid = password.length >= 4;
+  const isPasswordValid = password.length >= 8;
   const isFormValid = isNameValid && isPhoneValid && isEmailValid && isPasswordValid;
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -173,7 +173,7 @@ export default function SignupPage() {
             <input
               type="password"
               required
-              placeholder="At least 4 characters"
+              placeholder="At least 8 characters"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               onBlur={() => setTouched((t) => ({ ...t, password: true }))}
@@ -186,7 +186,7 @@ export default function SignupPage() {
             {touched.password && !isPasswordValid && (
               <p className="text-xs text-red-400 mt-1.5 flex items-center gap-1.5">
                 <Icon name="alert" size={12} className="text-rose-400" />
-                <span>Password must be at least 4 characters</span>
+                <span>Password must be at least 8 characters</span>
               </p>
             )}
           </div>

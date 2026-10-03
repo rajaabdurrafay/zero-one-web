@@ -1,3 +1,4 @@
+import { decodeImage, deleteLocalUpload } from '../utils/uploads';
 import { Router, Request, Response } from 'express';
 import { prisma } from '../db';
 import { z } from 'zod';
@@ -70,19 +71,7 @@ router.post('/admin', requireAdminAuth([AdminRole.SUPER_ADMIN, AdminRole.MANAGER
         fs.mkdirSync(uploadsDir, { recursive: true });
       }
 
-      const matches = validatedData.imageBase64.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
-      let buffer: Buffer;
-      let extension = 'png';
-
-      if (matches && matches.length === 3) {
-        const mime = matches[1];
-        if (mime.includes('jpeg') || mime.includes('jpg')) extension = 'jpg';
-        else if (mime.includes('webp')) extension = 'webp';
-        else if (mime.includes('gif')) extension = 'gif';
-        buffer = Buffer.from(matches[2], 'base64');
-      } else {
-        buffer = Buffer.from(validatedData.imageBase64, 'base64');
-      }
+      const { buffer, extension } = decodeImage(validatedData.imageBase64);
 
       const uniqueName = `gallery_${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${extension}`;
       const filePath = path.join(uploadsDir, uniqueName);
@@ -145,18 +134,7 @@ router.delete('/admin/:id', requireAdminAuth([AdminRole.SUPER_ADMIN]), async (re
       return res.status(404).json({ error: 'Gallery image not found' });
     }
 
-    // Attempt to remove local file if in /uploads/gallery
-    if (image.imageUrl.startsWith('/uploads/gallery/')) {
-      const relativePath = image.imageUrl.replace('/uploads/gallery/', '');
-      const filePath = path.join(process.cwd(), 'uploads', 'gallery', relativePath);
-      if (fs.existsSync(filePath)) {
-        try {
-          fs.unlinkSync(filePath);
-        } catch (e) {
-          console.error('Failed to delete physical file:', e);
-        }
-      }
-    }
+    deleteLocalUpload(image.imageUrl, 'gallery');
 
     await prisma.galleryImage.delete({ where: { id } });
     res.json({ message: 'Gallery image deleted successfully' });

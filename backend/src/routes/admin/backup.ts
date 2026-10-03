@@ -79,12 +79,15 @@ router.get('/full', requireAdminAuth([AdminRole.SUPER_ADMIN]), async (req: Reque
       }),
     ]);
 
+    res.setHeader('Cache-Control', 'private, no-store');
     const backupData = {
       meta: {
         app: 'ZERO ONE Cue & Play',
         environment: process.env.NODE_ENV || 'production',
         exportedAt: new Date().toISOString(),
         version: '1.0.0',
+        exportType: 'sanitized-business-data',
+        restorableDatabaseBackup: false,
         tableCounts: {
           bookings: bookings.length,
           bookingGroups: bookingGroups.length,

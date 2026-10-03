@@ -5,6 +5,7 @@ const API_BASE = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http
 
 export async function POST(request: NextRequest) {
   try {
+    if (request.headers.get('origin') !== request.nextUrl.origin) return NextResponse.json({ error: 'Invalid origin' }, { status: 403 });
     const body = await request.json();
     const { username, password } = body;
 
@@ -15,6 +16,7 @@ export async function POST(request: NextRequest) {
     const backendRes = await fetch(`${API_BASE}/api/auth/admin/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      signal: AbortSignal.timeout(15_000),
       body: JSON.stringify({ username, password }),
     });
 
@@ -33,7 +35,6 @@ export async function POST(request: NextRequest) {
       success: true,
       message: 'Signed in successfully',
       user,
-      token,
       isNewDevice,
       deviceInfo,
       whatsappAlertUrl,
@@ -43,7 +44,7 @@ export async function POST(request: NextRequest) {
       path: '/',
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax' as const,
-      maxAge: 60 * 60 * 24 * 7, // 7 days
+      maxAge: 60 * 60 * 8, // matches backend token lifetime
     };
 
     // Store HttpOnly session token for middleware
@@ -52,11 +53,7 @@ export async function POST(request: NextRequest) {
       httpOnly: true,
     });
 
-    // Store readable token for browser apiFetch to include in Authorization header
-    response.cookies.set(TOKEN_COOKIE, token, {
-      ...cookieOptions,
-      httpOnly: false,
-    });
+    response.cookies.delete(TOKEN_COOKIE);
 
     // Store role and user details in cookies readable by client components and middleware
     response.cookies.set(ROLE_COOKIE, user.role, {

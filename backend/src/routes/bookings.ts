@@ -1,3 +1,7 @@
+import { transitionBookingStock } from '../services/bookingStock';
+import { transactionalBooking } from '../middleware/transactionalBooking';
+import { requireBookingAccess } from '../middleware/bookingAccess';
+import { customerSelect } from '../utils/customerSelect';
 import { Router } from 'express';
 import { z } from 'zod';
 import fs from 'fs';
@@ -8,7 +12,7 @@ import { BookingStatus, PaymentMethod, ResourceType } from '@prisma/client';
 import { autoCompleteExpiredBookings, autoCancelExpiredPendingPayments } from '../services/bookingAutomation';
 import { requireCustomerAuth, optionalCustomerAuth, AuthenticatedCustomerRequest } from '../middleware/customerAuth';
 import { requireAdminAuth, AuthenticatedAdminRequest } from '../middleware/adminAuth';
-import { verifyAdminToken } from '../utils/auth';
+import { verifyAdminToken, signBookingAccess, credentialTag } from '../utils/auth';
 import { getOrCreateSystemSettings } from './systemSettings';
 import { createAuditLog } from '../utils/auditLogger';
 
@@ -25,14 +29,14 @@ const createBookingSchema = z.object({
   endTime: z.string().datetime(),
   isWalkIn: z.boolean().optional().default(false),
   paymentMethod: z.nativeEnum(PaymentMethod).optional(),
-  amountPaid: z.number().optional(),
+  amountPaid: z.number().nonnegative().finite().optional(),
   screenshotBase64: z.string().optional(),
   promoCode: z.string().optional().nullable(),
   offerId: z.string().optional().nullable(),
   addons: z.array(
     z.object({
       addonItemId: z.string(),
-      quantity: z.number().int().min(1)
+      quantity: z.number().int().min(1).max(100)
     })
   ).optional()
 });
@@ -45,7 +49,7 @@ const createGroupBookingSchema = z.object({
   }),
   isWalkIn: z.boolean().optional().default(false),
   paymentMethod: z.nativeEnum(PaymentMethod).optional(),
-  amountPaid: z.number().optional(),
+  amountPaid: z.number().nonnegative().finite().optional(),
   screenshotBase64: z.string().optional(),
   items: z.array(
     z.object({
@@ -55,11 +59,11 @@ const createGroupBookingSchema = z.object({
       promoCode: z.string().optional().nullable(),
       offerId: z.string().optional().nullable()
     })
-  ).min(1, 'At least one activity item is required in a group booking'),
+  ).min(1, 'At least one activity item is required in a group booking').max(20),
   addons: z.array(
     z.object({
       addonItemId: z.string(),
-      quantity: z.number().int().min(1)
+      quantity: z.number().int().min(1).max(100)
     })
   ).optional()
 });
@@ -69,7 +73,7 @@ const updateBookingSchema = z.object({
   startTime: z.string().datetime().optional(),
   endTime: z.string().datetime().optional(),
   paymentMethod: z.nativeEnum(PaymentMethod).optional(),
-  amountPaid: z.number().optional(),
+  amountPaid: z.number().nonnegative().finite().optional(),
   reminderSent: z.boolean().optional(),
   verifiedAt: z.string().datetime().optional(),
   rejectionReason: z.string().optional()
@@ -77,7 +81,7 @@ const updateBookingSchema = z.object({
 
 // Check for time conflicts: (existing.startTime < new.endTime) AND (existing.endTime > new.startTime)
 async function hasConflict(resourceId: string, startTime: Date, endTime: Date, excludeBookingId?: string) {
-  const conflicts = await prisma.booking.findMany({
+  const conflicts = await prisma.booking.findFirst({
     where: {
       resourceId,
       status: {
@@ -94,7 +98,7 @@ async function hasConflict(resourceId: string, startTime: Date, endTime: Date, e
     }
   });
 
-  return conflicts.length > 0;
+  return conflicts !== null;
 }
 
 // Calculate price based on activity pricing
@@ -145,9 +149,10 @@ async function calculatePrice(resourceId: string, startTime: Date, endTime: Date
 }
 
 // POST /api/bookings - Create booking
-router.post('/', optionalCustomerAuth, async (req: AuthenticatedCustomerRequest, res, next) => {
+router.post('/', optionalCustomerAuth, transactionalBooking(async (req: AuthenticatedCustomerRequest, res, next) => {
   try {
     const data = createBookingSchema.parse(req.body);
+    if (new Set(data.addons?.map(item => item.addonItemId)).size !== (data.addons?.length || 0)) return res.status(400).json({ error: 'Duplicate add-ons are not allowed.' });
 
     // Determine if the request is from an authenticated Admin
     const authHeader = req.headers.authorization;
@@ -158,7 +163,13 @@ router.post('/', optionalCustomerAuth, async (req: AuthenticatedCustomerRequest,
     } else if (customAdminToken) {
       adminToken = customAdminToken;
     }
-    const adminUser = adminToken ? verifyAdminToken(adminToken) : null;
+    let adminUser = adminToken ? verifyAdminToken(adminToken) : null;
+    if (adminUser) {
+      const account = await prisma.adminUser.findUnique({ where: { id: adminUser.id } });
+      if (!account?.isActive || credentialTag(account.password) !== adminUser.credentialTag) adminUser = null;
+      if (adminUser) { const session = await prisma.loginSession.findUnique({ where: { id: adminUser.sessionId } }); if (!session || session.adminUserId !== adminUser.id) adminUser = null; }
+    }
+    if (data.isWalkIn && !adminUser) return res.status(403).json({ error: 'Only staff can create confirmed walk-in bookings.' });
     const isAdminRequest = Boolean(adminUser);
 
     // System Settings Check (Maintenance Mode, Online Bookings Toggle, Emergency Closed)
@@ -317,7 +328,7 @@ router.post('/', optionalCustomerAuth, async (req: AuthenticatedCustomerRequest,
       });
     }
 
-    if (!customer && data.customer?.phone) {
+    if (!customer && isAdminRequest && data.customer?.phone) {
       customer = await prisma.customer.findFirst({
         where: { phone: data.customer.phone }
       });
@@ -424,7 +435,7 @@ router.post('/', optionalCustomerAuth, async (req: AuthenticatedCustomerRequest,
     // Create booking:
     // Online bookings default to PENDING_PAYMENT (15-min slot hold)
     // Walk-in bookings are CONFIRMED immediately
-    const initialStatus = data.isWalkIn ? BookingStatus.CONFIRMED : BookingStatus.PENDING_PAYMENT;
+    const initialStatus = data.isWalkIn ? BookingStatus.CONFIRMED : paymentScreenshotUrl ? BookingStatus.AWAITING_VERIFICATION : BookingStatus.PENDING_PAYMENT;
     const defaultPaymentMethod = data.paymentMethod || (data.isWalkIn ? PaymentMethod.CASH : undefined);
 
     const booking = await prisma.booking.create({
@@ -455,7 +466,7 @@ router.post('/', optionalCustomerAuth, async (req: AuthenticatedCustomerRequest,
       },
       include: {
         resource: true,
-        customer: true,
+        customer: { select: customerSelect },
         appliedOffer: true,
         addons: {
           include: {
@@ -465,19 +476,24 @@ router.post('/', optionalCustomerAuth, async (req: AuthenticatedCustomerRequest,
       }
     });
 
-    res.status(201).json(booking);
+    res.status(201).json({ ...booking, accessToken: signBookingAccess(booking.id) });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: 'Invalid request data', details: error.errors });
     }
     next(error);
   }
-});
+}));
 
 // POST /api/bookings/group - Create multiple activity bookings in a single group
-router.post('/group', optionalCustomerAuth, async (req: AuthenticatedCustomerRequest, res, next) => {
+router.post('/group', optionalCustomerAuth, transactionalBooking(async (req: AuthenticatedCustomerRequest, res, next) => {
   try {
     const data = createGroupBookingSchema.parse(req.body);
+    if (new Set(data.addons?.map(item => item.addonItemId)).size !== (data.addons?.length || 0)) return res.status(400).json({ error: 'Duplicate add-ons are not allowed.' });
+    for (let i = 0; i < data.items.length; i++) for (let j = i + 1; j < data.items.length; j++) {
+      const a = data.items[i], b = data.items[j];
+      if (a.resourceId === b.resourceId && new Date(a.startTime) < new Date(b.endTime) && new Date(a.endTime) > new Date(b.startTime)) return res.status(409).json({ error: 'Activities in the group overlap on the same resource.' });
+    }
 
     // Determine if the request is from an authenticated Admin
     const authHeader = req.headers.authorization;
@@ -488,7 +504,12 @@ router.post('/group', optionalCustomerAuth, async (req: AuthenticatedCustomerReq
     } else if (customAdminToken) {
       adminToken = customAdminToken;
     }
-    const adminUser = adminToken ? verifyAdminToken(adminToken) : null;
+    let adminUser = adminToken ? verifyAdminToken(adminToken) : null;
+    if (adminUser) {
+      const account = await prisma.adminUser.findUnique({ where: { id: adminUser.id } });
+      if (!account?.isActive || credentialTag(account.password) !== adminUser.credentialTag) adminUser = null;
+    }
+    if (data.isWalkIn && !adminUser) return res.status(403).json({ error: 'Only staff can create confirmed walk-in bookings.' });
     const isAdminRequest = Boolean(adminUser);
 
     // System Settings Check (Maintenance Mode, Online Bookings Toggle, Emergency Closed)
@@ -728,7 +749,7 @@ router.post('/group', optionalCustomerAuth, async (req: AuthenticatedCustomerReq
       }
     }
 
-    const initialStatus = data.isWalkIn ? BookingStatus.CONFIRMED : BookingStatus.PENDING_PAYMENT;
+    const initialStatus = data.isWalkIn ? BookingStatus.CONFIRMED : paymentScreenshotUrl ? BookingStatus.AWAITING_VERIFICATION : BookingStatus.PENDING_PAYMENT;
     const defaultPaymentMethod = data.paymentMethod || (data.isWalkIn ? PaymentMethod.CASH : undefined);
 
     // Process group-level add-ons if provided
@@ -795,7 +816,7 @@ router.post('/group', optionalCustomerAuth, async (req: AuthenticatedCustomerReq
         totalAmount: groupTotalAmount,
         status: initialStatus,
         paymentMethod: defaultPaymentMethod,
-        amountPaid: data.amountPaid || (data.isWalkIn ? groupTotalAmount : undefined),
+        amountPaid: data.amountPaid ?? (data.isWalkIn ? groupTotalAmount : undefined),
         paymentScreenshotUrl,
         paymentSubmittedAt,
         verifiedAt: data.isWalkIn ? new Date() : undefined
@@ -836,7 +857,7 @@ router.post('/group', optionalCustomerAuth, async (req: AuthenticatedCustomerReq
           },
           include: {
             resource: true,
-            customer: true,
+            customer: { select: customerSelect },
             appliedOffer: true,
             addons: {
               include: {
@@ -849,10 +870,10 @@ router.post('/group', optionalCustomerAuth, async (req: AuthenticatedCustomerReq
     );
 
     res.status(201).json({
-      group: bookingGroup,
-      bookings: createdBookings,
+      group: { ...bookingGroup, accessToken: signBookingAccess(bookingGroup.id, true) },
+      bookings: createdBookings.map(booking => ({ ...booking, accessToken: signBookingAccess(booking.id) })),
       totalAmount: groupTotalAmount,
-      customer
+      customer: { id: customer.id, name: customer.name, phone: customer.phone, email: customer.email }
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -860,17 +881,17 @@ router.post('/group', optionalCustomerAuth, async (req: AuthenticatedCustomerReq
     }
     next(error);
   }
-});
+}));
 
 // GET /api/bookings/group/:groupId - Retrieve group booking details with all child bookings
-router.get('/group/:groupId', async (req, res, next) => {
+router.get('/group/:groupId', requireBookingAccess(true), async (req, res, next) => {
   try {
     const { groupId } = req.params;
 
     const bookingGroup = await (prisma as any).bookingGroup.findUnique({
       where: { id: groupId },
       include: {
-        customer: true,
+        customer: { select: customerSelect },
         bookings: {
           include: {
             resource: true,
@@ -897,7 +918,7 @@ router.get('/group/:groupId', async (req, res, next) => {
 });
 
 // POST /api/bookings/group/:groupId/upload-payment - Upload combined payment screenshot for all activities in a group
-router.post('/group/:groupId/upload-payment', async (req, res, next) => {
+router.post('/group/:groupId/upload-payment', requireBookingAccess(true), transactionalBooking(async (req, res, next) => {
   try {
     const { groupId } = req.params;
     const body = uploadPaymentSchema.parse(req.body);
@@ -911,7 +932,7 @@ router.post('/group/:groupId/upload-payment', async (req, res, next) => {
       return res.status(404).json({ error: 'Group booking not found' });
     }
 
-    if (bookingGroup.status === BookingStatus.CANCELLED) {
+    if (![BookingStatus.PENDING_PAYMENT, BookingStatus.REJECTED, BookingStatus.AWAITING_VERIFICATION].includes(bookingGroup.status)) {
       return res.status(400).json({ error: 'This group booking has expired or been cancelled.' });
     }
 
@@ -938,6 +959,9 @@ router.post('/group/:groupId/upload-payment', async (req, res, next) => {
     fs.writeFileSync(filePath, buffer);
 
     const screenshotUrl = `/uploads/${fileName}`;
+
+    const stockBookings = await prisma.booking.findMany({ where: { bookingGroupId: groupId } });
+    for (const child of stockBookings) await transitionBookingStock(child.id, child.status, BookingStatus.AWAITING_VERIFICATION);
 
     // Update parent BookingGroup
     const updatedGroup = await (prisma as any).bookingGroup.update({
@@ -967,7 +991,7 @@ router.post('/group/:groupId/upload-payment', async (req, res, next) => {
     const fullGroup = await (prisma as any).bookingGroup.findUnique({
       where: { id: groupId },
       include: {
-        customer: true,
+        customer: { select: customerSelect },
         bookings: {
           include: { resource: true, appliedOffer: true }
         }
@@ -981,16 +1005,16 @@ router.post('/group/:groupId/upload-payment', async (req, res, next) => {
     }
     next(error);
   }
-});
+}));
 
 // POST /api/bookings/group/:groupId/verify - Verify or reject all bookings in a group at once
 const verifyGroupSchema = z.object({
   status: z.enum([BookingStatus.CONFIRMED, BookingStatus.REJECTED]),
   rejectionReason: z.string().optional(),
-  amountPaid: z.number().optional()
+  amountPaid: z.number().nonnegative().finite().optional()
 });
 
-router.post('/group/:groupId/verify', requireAdminAuth(), async (req, res, next) => {
+router.post('/group/:groupId/verify', requireAdminAuth(), transactionalBooking(async (req, res, next) => {
   try {
     const { groupId } = req.params;
     const body = verifyGroupSchema.parse(req.body);
@@ -1003,6 +1027,9 @@ router.post('/group/:groupId/verify', requireAdminAuth(), async (req, res, next)
       return res.status(404).json({ error: 'Group booking not found' });
     }
 
+    if (bookingGroup.status === BookingStatus.CANCELLED) return res.status(400).json({ error: 'Cancelled booking groups cannot be verified.' });
+    const stockBookings = await prisma.booking.findMany({ where: { bookingGroupId: groupId } });
+    for (const child of stockBookings) await transitionBookingStock(child.id, child.status, body.status);
     const verifiedAt = body.status === BookingStatus.CONFIRMED ? new Date() : null;
 
     // Update parent group
@@ -1026,29 +1053,8 @@ router.post('/group/:groupId/verify', requireAdminAuth(), async (req, res, next)
       }
     });
 
-    // If rejected, restore stock for all addons in the group
-    if (body.status === BookingStatus.REJECTED) {
-      const childBookings = await prisma.booking.findMany({
-        where: { bookingGroupId: groupId },
-        include: { addons: true }
-      });
-      for (const cb of childBookings) {
-        if (cb.addons && cb.addons.length > 0) {
-          for (const ba of cb.addons) {
-            const item = await prisma.addonItem.findUnique({ where: { id: ba.addonItemId } });
-            if (item && item.stock !== null && item.stock !== undefined) {
-              await prisma.addonItem.update({
-                where: { id: ba.addonItemId },
-                data: { stock: item.stock + ba.quantity }
-              });
-            }
-          }
-        }
-      }
-    }
-
     if ((req as AuthenticatedAdminRequest).admin?.id) {
-      createAuditLog(
+      await createAuditLog(
         (req as AuthenticatedAdminRequest).admin!.id,
         body.status === BookingStatus.CONFIRMED ? 'VERIFY' : 'REJECT',
         'BOOKING_GROUP',
@@ -1064,7 +1070,7 @@ router.post('/group/:groupId/verify', requireAdminAuth(), async (req, res, next)
     const fullGroup = await (prisma as any).bookingGroup.findUnique({
       where: { id: groupId },
       include: {
-        customer: true,
+        customer: { select: customerSelect },
         bookings: {
           include: { resource: true, appliedOffer: true }
         }
@@ -1078,7 +1084,7 @@ router.post('/group/:groupId/verify', requireAdminAuth(), async (req, res, next)
     }
     next(error);
   }
-});
+}));
 
 // GET /api/bookings/group/:groupId/receipt-pdf - Branded Multi-Activity PDF receipt
 router.get('/group/:groupId/receipt-pdf', requireAdminAuth(), async (req, res, next) => {
@@ -1088,7 +1094,7 @@ router.get('/group/:groupId/receipt-pdf', requireAdminAuth(), async (req, res, n
     const group = await (prisma as any).bookingGroup.findUnique({
       where: { id: groupId },
       include: {
-        customer: true,
+        customer: { select: customerSelect },
         bookings: {
           include: {
             resource: true,
@@ -1375,7 +1381,7 @@ router.get('/my-bookings', requireCustomerAuth, async (req: AuthenticatedCustome
         where: { customerId },
         include: {
           resource: true,
-          customer: true,
+          customer: { select: customerSelect },
           appliedOffer: true
         },
         orderBy: { startTime: 'desc' }
@@ -1412,7 +1418,7 @@ router.get('/my-bookings', requireCustomerAuth, async (req: AuthenticatedCustome
 });
 
 // POST /api/bookings/:id/cancel - Customer self-cancel booking
-router.post('/:id/cancel', requireCustomerAuth, async (req: AuthenticatedCustomerRequest, res, next) => {
+router.post('/:id/cancel', requireCustomerAuth, transactionalBooking(async (req: AuthenticatedCustomerRequest, res, next) => {
   try {
     const { id } = req.params;
     const booking = await prisma.booking.findUnique({
@@ -1444,32 +1450,21 @@ router.post('/:id/cancel', requireCustomerAuth, async (req: AuthenticatedCustome
       },
       include: {
         resource: true,
-        customer: true,
+        customer: { select: customerSelect },
         addons: true
       }
     });
 
-    // Restore stock if any addons were attached
-    if (updated.addons && updated.addons.length > 0) {
-      for (const ba of updated.addons) {
-        const item = await prisma.addonItem.findUnique({ where: { id: ba.addonItemId } });
-        if (item && item.stock !== null && item.stock !== undefined) {
-          await prisma.addonItem.update({
-            where: { id: ba.addonItemId },
-            data: { stock: item.stock + ba.quantity }
-          });
-        }
-      }
-    }
+    await transitionBookingStock(id, booking.status, BookingStatus.CANCELLED);
 
     res.json({ message: 'Booking cancelled successfully', booking: updated });
   } catch (error) {
     next(error);
   }
-});
+}));
 
 // POST /api/bookings/:id/reupload-payment - Re-upload payment after rejection or pending
-router.post('/:id/reupload-payment', requireCustomerAuth, async (req: AuthenticatedCustomerRequest, res, next) => {
+router.post('/:id/reupload-payment', requireCustomerAuth, transactionalBooking(async (req: AuthenticatedCustomerRequest, res, next) => {
   try {
     const { id } = req.params;
     const body = uploadPaymentSchema.parse(req.body);
@@ -1487,8 +1482,8 @@ router.post('/:id/reupload-payment', requireCustomerAuth, async (req: Authentica
       return res.status(403).json({ error: 'Unauthorized to update this booking' });
     }
 
-    if (booking.status === BookingStatus.CANCELLED) {
-      return res.status(400).json({ error: 'This booking has expired or been cancelled.' });
+    if (!([BookingStatus.PENDING_PAYMENT, BookingStatus.REJECTED, BookingStatus.AWAITING_VERIFICATION] as BookingStatus[]).includes(booking.status)) {
+      return res.status(400).json({ error: 'This booking does not accept payment uploads.' });
     }
 
     // Process Base64 image
@@ -1517,6 +1512,7 @@ router.post('/:id/reupload-payment', requireCustomerAuth, async (req: Authentica
     const screenshotUrl = `/uploads/${fileName}`;
 
     // Reset status back to AWAITING_VERIFICATION and clear previous rejection
+    await transitionBookingStock(id, booking.status, BookingStatus.AWAITING_VERIFICATION);
     const updatedBooking = await prisma.booking.update({
       where: { id },
       data: {
@@ -1529,7 +1525,7 @@ router.post('/:id/reupload-payment', requireCustomerAuth, async (req: Authentica
       },
       include: {
         resource: true,
-        customer: true
+        customer: { select: customerSelect }
       }
     });
 
@@ -1540,10 +1536,10 @@ router.post('/:id/reupload-payment', requireCustomerAuth, async (req: Authentica
     }
     next(error);
   }
-});
+}));
 
 // GET /api/bookings/reminders-due - List confirmed bookings starting in the next time window (customizable minutes, default 0-60m)
-router.get('/reminders-due', async (req, res, next) => {
+router.get('/reminders-due', requireAdminAuth(), async (req, res, next) => {
   try {
     const { maxMinutes = '60', minMinutes = '0' } = req.query;
     const maxMins = parseInt(maxMinutes as string, 10) || 60;
@@ -1564,7 +1560,7 @@ router.get('/reminders-due', async (req, res, next) => {
       },
       include: {
         resource: true,
-        customer: true,
+        customer: { select: customerSelect },
         appliedOffer: true
       },
       orderBy: {
@@ -1579,10 +1575,10 @@ router.get('/reminders-due', async (req, res, next) => {
 });
 
 // GET /api/bookings/reminders-history - List bookings where reminderSent is true (most recently updated/sent first)
-router.get('/reminders-history', async (req, res, next) => {
+router.get('/reminders-history', requireAdminAuth(), async (req, res, next) => {
   try {
     const { limit = '50' } = req.query;
-    const take = Math.min(100, parseInt(limit as string, 10) || 50);
+    const take = Math.max(1, Math.min(100, parseInt(limit as string, 10) || 50));
 
     const history = await prisma.booking.findMany({
       where: {
@@ -1590,7 +1586,7 @@ router.get('/reminders-history', async (req, res, next) => {
       },
       include: {
         resource: true,
-        customer: true,
+        customer: { select: customerSelect },
         appliedOffer: true
       },
       orderBy: {
@@ -1606,7 +1602,7 @@ router.get('/reminders-history', async (req, res, next) => {
 });
 
 // GET /api/bookings - List bookings with advanced filters & search
-router.get('/', async (req, res, next) => {
+router.get('/', requireAdminAuth(), async (req, res, next) => {
   try {
     // Lazy evaluation fallback: Auto-cancel expired pending payments & auto-complete expired confirmed bookings
     await autoCancelExpiredPendingPayments();
@@ -1722,7 +1718,7 @@ router.get('/', async (req, res, next) => {
       },
       include: {
         resource: true,
-        customer: true,
+        customer: { select: customerSelect },
         appliedOffer: true,
         bookingGroup: true,
         addons: {
@@ -1741,14 +1737,14 @@ router.get('/', async (req, res, next) => {
 });
 
 // GET /api/bookings/:id - Get single booking by ID
-router.get('/:id', async (req, res, next) => {
+router.get('/:id', requireBookingAccess(false), async (req, res, next) => {
   try {
     const { id } = req.params;
     const booking = await prisma.booking.findUnique({
       where: { id },
       include: {
         resource: true,
-        customer: true,
+        customer: { select: customerSelect },
         appliedOffer: true,
         addons: {
           include: {
@@ -1783,7 +1779,7 @@ router.get('/:id', async (req, res, next) => {
 });
 
 // PATCH /api/bookings/:id - Update booking
-router.patch('/:id', async (req, res, next) => {
+router.patch('/:id', requireAdminAuth(), transactionalBooking(async (req, res, next) => {
   try {
     const { id } = req.params;
     const data = updateBookingSchema.parse(req.body);
@@ -1795,6 +1791,9 @@ router.patch('/:id', async (req, res, next) => {
     if (!existingBooking) {
       return res.status(404).json({ error: 'Booking not found' });
     }
+
+    if (existingBooking.status === BookingStatus.CANCELLED && data.status && data.status !== BookingStatus.CANCELLED) return res.status(400).json({ error: 'Cancelled bookings cannot be reopened. Create a new booking.' });
+    if (data.status) await transitionBookingStock(id, existingBooking.status, data.status);
 
     // If time is being changed, check for conflicts
     if (data.startTime || data.endTime) {
@@ -1832,7 +1831,7 @@ router.patch('/:id', async (req, res, next) => {
         },
         include: {
           resource: true,
-          customer: true
+          customer: { select: customerSelect }
         }
       });
 
@@ -1845,28 +1844,18 @@ router.patch('/:id', async (req, res, next) => {
       data,
       include: {
         resource: true,
-        customer: true,
+        customer: { select: customerSelect },
         addons: true
       }
     });
 
-    // If booking was cancelled or rejected, restore stock
-    if ((data.status === BookingStatus.CANCELLED || data.status === BookingStatus.REJECTED) && booking.addons && booking.addons.length > 0) {
-      for (const ba of booking.addons) {
-        const item = await prisma.addonItem.findUnique({ where: { id: ba.addonItemId } });
-        if (item && item.stock !== null && item.stock !== undefined) {
-          await prisma.addonItem.update({
-            where: { id: ba.addonItemId },
-            data: { stock: item.stock + ba.quantity }
-          });
-        }
-      }
-    }
+    // Inventory was adjusted before the state update in this transaction.
 
     // If status updated and booking is part of a group, sync parent group status if applicable
     if (data.status && existingBooking.bookingGroupId) {
       try {
-        if (data.status === BookingStatus.CONFIRMED) {
+        const remainingUnconfirmed = await prisma.booking.count({ where: { bookingGroupId: existingBooking.bookingGroupId, status: { not: BookingStatus.CONFIRMED } } });
+        if (data.status === BookingStatus.CONFIRMED && remainingUnconfirmed === 0) {
           await (prisma as any).bookingGroup.update({
             where: { id: existingBooking.bookingGroupId },
             data: {
@@ -1889,7 +1878,7 @@ router.patch('/:id', async (req, res, next) => {
     }
 
     if ((req as any).admin?.id) {
-      createAuditLog((req as any).admin.id, 'UPDATE', 'BOOKING', id, { ...data });
+      await createAuditLog((req as any).admin.id, 'UPDATE', 'BOOKING', id, { ...data });
     }
 
     res.json(booking);
@@ -1899,17 +1888,17 @@ router.patch('/:id', async (req, res, next) => {
     }
     next(error);
   }
-});
+}));
 
 // POST /api/bookings/:id/upload-payment - Upload Payment Screenshot (Base64 or image data)
 const uploadPaymentSchema = z.object({
   screenshotBase64: z.string().min(1, 'Screenshot data is required'),
   fileName: z.string().optional(),
   paymentMethod: z.nativeEnum(PaymentMethod).optional(),
-  amountPaid: z.number().optional()
+  amountPaid: z.number().nonnegative().finite().optional()
 });
 
-router.post('/:id/upload-payment', async (req, res, next) => {
+router.post('/:id/upload-payment', requireBookingAccess(false), transactionalBooking(async (req, res, next) => {
   try {
     const { id } = req.params;
     const body = uploadPaymentSchema.parse(req.body);
@@ -1954,6 +1943,7 @@ router.post('/:id/upload-payment', async (req, res, next) => {
     const screenshotUrl = `/uploads/${fileName}`;
 
     // Update booking status to AWAITING_VERIFICATION
+    await transitionBookingStock(id, booking.status, BookingStatus.AWAITING_VERIFICATION);
     const updatedBooking = await prisma.booking.update({
       where: { id },
       data: {
@@ -1965,7 +1955,7 @@ router.post('/:id/upload-payment', async (req, res, next) => {
       },
       include: {
         resource: true,
-        customer: true
+        customer: { select: customerSelect }
       }
     });
 
@@ -1983,6 +1973,9 @@ router.post('/:id/upload-payment', async (req, res, next) => {
             ...(body.amountPaid !== undefined && { amountPaid: body.amountPaid })
           }
         });
+        // Reserve released stock for each rejected sibling before resubmission.
+        const siblings = await prisma.booking.findMany({ where: { bookingGroupId: booking.bookingGroupId } });
+        for (const sibling of siblings) await transitionBookingStock(sibling.id, sibling.status, BookingStatus.AWAITING_VERIFICATION);
         // Also sync sibling bookings in the group
         await prisma.booking.updateMany({
           where: { bookingGroupId: booking.bookingGroupId },
@@ -2006,7 +1999,7 @@ router.post('/:id/upload-payment', async (req, res, next) => {
     }
     next(error);
   }
-});
+}));
 
 // GET /api/bookings/:id/receipt-pdf (or /api/admin/bookings/:id/receipt-pdf) - Generate branded PDF receipt
 router.get('/:id/receipt-pdf', requireAdminAuth(), async (req, res, next) => {
@@ -2017,7 +2010,7 @@ router.get('/:id/receipt-pdf', requireAdminAuth(), async (req, res, next) => {
       where: { id },
       include: {
         resource: true,
-        customer: true,
+        customer: { select: customerSelect },
         appliedOffer: true,
         addons: {
           include: {

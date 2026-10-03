@@ -423,7 +423,7 @@ router.post('/:id/reset-password', requireAdminAuth([AdminRole.SUPER_ADMIN, Admi
       newPassword += chars[randomBytes[i] % chars.length];
     }
 
-    const hashedPassword = hashPassword(newPassword);
+    const hashedPassword = await hashPassword(newPassword);
 
     // Update password for all customer records sharing this phone number
     await prisma.customer.updateMany({

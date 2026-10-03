@@ -74,10 +74,7 @@ export default function NewBookingPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
 
-  useEffect(() => {
-    loadActivities();
-    loadAddonsList();
-  }, []);
+
 
   async function loadAddonsList() {
     try {
@@ -87,6 +84,33 @@ export default function NewBookingPage() {
       console.error('Failed to load addons for walkin:', e);
     }
   }
+
+
+  async function loadActivities() {
+    try {
+      setActivities(await getPricing());
+    } catch (err: any) {
+      setError('Could not load activities: ' + err.message);
+    }
+  }
+
+
+  async function loadResources() {
+    try {
+      const activity = activities.find((a) => a.id === selectedActivity);
+      if (!activity) return;
+      const data = await getAvailability(date, activity.resourceType);
+      setResources(data.resources);
+      setSelectedResource('');
+    } catch (err: any) {
+      setError('Could not load bays: ' + err.message);
+    }
+  }
+
+  useEffect(() => {
+    loadActivities();
+    loadAddonsList();
+  }, []);
 
   useEffect(() => {
     if (selectedActivity && date) {
@@ -106,26 +130,6 @@ export default function NewBookingPage() {
       setDuration(hasTiered || selectedActivityData.pricingUnit === 'PER_MINUTE' ? 30 : 60);
     }
   }, [selectedActivityData]);
-
-  async function loadActivities() {
-    try {
-      setActivities(await getPricing());
-    } catch (err: any) {
-      setError('Could not load activities: ' + err.message);
-    }
-  }
-
-  async function loadResources() {
-    try {
-      const activity = activities.find((a) => a.id === selectedActivity);
-      if (!activity) return;
-      const data = await getAvailability(date, activity.resourceType);
-      setResources(data.resources);
-      setSelectedResource('');
-    } catch (err: any) {
-      setError('Could not load bays: ' + err.message);
-    }
-  }
 
   function handleAddonQtyChange(addonId: string, delta: number) {
     setSelectedAddons((prev) => {

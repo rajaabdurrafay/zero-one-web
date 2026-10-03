@@ -5,7 +5,7 @@ import path from 'path';
 import fs from 'fs';
 import { Resend } from 'resend';
 import { prisma } from '../db';
-import { hashPassword, comparePassword, signToken } from '../utils/auth';
+import { hashPassword, comparePassword, signToken, credentialTag } from '../utils/auth';
 import { requireCustomerAuth, AuthenticatedCustomerRequest } from '../middleware/customerAuth';
 
 const router = Router();
@@ -14,12 +14,12 @@ const signupSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   phone: z.string().min(10, 'Valid mobile number is required'),
   email: z.string().email('Invalid email address').optional().nullable(),
-  password: z.string().min(4, 'Password must be at least 4 characters'),
+  password: z.string().min(8, 'Password must be at least 8 characters').max(128),
 });
 
 const loginSchema = z.object({
   phone: z.string().min(1, 'Phone number is required'),
-  password: z.string().min(1, 'Password is required'),
+  password: z.string().min(1, 'Password is required').max(128),
 });
 
 const forgotPasswordSchema = z.object({
@@ -28,7 +28,7 @@ const forgotPasswordSchema = z.object({
 
 const resetPasswordSchema = z.object({
   token: z.string().min(1, 'Token is required'),
-  newPassword: z.string().min(4, 'Password must be at least 4 characters'),
+  newPassword: z.string().min(8, 'Password must be at least 8 characters').max(128),
 });
 
 // Normalize phone format (remove spaces, dashes)
@@ -66,7 +66,7 @@ router.post('/forgot-password', async (req, res, next) => {
     await prisma.customer.update({
       where: { id: customer.id },
       data: {
-        resetToken,
+        resetToken: crypto.createHash('sha256').update(resetToken).digest('hex'),
         resetTokenExpiry
       }
     });
@@ -107,7 +107,7 @@ router.post('/reset-password', async (req, res, next) => {
 
     const customer = await prisma.customer.findFirst({
       where: {
-        resetToken: data.token,
+        resetToken: crypto.createHash('sha256').update(data.token).digest('hex'),
         resetTokenExpiry: {
           gt: new Date()
         }
@@ -120,10 +120,10 @@ router.post('/reset-password', async (req, res, next) => {
       });
     }
 
-    const hashedPassword = hashPassword(data.newPassword);
+    const hashedPassword = await hashPassword(data.newPassword);
 
-    await prisma.customer.update({
-      where: { id: customer.id },
+    const resetResult = await prisma.customer.updateMany({
+      where: { id: customer.id, resetToken: customer.resetToken, resetTokenExpiry: { gt: new Date() } },
       data: {
         password: hashedPassword,
         resetToken: null,
@@ -132,6 +132,7 @@ router.post('/reset-password', async (req, res, next) => {
       }
     });
 
+    if (resetResult.count !== 1) return res.status(400).json({ error: 'Reset link already used or expired.' });
     res.json({
       message: 'Password has been reset successfully. You can now log in with your new password.'
     });
@@ -160,23 +161,10 @@ router.post('/signup', async (req, res, next) => {
       });
     }
 
-    const hashedPassword = hashPassword(data.password);
+    if (existing) return res.status(409).json({ error: 'This phone is linked to existing bookings. Contact staff to securely register your account.' });
+    const hashedPassword = await hashPassword(data.password);
 
-    let customer;
-    if (existing) {
-      // Upgrade existing guest customer to registered
-      customer = await prisma.customer.update({
-        where: { id: existing.id },
-        data: {
-          name: data.name.trim(),
-          email: data.email ? data.email.trim() : (existing.email || null),
-          password: hashedPassword,
-          isRegistered: true,
-        }
-      });
-    } else {
-      // Create new customer
-      customer = await prisma.customer.create({
+    const customer = await prisma.customer.create({
         data: {
           name: data.name.trim(),
           phone,
@@ -185,12 +173,12 @@ router.post('/signup', async (req, res, next) => {
           isRegistered: true,
         }
       });
-    }
 
     const token = signToken({
       customerId: customer.id,
       phone: customer.phone,
-      name: customer.name
+      name: customer.name,
+      credentialTag: credentialTag(customer.password!),
     });
 
     res.status(201).json({
@@ -220,26 +208,31 @@ router.post('/login', async (req, res, next) => {
     const phone = cleanPhone(data.phone);
 
     const customer = await prisma.customer.findFirst({
-      where: { phone }
+      where: { phone, isRegistered: true, password: { not: null } }
     });
 
     if (!customer || !customer.password) {
       return res.status(401).json({
-        error: 'No registered account found with this phone number. Please sign up.'
+        error: 'Invalid phone number or password.'
       });
     }
 
-    const isValid = comparePassword(data.password, customer.password);
+    const isValid = await comparePassword(data.password, customer.password);
     if (!isValid) {
       return res.status(401).json({
-        error: 'Incorrect password. Please try again.'
+        error: 'Invalid phone number or password.'
       });
     }
 
+    if (!customer.password.startsWith('scrypt:')) {
+      customer.password = await hashPassword(data.password);
+      await prisma.customer.update({ where: { id: customer.id }, data: { password: customer.password } });
+    }
     const token = signToken({
       customerId: customer.id,
       phone: customer.phone,
-      name: customer.name
+      name: customer.name,
+      credentialTag: credentialTag(customer.password!),
     });
 
     res.json({

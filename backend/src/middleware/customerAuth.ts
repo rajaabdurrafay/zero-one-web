@@ -1,39 +1,20 @@
 import { Request, Response, NextFunction } from 'express';
-import { verifyToken } from '../utils/auth';
-
-export interface AuthenticatedCustomerRequest extends Request {
-  customer?: {
-    customerId: string;
-    phone: string;
-    name: string;
-  };
+import { verifyToken, credentialTag } from '../utils/auth';
+import { prisma } from '../db';
+export interface AuthenticatedCustomerRequest extends Request { customer?: { customerId: string; phone: string; name: string } }
+async function authenticate(req: AuthenticatedCustomerRequest): Promise<boolean> {
+  const header = req.get('authorization');
+  if (!header?.startsWith('Bearer ')) return false;
+  const payload = verifyToken(header.slice(7).trim());
+  if (!payload) return false;
+  const account = await prisma.customer.findUnique({ where: { id: payload.customerId } });
+  if (!account?.password || !account.isRegistered || credentialTag(account.password) !== payload.credentialTag) return false;
+  req.customer = { customerId: account.id, phone: account.phone, name: account.name };
+  return true;
 }
-
-export function requireCustomerAuth(req: AuthenticatedCustomerRequest, res: Response, next: NextFunction) {
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ error: 'Authentication required. Please login.' });
-  }
-
-  const token = authHeader.substring(7).trim();
-  const payload = verifyToken(token);
-
-  if (!payload) {
-    return res.status(401).json({ error: 'Invalid or expired session. Please login again.' });
-  }
-
-  req.customer = payload;
-  next();
+export async function requireCustomerAuth(req: AuthenticatedCustomerRequest, res: Response, next: NextFunction) {
+  try { if (!await authenticate(req)) return res.status(401).json({ error: 'Invalid or expired session. Please login again.' }); next(); } catch(error) { next(error); }
 }
-
-export function optionalCustomerAuth(req: AuthenticatedCustomerRequest, res: Response, next: NextFunction) {
-  const authHeader = req.headers.authorization;
-  if (authHeader && authHeader.startsWith('Bearer ')) {
-    const token = authHeader.substring(7).trim();
-    const payload = verifyToken(token);
-    if (payload) {
-      req.customer = payload;
-    }
-  }
-  next();
+export async function optionalCustomerAuth(req: AuthenticatedCustomerRequest, res: Response, next: NextFunction) {
+  try { await authenticate(req); next(); } catch(error) { next(error); }
 }

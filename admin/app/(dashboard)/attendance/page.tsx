@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import useSWR from 'swr';
 import { Icon } from '@/components/Icon';
 import Select from '@/components/Select';
@@ -87,6 +87,8 @@ function RoleBadge({ role }: { role: string }) {
 }
 
 export default function AttendancePage() {
+  const [clockTime, setClockTime] = useState(() => Date.now());
+  useEffect(() => { const timer = setInterval(() => setClockTime(Date.now()), 60_000); return () => clearInterval(timer); }, []);
   const [selectedStaffId, setSelectedStaffId] = useState<string>('ALL');
   const [dateFilterMode, setDateFilterMode] = useState<string>('THIS_WEEK');
   const [customStartDate, setCustomStartDate] = useState<string>('');
@@ -162,7 +164,7 @@ export default function AttendancePage() {
       } else if (!log.logoutAt) {
         ongoingCount += 1;
         // Calculate rough elapsed minutes for ongoing
-        const diffMs = Date.now() - new Date(log.loginAt).getTime();
+        const diffMs = clockTime - new Date(log.loginAt).getTime();
         totalMinutes += Math.max(0, Math.floor(diffMs / (1000 * 60)));
       }
 
@@ -179,7 +181,7 @@ export default function AttendancePage() {
       totalShifts: logs.length,
       ongoingCount,
     };
-  }, [logs]);
+  }, [logs, clockTime]);
 
   const staffOptions = useMemo(() => {
     const opts = [{ value: 'ALL', label: 'All Staff Members' }];

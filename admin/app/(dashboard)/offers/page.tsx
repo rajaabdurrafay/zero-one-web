@@ -14,7 +14,7 @@ export default function OffersPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState(() => ({
     title: '',
     description: '',
     discountType: 'PERCENTAGE' as 'PERCENTAGE' | 'FIXED_AMOUNT',
@@ -28,7 +28,7 @@ export default function OffersPage() {
     minDuration: 60,
     promoCode: '',
     bannerImageUrl: '',
-  });
+  }));
 
   async function loadData() {
     try {

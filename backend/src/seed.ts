@@ -4,6 +4,8 @@ import { hashPassword } from './utils/auth';
 const prisma = new PrismaClient();
 
 async function main() {
+  if (process.env.NODE_ENV === 'production') throw new Error('Demo seed is disabled in production.');
+  if (process.env.SEED_ADMIN_PASSWORD && process.env.SEED_ADMIN_PASSWORD.length < 12) throw new Error('SEED_ADMIN_PASSWORD must be at least 12 characters.');
   console.log('🌱 Seeding database...');
 
   // 1. Seed Super Admin account if none exists
@@ -13,12 +15,12 @@ async function main() {
       data: {
         username: 'admin',
         name: 'Super Admin',
-        password: hashPassword('admin123'),
+        password: await hashPassword(process.env.SEED_ADMIN_PASSWORD || (() => { throw new Error('Set SEED_ADMIN_PASSWORD (at least 12 characters) before seeding.'); })()),
         role: AdminRole.SUPER_ADMIN,
         isActive: true,
       },
     });
-    console.log('✅ Created initial Super Admin account (admin / admin123)');
+    console.log('✅ Created initial Super Admin account.');
   } else {
     console.log('⚡ Admin users already exist. Skipping admin seed.');
   }
