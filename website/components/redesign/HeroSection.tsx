@@ -8,7 +8,7 @@ export function HeroSection({ stats }: { stats: ReviewsResponse['stats'] }) {
     <section className="zo-hero zo-container" aria-labelledby="zo-hero-title">
       <Image
         src={venueImages.hero}
-        alt="ZeroOne Cue & Play entrance and snooker lounge in Karachi"
+        alt="Wide view of ZeroOne's illuminated snooker lounge and full-size tables"
         fill
         loading="eager"
         fetchPriority="high"

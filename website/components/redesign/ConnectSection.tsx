@@ -44,8 +44,8 @@ export function ConnectSection({ activities }: { activities: Activity[] }) {
         </div>
         <div className="zo-connect-photo">
           <Image
-            src={`${imageRoot}/private-ps5-room.webp`}
-            alt="Illustrated private gaming room placeholder for the venue photo"
+            src={`${imageRoot}/priveat ps5.webp`}
+            alt="Private console gaming room at ZeroOne"
             fill
             sizes="(max-width: 700px) 92vw, 45vw"
           />

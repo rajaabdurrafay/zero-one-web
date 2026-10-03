@@ -260,22 +260,22 @@
   html {
     scroll-behavior: auto !important;
   }
-  .zo-home *,
-  .zo-home *::before,
-  .zo-home *::after,
+  .zo-home:not(:has([data-motion='on'])) *,
+  .zo-home:not(:has([data-motion='on'])) *::before,
+  .zo-home:not(:has([data-motion='on'])) *::after,
   .zo-navigation *,
   .zo-footer * {
     animation: none !important;
     transition: none !important;
   }
-  .zo-home .zo-reveal-pending {
+  .zo-home:not(:has([data-motion='on'])) .zo-reveal-pending {
     opacity: 1;
     transform: none;
   }
-  .zo-home a:hover,
-  .zo-home a:hover img,
-  .zo-home a:hover .zo-feature-photo,
-  .zo-home a:hover svg {
+  .zo-home:not(:has([data-motion='on'])) a:hover,
+  .zo-home:not(:has([data-motion='on'])) a:hover img,
+  .zo-home:not(:has([data-motion='on'])) a:hover .zo-feature-photo,
+  .zo-home:not(:has([data-motion='on'])) a:hover svg {
     transform: none;
   }
 }
@@ -303,8 +303,8 @@
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(90deg, rgba(8, 14, 20, 0.83), rgba(8, 14, 20, 0.25) 80%),
-    linear-gradient(0deg, rgba(8, 14, 20, 0.6), transparent 45%);
+    linear-gradient(90deg, rgba(8, 14, 20, 0.68), rgba(8, 14, 20, 0.04) 80%),
+    linear-gradient(0deg, rgba(8, 14, 20, 0.45), transparent 45%);
   z-index: -1;
 }
 .zo-hero-copy {
@@ -1340,4 +1340,38 @@
   .zo-book-label-short {
     display: inline;
   }
+}
+
+.zo-motion-control {
+  position: fixed;
+  bottom: 18px;
+  right: 18px;
+  z-index: 35;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 16px;
+  border-radius: 99px;
+  border: 1px solid var(--zo-border);
+  background: var(--zo-card);
+  color: var(--zo-ink);
+  box-shadow: 0 4px 20px #00000016;
+  font-size: 11px;
+  cursor: pointer;
+}
+.zo-home [data-motion='off'] *,
+.zo-home [data-motion='off'] *::before,
+.zo-home [data-motion='off'] *::after {
+  animation: none !important;
+  transition: none !important;
+}
+.zo-home [data-motion='off'] .zo-reveal-pending {
+  opacity: 1;
+  transform: none;
+}
+.zo-home [data-motion='off'] a:hover img,
+.zo-home [data-motion='off'] a:hover .zo-feature-photo,
+.zo-home [data-motion='off'] a:hover svg {
+  transform: none;
 }

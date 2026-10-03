@@ -1,13 +1,54 @@
 'use client';
 
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
+
+type MotionChoice = 'system' | 'on' | 'off';
+const storageKey = 'zeroone-motion';
+function readChoice(): MotionChoice {
+  try {
+    const value = localStorage.getItem(storageKey);
+    return value === 'on' || value === 'off' ? value : 'system';
+  } catch {
+    return 'system';
+  }
+}
+function subscribeChoice(listener: () => void) {
+  window.addEventListener('storage', listener);
+  return () => window.removeEventListener('storage', listener);
+}
+function subscribeSystem(listener: () => void) {
+  const media = window.matchMedia('(prefers-reduced-motion: reduce)');
+  media.addEventListener('change', listener);
+  return () => media.removeEventListener('change', listener);
+}
 
 // Content is visible without JavaScript. Only off-screen items receive the reveal state.
 export function Reveal({ children }: { children: ReactNode }) {
   const root = useRef<HTMLDivElement>(null);
+  const savedChoice = useSyncExternalStore(
+    subscribeChoice,
+    readChoice,
+    () => 'system' as MotionChoice,
+  );
+  const systemReduced = useSyncExternalStore(
+    subscribeSystem,
+    () => window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+    () => true,
+  );
+  const [override, setOverride] = useState<MotionChoice | null>(null);
+  const choice = override ?? savedChoice;
+  const enabled = choice === 'on' || (choice === 'system' && !systemReduced);
+  const toggle = () => {
+    const next = enabled ? 'off' : 'on';
+    setOverride(next);
+    try {
+      localStorage.setItem(storageKey, next);
+    } catch {
+      /* Session choice still works. */
+    }
+  };
   useEffect(() => {
-    const preference = window.matchMedia('(prefers-reduced-motion: reduce)');
-    if (!root.current || preference.matches || !('IntersectionObserver' in window)) return;
+    if (!root.current || !enabled || !('IntersectionObserver' in window)) return;
     const elements = Array.from(root.current.querySelectorAll<HTMLElement>('[data-reveal]'));
     const animations: Animation[] = [];
     // A short opening sequence, then stagger only siblings in each section.
@@ -32,11 +73,16 @@ export function Reveal({ children }: { children: ReactNode }) {
     });
     const observer = new IntersectionObserver(
       (entries) => {
-        for (const entry of entries)
+        for (const entry of entries) {
           if (entry.isIntersecting) {
             entry.target.classList.remove('zo-reveal-pending');
-            observer.unobserve(entry.target);
+          } else if (
+            entry.boundingClientRect.bottom < 0 ||
+            entry.boundingClientRect.top >= innerHeight
+          ) {
+            entry.target.classList.add('zo-reveal-pending');
           }
+        }
       },
       { rootMargin: '0px 0px -24px 0px', threshold: 0.08 },
     );
@@ -48,10 +94,11 @@ export function Reveal({ children }: { children: ReactNode }) {
         '--zo-reveal-delay',
         `${Math.max(0, siblings.indexOf(element) % 4) * 85}ms`,
       );
-      if (element.getBoundingClientRect().top > window.innerHeight) {
+      const bounds = element.getBoundingClientRect();
+      if (bounds.top > window.innerHeight || bounds.bottom < 0) {
         element.classList.add('zo-reveal-pending');
-        observer.observe(element);
       }
+      observer.observe(element);
     }
     // Small image drift follows real scroll position; no React state or scroll hijacking.
     const photos = Array.from(
@@ -69,29 +116,26 @@ export function Reveal({ children }: { children: ReactNode }) {
       }
     };
     const onScroll = () => {
-      if (!frame && !preference.matches) frame = requestAnimationFrame(updatePhotos);
+      if (!frame) frame = requestAnimationFrame(updatePhotos);
     };
     window.addEventListener('scroll', onScroll, { passive: true });
     updatePhotos();
-    const showAll = () => {
-      if (preference.matches) {
-        animations.forEach((animation) => animation.cancel());
-        if (frame) cancelAnimationFrame(frame);
-        frame = 0;
-        photos.forEach((photo) => photo.style.removeProperty('--zo-photo-drift'));
-        elements.forEach((element) => element.classList.remove('zo-reveal-pending'));
-        observer.disconnect();
-      }
-    };
-    preference.addEventListener('change', showAll);
     return () => {
       observer.disconnect();
       animations.forEach((animation) => animation.cancel());
       if (frame) cancelAnimationFrame(frame);
       window.removeEventListener('scroll', onScroll);
-      preference.removeEventListener('change', showAll);
+      photos.forEach((photo) => photo.style.removeProperty('--zo-photo-drift'));
       elements.forEach((element) => element.classList.remove('zo-reveal-pending'));
     };
-  }, []);
-  return <div ref={root}>{children}</div>;
+  }, [enabled]);
+  return (
+    <div ref={root} data-motion={enabled ? 'on' : 'off'}>
+      {children}
+      <button type="button" className="zo-motion-control" onClick={toggle} aria-pressed={enabled}>
+        <span aria-hidden="true">{enabled ? 'Ⅱ' : '▶'}</span>
+        {enabled ? 'Pause animations' : 'Enable animations'}
+      </button>
+    </div>
+  );
 }

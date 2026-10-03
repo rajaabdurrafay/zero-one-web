@@ -2,7 +2,7 @@ import type { Activity, Offer } from '@/lib/api';
 
 export const imageRoot = '/images';
 export const venueImages = {
-  hero: '/images/hero-banner.jpg.webp',
+  hero: '/images/Snokker/snooker-table.jpg (3).webp',
   deal: '/images/PS5/ps5-room.jpg.webp',
   snooker: '/images/Snokker/snooker-table.jpg.webp',
   cinema: '/images/Cinema/cinema.jpg.webp',
