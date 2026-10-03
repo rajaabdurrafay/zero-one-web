@@ -1,5 +1,7 @@
-import { getPricing, getActiveOffers, type Activity, type Offer } from '@/lib/api';
-import { HeroSection } from '@/components/sections/HeroSection';
+import { getPricing, getActiveOffers, getPublicReviews, type Activity, type Offer } from '@/lib/api';
+import { HeroSection } from '@/components/redesign/HeroSection';
+import { Reveal } from '@/components/redesign/Reveal';
+import { FeatureCardsSection } from '@/components/redesign/FeatureCardsSection';
 import { PopularActivities } from '@/components/sections/PopularActivities';
 import { HowItWorks } from '@/components/sections/HowItWorks';
 import { PromotionalSection } from '@/components/sections/PromotionalSection';
@@ -20,14 +22,16 @@ async function fetchActivities(): Promise<Activity[]> {
 }
 
 export default async function HomePage() {
-  const [activities, offers] = await Promise.all([
+  const [activities, offers, reviews] = await Promise.all([
     fetchActivities(),
     getActiveOffers().catch(() => [] as Offer[]),
+    getPublicReviews({ limit: 3 }),
   ]);
 
   return (
-    <div className="space-y-0 pb-0">
-      <HeroSection offers={offers} />
+    <div className="zo-home"><Reveal>
+      <HeroSection stats={reviews.stats} />
+      <FeatureCardsSection offers={offers} />
       <PopularActivities activities={activities} />
       <PromotionalSection offers={offers} />
       <SocialReelsSection />
@@ -35,6 +39,6 @@ export default async function HomePage() {
       <ReviewsSection />
       <LocationSection />
       <CTASection />
-    </div>
+    </Reveal></div>
   );
 }

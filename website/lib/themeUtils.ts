@@ -37,6 +37,7 @@ export function computeThemeVariables(theme: {
   const isGlass = Boolean(theme.glassEffectEnabled);
 
   const fontVars: Record<string, string> = {
+    '--theme-primary-contrast': (1.05 / (getLuminance(theme.primaryColor) + .05)) >= ((getLuminance(theme.primaryColor) + .05) / (getLuminance('#111111') + .05)) ? '#ffffff' : '#111111',
     '--font-display': `"${theme.displayFont || 'Space Grotesk'}", system-ui, sans-serif`,
     '--font-sans': `"${theme.bodyFont || 'Inter'}", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`,
     '--base-size-scale': String(theme.baseSizeScale ?? 1),
