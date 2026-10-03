@@ -75,13 +75,14 @@ export function ThemeProvider({
 
   const activeTheme = mode === 'LIGHT' ? lightTheme : darkTheme;
 
-  const applyTheme = (theme: ThemeSettings, newMode: ThemeMode) => {
+  const applyTheme = (theme: ThemeSettings, newMode: ThemeMode, animate = true) => {
     if (typeof document === 'undefined') return;
     const root = document.documentElement;
     const body = document.body;
+    animate = animate && !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     // Enable smooth transition
-    root.classList.add('theme-transition');
+    if (animate) root.classList.add('theme-transition');
 
     const vars = computeThemeVariables(theme);
     Object.entries(vars).forEach(([key, val]) => {
@@ -99,7 +100,7 @@ export function ThemeProvider({
       root.classList.remove('dark');
     }
 
-    setTimeout(() => {
+    if (animate) setTimeout(() => {
       root.classList.remove('theme-transition');
     }, 300);
   };
@@ -114,7 +115,7 @@ export function ThemeProvider({
         resolvedMode = 'LIGHT';
       }
       setModeState(resolvedMode);
-      applyTheme(resolvedMode === 'LIGHT' ? lightTheme : darkTheme, resolvedMode);
+      applyTheme(resolvedMode === 'LIGHT' ? lightTheme : darkTheme, resolvedMode, false);
     } catch {
       // ignore
     }

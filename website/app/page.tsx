@@ -1,4 +1,10 @@
-import { getPricing, getActiveOffers, getPublicReviews, type Activity, type Offer } from '@/lib/api';
+import {
+  getPricing,
+  getActiveOffers,
+  getPublicReviews,
+  type Activity,
+  type Offer,
+} from '@/lib/api';
 import { HeroSection } from '@/components/redesign/HeroSection';
 import { Reveal } from '@/components/redesign/Reveal';
 import { FeatureCardsSection } from '@/components/redesign/FeatureCardsSection';
@@ -16,7 +22,7 @@ export const dynamic = 'force-dynamic';
 async function fetchActivities(): Promise<Activity[]> {
   try {
     const data = await getPricing();
-    return Array.isArray(data) ? data:[];
+    return Array.isArray(data) ? data : [];
   } catch (e) {
     return [];
   }
@@ -30,17 +36,19 @@ export default async function HomePage() {
   ]);
 
   return (
-    <div className="zo-home"><Reveal>
-      <HeroSection stats={reviews.stats} />
-      <FeatureCardsSection offers={offers} />
-      <ActivitiesSection activities={activities} />
-      <WhyZeroOneSection />
-      <StatsSection stats={reviews.stats} />
-      <BookingBanner />
-      <PricingSection activities={activities} />
-      <ReviewsDealsSection reviews={reviews.reviews} offers={offers} />
-      <LatestOffersSection offers={offers} />
-      <ConnectSection activities={activities} />
-    </Reveal></div>
+    <div className="zo-home">
+      <Reveal>
+        <HeroSection stats={reviews.stats} />
+        <FeatureCardsSection offers={offers} />
+        <ActivitiesSection activities={activities} />
+        <WhyZeroOneSection />
+        <StatsSection stats={reviews.stats} />
+        <BookingBanner />
+        <PricingSection activities={activities} />
+        <ReviewsDealsSection reviews={reviews.reviews} offers={offers} />
+        <LatestOffersSection offers={offers} />
+        <ConnectSection activities={activities} />
+      </Reveal>
+    </div>
   );
 }
