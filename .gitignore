@@ -56,3 +56,7 @@ coverage/
 .claude/
 
 /backend/uploads/
+
+# Local security reports and private database exports
+security-audit*.json
+*.sql

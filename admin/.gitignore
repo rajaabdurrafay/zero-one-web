@@ -44,3 +44,6 @@ next-env.d.ts
 /backend/uploads/
 
 
+
+# Share setup examples, never real credentials.
+!.env.example

@@ -1,247 +1,54 @@
-# Gaming Zone Booking System
+# ZeroOne Web
 
-Complete booking management system for gaming zone with multiple activities.
+Gaming lounge booking and operations software. This npm workspace contains an Express/Prisma/MySQL API, a Next.js customer website, and a Next.js staff/admin dashboard.
 
-## Project Structure
+## Structure
 
-```
-├── backend/          # Node.js + Express + TypeScript + Prisma
-├── website/          # Next.js customer-facing website (Phase 2)
-└── admin/            # Next.js admin panel (Phase 2)
-```
+- backend/src: API routes, authentication, booking automation, stock and session logic.
+- backend/prisma/schema.prisma: existing MySQL schema. This hardening pass did not change it.
+- backend/tests: database-free security, transaction and export regression tests.
+- website: customer booking, payment submission, profile, reviews and public content.
+- admin: booking management, live sessions, staff, attendance, analytics and content/settings.
+- scripts/smoke-frontends.cjs: production frontend handler checks against a disposable backend fixture.
+- docs/HANDOVER.md: architecture, behavior changes, verification and remaining constraints.
+- docs/DEPLOYMENT.md: environment, deployment and rollback procedure.
 
-## Activities Supported
+## Setup
 
-1. **Snooker** - ₨500/hour
-2. **PS5 Gaming (Open)** - ₨300/hour
-3. **PS5 Private Room** - ₨800/hour
-4. **Private Cinema** - ₨1000/hour
-5. **Table Tennis** - ₨400/hour
-6. **Car Simulator** - ₨20/minute
+Use Node.js 22 or later and npm with the committed package-lock.json.
 
-## Phase 0 + Phase 1 Complete ✅
+1. Run npm ci from the repository root.
+2. Copy backend/.env.example to backend/.env, and each frontend .env.example to .env.local.
+3. Supply the existing MySQL DATABASE_URL and unique JWT_SECRET. Use at least 32 random characters.
+4. Set the SAME REVALIDATE_SECRET in backend and website (at least 32 random characters).
+5. Set API_URL for server-side frontend calls and NEXT_PUBLIC_API_URL for backend image URLs.
+6. For a NEW, disposable development database only, deliberately initialize the schema. Do not run database initialization against an existing/live database. Set SEED_ADMIN_PASSWORD (12+ characters) before development demo seeding. Production seeding is blocked.
 
-### Features Implemented:
-- ✅ Monorepo structure with workspaces
-- ✅ PostgreSQL database with Prisma ORM
-- ✅ Complete database schema (Resources, Activities, Customers, Bookings)
-- ✅ Time conflict detection (no double-booking)
-- ✅ Automatic price calculation based on activity pricing
-- ✅ REST API with validation (Zod)
-- ✅ Database seeding with sample data
+Generate a secret locally with node -e "console.log(require('crypto').randomBytes(48).toString('hex'))". Never commit its result.
 
-### API Endpoints:
+Run the apps in separate terminals:
 
-#### 1. Get Availability
-```http
-GET /api/availability?date=2026-09-15&resourceType=SNOOKER
-```
-Returns all resources with their busy time slots for the specified date.
+- npm run dev:backend: API on port 3001.
+- npm run dev:admin: admin on port 3000.
+- npm run dev:website: customer website on port 3002.
 
-#### 2. Create Booking
-```http
-POST /api/bookings
-Content-Type: application/json
+## Validation and production builds
 
-{
-  "resourceId": "clxxx...",
-  "customer": {
-    "name": "Raja Abdurrafay",
-    "phone": "03001234567",
-    "email": "raja@example.com"
-  },
-  "startTime": "2026-09-15T14:00:00Z",
-  "endTime": "2026-09-15T16:00:00Z",
-  "isWalkIn": false
-}
-```
-Creates a booking with automatic conflict check and price calculation.
+- npm run build: generate Prisma client and build all three workspaces.
+- npm run typecheck: TypeScript validation across all workspaces.
+- npm test: database-free backend regression tests.
+- npm run lint: both frontend lint checks; existing advisory warnings remain visible.
+- npm run test:frontends: requires completed frontend builds; uses ports 4310/4312 and a disposable fixture, not the configured API/database.
+- npm run audit:production: audit dependencies used at runtime.
 
-#### 3. List Bookings
-```http
-GET /api/bookings?date=2026-09-15&status=CONFIRMED
-```
-Filter bookings by date and/or status.
+Production commands: npm run start:backend, npm run start:admin, npm run start:website. Frontend start scripts default to ports 3000/3002; a managed hosting platform may supply its own explicit next start -p PORT command. See docs/DEPLOYMENT.md.
 
-#### 4. Update Booking
-```http
-PATCH /api/bookings/:id
-Content-Type: application/json
+## Security and data handling
 
-{
-  "status": "CANCELLED"
-}
-```
-Update booking status or reschedule (with conflict check).
+Admin and customer bearer tokens are held in HttpOnly, SameSite=Lax cookies through same-origin API relays. API authorization validates current accounts and credentials; admin tokens also require a live device-session record. Public booking administration is blocked. Guest booking access is scoped to one booking/group and expires after 24 hours. Payment screenshot links expire after 15 minutes.
 
-#### 5. Get Pricing
-```http
-GET /api/pricing
-```
-Returns all activities with current pricing information.
+New passwords use async scrypt; legacy PBKDF2 passwords are verified and upgraded after successful login. Existing sessions must sign in again after this release. Anonymous signup cannot claim historical guest bookings solely by matching a phone number; staff-assisted verification is needed for that workflow.
 
-## Setup Instructions
+The dashboard JSON export omits credentials and is a business-data export, not a restorable database backup. Keep encrypted MySQL backups and backend/uploads separately. Secrets, uploads, database dumps, node_modules, build output and editor settings are excluded from the delivery archive.
 
-### Prerequisites
-- Node.js 18+ installed
-- PostgreSQL database running
-- npm or yarn
-
-### Step 1: Install Dependencies
-```bash
-npm install
-```
-
-### Step 2: Configure Database
-1. Copy the example env file:
-   ```bash
-   cd backend
-   cp .env.example .env
-   ```
-
-2. Update `.env` with your PostgreSQL credentials:
-   ```
-   DATABASE_URL="postgresql://username:password@localhost:5432/gaming_zone_db?schema=public"
-   PORT=3001
-   NODE_ENV=development
-   ```
-
-### Step 3: Run Database Migrations
-```bash
-cd backend
-npm run db:migrate
-```
-
-### Step 4: Seed Database
-```bash
-npm run db:seed
-```
-This will create:
-- 6 activities with pricing
-- 11 resources (3 snooker tables, 4 PS5 stations, etc.)
-- 1 sample customer
-
-### Step 5: Start Backend Server
-```bash
-npm run dev
-```
-
-Server will start on `http://localhost:3001`
-
-### Optional: Open Prisma Studio (Database GUI)
-```bash
-npm run db:studio
-```
-
-## Testing the API
-
-### Using curl:
-
-**Check health:**
-```bash
-curl http://localhost:3001/health
-```
-
-**Get pricing:**
-```bash
-curl http://localhost:3001/api/pricing
-```
-
-**Check availability:**
-```bash
-curl "http://localhost:3001/api/availability?date=2026-09-15&resourceType=SNOOKER"
-```
-
-**Create booking:**
-```bash
-curl -X POST http://localhost:3001/api/bookings \
-  -H "Content-Type: application/json" \
-  -d '{
-    "resourceId": "YOUR_RESOURCE_ID",
-    "customer": {
-      "name": "Test User",
-      "phone": "03001234567"
-    },
-    "startTime": "2026-09-15T14:00:00Z",
-    "endTime": "2026-09-15T16:00:00Z"
-  }'
-```
-
-### Using Postman:
-Import the endpoints above and test each one.
-
-## Key Features
-
-### 1. Conflict Detection
-The system prevents double-booking by checking for overlapping time slots on the same resource:
-- New booking starts during existing booking ❌
-- New booking ends during existing booking ❌
-- New booking contains existing booking ❌
-
-### 2. Automatic Pricing
-Price is calculated based on:
-- Activity's pricing unit (per hour or per minute)
-- Duration of booking
-- Base price from Activity table
-
-### 3. Customer Management
-- Customers are identified by phone number
-- Automatically reuses existing customer or creates new one
-
-### 4. Type Safety
-- Full TypeScript support
-- Prisma ORM for type-safe database queries
-- Zod validation for API requests
-
-## Next Steps (Phase 2)
-
-- [ ] Build admin panel (Next.js)
-- [ ] Build customer-facing website (Next.js)
-- [ ] Add authentication
-- [ ] Add payment integration
-- [ ] Real-time availability updates
-
-## Tech Stack
-
-- **Backend**: Node.js, Express, TypeScript
-- **Database**: PostgreSQL
-- **ORM**: Prisma
-- **Validation**: Zod
-- **Development**: tsx (hot reload)
-
-## Common Commands
-
-```bash
-# Start backend dev server
-npm run dev:backend
-
-# Run database migrations
-cd backend && npm run db:migrate
-
-# Seed database
-cd backend && npm run db:seed
-
-# Open Prisma Studio
-cd backend && npm run db:studio
-
-# Build backend for production
-cd backend && npm run build
-
-# Start production server
-cd backend && npm start
-```
-
-## Troubleshooting
-
-**Issue: Database connection error**
-- Verify PostgreSQL is running
-- Check DATABASE_URL in `.env`
-- Ensure database exists
-
-**Issue: Port 3001 already in use**
-- Change PORT in `.env`
-- Or kill the process using port 3001
-
-**Issue: Prisma migration fails**
-- Drop database and recreate: `dropdb gaming_zone_db && createdb gaming_zone_db`
-- Run migrations again
+No live database writes, migrations, emails or deployment were performed during verification. Read the handover for unverified integration requirements and retained development-tool advisories.
