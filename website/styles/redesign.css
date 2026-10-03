@@ -209,12 +209,18 @@
 }
 [data-reveal] {
   transition:
-    opacity 0.55s ease,
-    transform 0.55s ease;
+    opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: var(--zo-reveal-delay, 0ms);
 }
 .zo-reveal-pending {
   opacity: 0;
-  transform: translateY(18px);
+  transform: translateY(32px);
+}
+.zo-reveal-pending:focus-within {
+  opacity: 1;
+  transform: none;
+  transition-delay: 0ms;
 }
 @media (max-width: 900px) {
   .zo-feature-grid {
@@ -290,6 +296,7 @@
 }
 .zo-hero > img {
   object-fit: cover;
+  transform: translateY(var(--zo-photo-drift, 0px)) scale(1.065);
   z-index: -2;
 }
 .zo-hero-overlay {
@@ -593,6 +600,7 @@
 }
 .zo-banner-card > img {
   object-fit: cover;
+  transform: translateY(var(--zo-photo-drift, 0px)) scale(1.065);
   z-index: -2;
 }
 .zo-banner-overlay {
@@ -1002,16 +1010,16 @@
   left: 0;
   right: 0;
   z-index: 50;
-  padding-block: 24px;
+  padding-block: 18px;
 }
 .zo-nav-inner {
-  width: min(1500px, calc(100% - 64px));
-  min-height: 50px;
+  width: min(1320px, calc(100% - 48px));
+  min-height: 64px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 24px;
-  padding: 2px 12px 2px 20px;
+  padding: 7px 16px 7px 24px;
   border-radius: 99px;
   border: 1px solid var(--theme-glass-border);
   background: var(--theme-glass-bg);
@@ -1026,16 +1034,16 @@
   min-height: 44px;
 }
 .zo-nav-logo img {
-  width: 99px;
+  width: 116px;
   height: auto;
 }
 .zo-nav-links {
   display: flex;
   align-items: center;
-  gap: 18px;
+  gap: 22px;
 }
 .zo-nav-links a {
-  font-size: 11px;
+  font-size: 12px;
   min-height: 44px;
   display: flex;
   align-items: center;

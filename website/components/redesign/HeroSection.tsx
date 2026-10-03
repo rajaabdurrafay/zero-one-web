@@ -35,7 +35,7 @@ export function HeroSection({ stats }: { stats: ReviewsResponse['stats'] }) {
         </div>
         <div>
           <span>Opening hours</span>
-          <strong>Contact venue for timing</strong>
+          <strong>Open 24/7</strong>
         </div>
         <div>
           <span>Player reviews</span>

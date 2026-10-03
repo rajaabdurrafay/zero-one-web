@@ -5,7 +5,9 @@ Date: 3 October 2026. Deployment and push have not been performed.
 
 ## Owner review updates
 
-The hero now spans almost the full viewport width with a 12 px desktop gutter and a viewport-height minimum. Navigation floats over it, with a separate 1500 px maximum width, 50 px desktop height and 99 px logo. On mobile, the header remains 60 px high for touch targets and the hero can grow to fit its copy/chips. Other content containers remain 1240 px. The header uses the existing `glass-nav` utility and `--theme-glass-*` tokens, so the existing admin Appearance glass setting controls transparency/blur/shadow independently in light and dark modes; no new admin toggle was added.
+The hero now spans almost the full viewport width with a 12 px desktop gutter and a viewport-height minimum. Navigation floats over it, with a separate 1320 px maximum width, 64 px desktop height and 116 px logo (rebalanced after owner review). On mobile, the header remains 60 px high for touch targets and the hero can grow to fit its copy/chips. Other content containers remain 1240 px. Motion now includes a short hero text/chip entrance sequence, section-local staggered reveals and a small, clamped scroll drift for the hero/banner photos. Native scrolling is retained; passive listeners schedule DOM updates through requestAnimationFrame without React scroll-state renders. Motion stops and all content is immediately exposed when reduced-motion is enabled, including when the preference changes mid-session. Keyboard focus exposes any pending reveal.
+
+The header uses the existing `glass-nav` utility and `--theme-glass-*` tokens, so the existing admin Appearance glass setting controls transparency/blur/shadow independently in light and dark modes; no new admin toggle was added.
 
 All homepage illustration slots now use existing ZeroOne venue photographs from `website/public/images/`. The pricing illustration is replaced by a rounded snooker photograph with a readable caption. The owner selected live snooker pricing and approved review count in place of unconfirmed booking totals and empty ratings. A numeric zero means zero approved reviews in the returned public response; it is not a zero-star rating. Booking totals are no longer shown.
 
@@ -26,7 +28,7 @@ The existing Navbar/Footer choose the new variants only on the homepage. Other c
 - The Let's Connect/session planner is a GET form to `/book`; it preselects the activity and then uses the existing wizard. It does not create a booking or collect new personal data.
 - Active offers and approved public reviews use the existing endpoints. Empty offers show clearly labelled experience guides, not invented promotions or news. Empty reviews show an honest invitation to review.
 - Existing authenticated account links, logout, booking-paused state, maintenance/provider behavior, popup handling and theme preferences remain connected to their original contexts.
-- The six advertised activities are the owner's requested list. The unconfirmed total booking count is omitted in favor of live snooker pricing. Opening hours say "Contact venue for timing". Rating appears only when the reviews API supplies reviews; no fabricated rating or testimonial is displayed.
+- The six advertised activities are the owner's requested list. The unconfirmed total booking count is omitted in favor of live snooker pricing. Opening hours display "Open 24/7", confirmed by the owner. Rating appears only when the reviews API supplies reviews; no fabricated rating or testimonial is displayed.
 
 ## Current venue photos
 

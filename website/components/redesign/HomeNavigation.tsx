@@ -47,7 +47,7 @@ export function HomeNavigation() {
         }}
       >
         <Link prefetch={false} href="/" className="zo-nav-logo" aria-label="ZeroOne home">
-          <BrandLogo width={99} height={30} />
+          <BrandLogo width={116} height={34} />
         </Link>
         <div className="zo-nav-links">
           {links.map(([label, href]) => (
