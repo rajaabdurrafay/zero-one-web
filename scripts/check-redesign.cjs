@@ -1,0 +1,231 @@
+// Optional browser QA; install Playwright/@axe-core/playwright in a test tool directory.
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const { startFixture } = require('./redesign-fixture.cjs');
+const { chromium } = require(process.env.PLAYWRIGHT_MODULE_PATH || 'playwright');
+const AxeBuilder = require(process.env.AXE_MODULE_PATH || '@axe-core/playwright').default;
+const output = process.env.REDESIGN_QA_OUTPUT;
+if (!output) throw Error('Set REDESIGN_QA_OUTPUT to a local QA artifact directory.');
+async function main() {
+  fs.mkdirSync(output, { recursive: true });
+  const fixture = await startFixture();
+  const browser = await chromium.launch({
+    ...(process.env.CHROME_PATH ? { executablePath: process.env.CHROME_PATH } : {}),
+    headless: true,
+  });
+  const results = [];
+  try {
+    for (const [mode, width] of [
+      ['LIGHT', 1440],
+      ['DARK', 1440],
+      ['LIGHT', 390],
+      ['DARK', 390],
+      ['LIGHT', 320],
+    ]) {
+      const context = await browser.newContext({
+        viewport: { width, height: 900 },
+        reducedMotion: 'reduce',
+      });
+      await context.addInitScript(
+        (value) => localStorage.setItem('zeroone-theme-mode', value),
+        mode,
+      );
+      const page = await context.newPage();
+      const errors = [];
+      page.on('pageerror', (error) => errors.push(error.message));
+      await page.goto(fixture.url, { waitUntil: 'domcontentloaded' });
+      await page.waitForFunction(
+        (value) => document.documentElement.classList.contains(value.toLowerCase()),
+        mode,
+      );
+      await page.locator('.zo-hero').waitFor();
+      await page.waitForFunction(
+        (value) => document.documentElement.classList.contains(value.toLowerCase()),
+        mode,
+      );
+      assert.equal(await page.locator('h1').count(), 1);
+      assert.equal(await page.locator('.zo-feature-grid .zo-feature').count(), 3);
+      assert.equal(await page.locator('.zo-activity-card').count(), 6);
+      assert.equal(await page.locator('.zo-benefit').count(), 4);
+      if (width === 1440) {
+        await page.locator('.zo-desktop-theme button').click();
+        assert.equal(
+          await page.evaluate(() =>
+            document.documentElement.classList.contains('theme-transition'),
+          ),
+          false,
+          'Reduced motion also disables theme animation',
+        );
+        await page.locator('.zo-desktop-theme button').click();
+        assert.equal(
+          await page.evaluate(() => localStorage.getItem('zeroone-theme-mode')),
+          mode,
+          'Theme choice remains persistent',
+        );
+      }
+      assert.match(await page.locator('.zo-hero').innerText(), /Reviews coming soon/);
+      assert.equal(
+        await page
+          .locator('.zo-home')
+          .evaluate(() => document.documentElement.scrollWidth <= innerWidth),
+        true,
+        `No horizontal overflow at ${width}px`,
+      );
+      assert.ok(
+        await page
+          .locator('.zo-feature-grid .zo-feature-accent .zo-feature-photo')
+          .evaluate((element) =>
+            getComputedStyle(element).maskImage.includes('data:image/svg+xml'),
+          ),
+        'Organic image mask is active',
+      );
+      const activity = page.locator('.zo-activity-card').first();
+      assert.match(await activity.getAttribute('href'), /\/book\?activity=/);
+      await activity.click();
+      await page.waitForURL('**/book?activity=*');
+      await page.getByRole('heading', { name: 'Date & Duration' }).waitFor({ timeout: 15000 });
+      await page.goto(fixture.url, { waitUntil: 'domcontentloaded' });
+      if (width < 700) {
+        await page.getByRole('button', { name: 'Open navigation' }).click();
+        assert.equal(
+          await page
+            .getByRole('button', { name: 'Close navigation' })
+            .getAttribute('aria-expanded'),
+          'true',
+        );
+        await page.keyboard.press('Escape');
+        assert.equal(
+          await page.getByRole('button', { name: 'Open navigation' }).getAttribute('aria-expanded'),
+          'false',
+        );
+      }
+      const accessibility = await new AxeBuilder({ page })
+        .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
+        .analyze();
+      fs.writeFileSync(
+        path.join(output, `axe-${mode.toLowerCase()}-${width}.json`),
+        JSON.stringify(accessibility.violations, null, 2),
+      );
+      assert.deepEqual(
+        accessibility.violations.map((item) => ({ id: item.id, nodes: item.nodes.length })),
+        [],
+        `Accessibility ${mode}/${width}`,
+      );
+      assert.deepEqual(errors, [], 'No runtime page errors');
+      if (width !== 320) {
+        for (let y = 0; y < (await page.evaluate(() => document.body.scrollHeight)); y += 700) {
+          await page.evaluate((value) => scrollTo(0, value), y);
+          await page.waitForTimeout(100);
+        }
+        await page.evaluate(() => scrollTo(0, 0));
+        await page.waitForTimeout(600);
+      }
+      if (width !== 320)
+        await page.screenshot({
+          path: path.join(output, `website-${mode.toLowerCase()}-${width}.png`),
+          fullPage: true,
+        });
+      results.push({
+        mode,
+        width,
+        overflow: false,
+        runtimeErrors: errors.length,
+        accessibilityViolations: accessibility.violations.length,
+      });
+      await context.close();
+    }
+    fixture.setScenario('live');
+    const page = await browser.newPage({ reducedMotion: 'reduce' });
+    await page.goto(fixture.url, { waitUntil: 'domcontentloaded' });
+    assert.match(
+      await page.locator('.zo-feature-grid .zo-feature-accent').getAttribute('href'),
+      /offerId=fixture-offer&promo=TEST\+ONLY\+%26\+SAFE/,
+    );
+    assert.match(
+      await page.locator('.zo-feature-grid .zo-feature-accent').innerText(),
+      /Fixture offer/,
+    );
+    assert.match(await page.locator('.zo-testimonial').innerText(), /Controlled review/);
+    assert.match(await page.locator('.zo-hero').innerText(), /4.0 \/ 5/);
+    fixture.setScenario('offline');
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    assert.match(await page.locator('.zo-pricing').innerText(), /Indicative rates/);
+    assert.equal(await page.locator('.zo-price-row').count(), 6);
+    assert.equal(
+      await page
+        .locator('.zo-feature-grid .zo-feature-photo')
+        .first()
+        .evaluate((element) => getComputedStyle(element).transitionDuration),
+      '0s',
+      'Reduced motion disables image animation',
+    );
+    fixture.setScenario('empty');
+    const motionPage = await browser.newPage({ reducedMotion: 'no-preference' });
+    await motionPage.goto(fixture.url, { waitUntil: 'domcontentloaded' });
+    await motionPage.locator('.zo-feature-grid .zo-feature-accent').hover();
+    await motionPage.waitForTimeout(650);
+    assert.notEqual(
+      await motionPage
+        .locator('.zo-feature-grid .zo-feature-accent .zo-feature-photo')
+        .evaluate((element) => getComputedStyle(element).transform),
+      'none',
+      'Feature blob subtly animates on hover',
+    );
+    const planner = motionPage.locator('.zo-connect-form');
+    await planner.locator('select').selectOption('cfixtureactivity000000001');
+    await planner.getByRole('button', { name: 'Continue to Booking' }).click();
+    await motionPage.waitForURL('**/book?activity=*');
+    await motionPage.getByRole('heading', { name: 'Date & Duration' }).waitFor();
+    await motionPage.close();
+    fixture.setScenario('paused');
+    const pausedPage = await browser.newPage({ viewport: { width: 320, height: 850 } });
+    await pausedPage.goto(fixture.url, { waitUntil: 'domcontentloaded' });
+    await pausedPage
+      .locator('.zo-navigation')
+      .getByRole('link', { name: 'Bookings Paused' })
+      .click();
+    await pausedPage.getByRole('heading', { name: 'Online Bookings Paused' }).waitFor();
+    await pausedPage.close();
+    fixture.setScenario('account');
+    const accountPage = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+    await accountPage.goto(fixture.url, { waitUntil: 'domcontentloaded' });
+    await accountPage.locator('.zo-account-menu summary').click();
+    assert.equal(
+      await accountPage
+        .locator('.zo-account-menu')
+        .getByRole('link', { name: 'My Profile' })
+        .getAttribute('href'),
+      '/profile',
+    );
+    assert.equal(
+      await accountPage
+        .locator('.zo-account-menu')
+        .getByRole('link', { name: 'My Bookings' })
+        .getAttribute('href'),
+      '/my-bookings',
+    );
+    await accountPage.locator('.zo-account-menu').getByRole('button', { name: 'Sign Out' }).click();
+    await accountPage.locator('.zo-nav-account').getByRole('link', { name: 'Sign In' }).waitFor();
+    await accountPage.close();
+    results.push({
+      liveOffersAndReviews: 'pass',
+      bookingActivityPreselection: 'pass',
+      sessionPlanner: 'pass',
+      offlinePriceLabel: 'pass',
+      reducedMotion: 'pass',
+      featureHover: 'pass',
+      pausedBooking: 'pass',
+      accountMenuAndLogout: 'pass',
+    });
+    fs.writeFileSync(path.join(output, 'browser-results.json'), JSON.stringify(results, null, 2));
+    console.log(JSON.stringify(results, null, 2));
+  } finally {
+    await browser.close();
+    await fixture.close();
+  }
+}
+main().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});
