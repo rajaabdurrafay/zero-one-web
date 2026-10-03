@@ -24,7 +24,10 @@
     "audit:production": "node scripts/audit-production.cjs",
     "lint": "npm run lint --workspace=website && npm run lint --workspace=admin",
     "test:frontends": "node scripts/smoke-frontends.cjs",
-    "test:db": "node scripts/run-db-tests.cjs"
+    "test:db": "node scripts/run-db-tests.cjs",
+    "dev:local": "node scripts/local.cjs start",
+    "local:doctor": "node scripts/local.cjs doctor",
+    "test:local-safety": "node --test scripts/local-environment.test.cjs"
   },
   "engines": {
     "node": ">=22.0.0"

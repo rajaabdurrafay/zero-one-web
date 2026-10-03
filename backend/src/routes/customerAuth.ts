@@ -1,3 +1,4 @@
+import { saveLocalEmail } from '../utils/localEmail';
 import { decodeImage } from '../utils/uploads';
 import { canonicalPhone } from '@zeroone/domain';
 import { Router } from 'express';
@@ -68,7 +69,9 @@ router.post('/forgot-password', async (req, res, next) => {
     const websiteUrl = process.env.WEBSITE_URL || 'http://localhost:3002';
     const apiKey = process.env.RESEND_API_KEY;
 
-    if (apiKey) {
+    if (await saveLocalEmail({to: customer.email!, subject: 'Reset Your ZeroOne Password', text: `${websiteUrl}/reset-password?token=${resetToken}`})) {
+      // The owner can open the local reset link from the private file outbox.
+    } else if (apiKey) {
       try {
         const resend = new Resend(apiKey);
         const delivery = await resend.emails.send({

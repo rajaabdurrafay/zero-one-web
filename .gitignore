@@ -61,3 +61,6 @@ coverage/
 security-audit*.json
 *.sql
 !docs/SCHEMA_CHANGES.sql
+
+# Isolated local runtime, uploads, private mail and credentials
+.local/

@@ -1,3 +1,4 @@
+import { saveLocalEmail } from './localEmail';
 import crypto from 'crypto';
 import { Resend } from 'resend';
 
@@ -107,6 +108,7 @@ export async function sendNewDeviceLoginEmail(params: {
   location: string;
   loginTime: Date;
 }) {
+  if (await saveLocalEmail({to: params.toEmail, subject: 'Local admin login notice', text: `A login for ${params.username} was detected. This is a local test notice.`})) return;
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
     console.warn('[Security Alert] RESEND_API_KEY is not defined. Email alert skipped.');

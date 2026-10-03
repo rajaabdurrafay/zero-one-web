@@ -1,5 +1,8 @@
 import { PrismaClient, Prisma } from '@prisma/client';
 import { AsyncLocalStorage } from 'node:async_hooks';
+import { assertLocalRuntime } from './utils/localRuntime';
+
+assertLocalRuntime();
 
 export const database = new PrismaClient({
   log: ['error', 'warn']

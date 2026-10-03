@@ -1,5 +1,7 @@
 # ZeroOne
 
+For real local testing with Laragon MySQL, run `npm run local:doctor` then `npm run dev:local`. Website: http://localhost:3002; admin: http://localhost:3000. See [isolated local setup](docs/LOCAL_DEVELOPMENT.md) for private uploads, email outbox and release boundaries.
+
 Gaming lounge booking and operations: Express/Prisma/MySQL API, Next.js customer website and staff dashboard, plus shared pricing/timezone utilities.
 
 ## Workspace
