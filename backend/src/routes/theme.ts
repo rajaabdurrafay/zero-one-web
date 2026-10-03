@@ -80,18 +80,18 @@ export const DEFAULT_ADMIN_THEME_LIGHT = {
 const updateThemeSchema = z.object({
   target: z.enum(['WEBSITE', 'ADMIN']),
   mode: z.enum(['LIGHT', 'DARK']).default('DARK'),
-  primaryColor: z.string().min(1),
-  primaryDarkColor: z.string().min(1),
-  accentColor: z.string().min(1),
-  accentDarkColor: z.string().min(1),
-  backgroundColor: z.string().min(1),
-  textColor: z.string().min(1),
-  displayFont: z.string().min(1).optional().default('Poppins'),
-  bodyFont: z.string().min(1).optional().default('Inter'),
+  primaryColor: z.string().regex(/^#[0-9a-fA-F]{6}$/),
+  primaryDarkColor: z.string().regex(/^#[0-9a-fA-F]{6}$/),
+  accentColor: z.string().regex(/^#[0-9a-fA-F]{6}$/),
+  accentDarkColor: z.string().regex(/^#[0-9a-fA-F]{6}$/),
+  backgroundColor: z.string().regex(/^#[0-9a-fA-F]{6}$/),
+  textColor: z.string().regex(/^#[0-9a-fA-F]{6}$/),
+  displayFont: z.string().regex(/^[a-zA-Z0-9 -]{1,80}$/).optional().default('Poppins'),
+  bodyFont: z.string().regex(/^[a-zA-Z0-9 -]{1,80}$/).optional().default('Inter'),
   baseSizeScale: z.number().min(0.5).max(2.0).optional().default(1.0),
   glassEffectEnabled: z.boolean().optional().default(false),
-  logoUrlDark: z.string().nullable().optional(),
-  logoUrlLight: z.string().nullable().optional(),
+  logoUrlDark: z.string().regex(/^\/uploads\/branding\/[a-zA-Z0-9_-]+\.(png|jpg|jpeg|webp|gif)$/).nullable().optional(),
+  logoUrlLight: z.string().regex(/^\/uploads\/branding\/[a-zA-Z0-9_-]+\.(png|jpg|jpeg|webp|gif)$/).nullable().optional(),
 });
 
 // GET /api/theme?target=WEBSITE|ADMIN&mode=LIGHT|DARK

@@ -355,8 +355,8 @@ export default function AddonsPage() {
                     type="button"
                     onClick={() => handleDelete(item)}
                     className="btn btn-ghost p-2 hover:text-stop"
-                    title={`Delete ${item.name}`}
-                    aria-label={`Delete ${item.name}`}
+                    title={`Archive ${item.name}`}
+                    aria-label={`Archive ${item.name}`}
                   >
                     <Icon name="trash" size={14} />
                   </button>

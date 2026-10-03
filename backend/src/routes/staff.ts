@@ -1,3 +1,4 @@
+import { decodeImage } from '../utils/uploads';
 import { Router } from 'express';
 import { z } from 'zod';
 import path from 'path';
@@ -13,7 +14,7 @@ const router = Router();
 // Helper to save base64 avatar image to /uploads/avatars
 function saveAvatarFile(base64Data: string, prefix: string): string {
   let ext = 'jpg';
-  const match = base64Data.match(/^data:image\/(png|jpeg|jpg|webp);base64,/);
+  const match = base64Data.match(/^data:image\/(png|jpeg|jpg|webp|gif);base64,/);
   if (match) {
     ext = match[1] === 'jpeg' ? 'jpg' : match[1];
     base64Data = base64Data.replace(/^data:image\/\w+;base64,/, '');
@@ -269,8 +270,9 @@ router.delete('/:id', async (req: AuthenticatedAdminRequest, res, next) => {
       return res.status(404).json({ error: 'Staff member not found.' });
     }
 
-    await prisma.adminUser.delete({
+    await prisma.adminUser.update({
       where: { id },
+      data: {isActive:false},
     });
 
     if (req.admin?.id) {
@@ -281,7 +283,7 @@ router.delete('/:id', async (req: AuthenticatedAdminRequest, res, next) => {
       });
     }
 
-    return res.json({ message: 'Staff account deleted successfully.' });
+    return res.json({ message: 'Staff account deactivated; history retained.' });
   } catch (error) {
     next(error);
   }

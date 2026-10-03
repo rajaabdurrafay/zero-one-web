@@ -125,7 +125,7 @@ router.post('/admin', requireAdminAuth([AdminRole.SUPER_ADMIN, AdminRole.MANAGER
     res.status(201).json(reel);
   } catch (error: any) {
     console.error('Failed to add reel:', error);
-    res.status(400).json({ error: error?.message || 'Invalid payload' });
+    res.status(400).json({ error: error instanceof z.ZodError ? 'Invalid reel payload' : 'Could not save reel' });
   }
 });
 
@@ -156,7 +156,7 @@ router.patch('/admin/:id', requireAdminAuth([AdminRole.SUPER_ADMIN, AdminRole.MA
     res.json(reel);
   } catch (error: any) {
     console.error('Failed to update reel:', error);
-    res.status(400).json({ error: error?.message || 'Failed to update reel' });
+    res.status(400).json({ error: 'Failed to update reel' });
   }
 });
 
@@ -181,7 +181,7 @@ router.delete('/admin/:id', requireAdminAuth([AdminRole.SUPER_ADMIN, AdminRole.M
     res.json({ success: true, message: 'Reel deleted successfully' });
   } catch (error: any) {
     console.error('Failed to delete reel:', error);
-    res.status(400).json({ error: error?.message || 'Failed to delete reel' });
+    res.status(400).json({ error: 'Failed to delete reel' });
   }
 });
 

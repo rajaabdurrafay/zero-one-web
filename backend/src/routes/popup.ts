@@ -18,7 +18,7 @@ const updatePopupSchema = z.object({
   heading: z.string().min(1).default('Special Announcement'),
   message: z.string().min(1).default('Check out our latest deals and book your gaming or snooker arena slot today!'),
   buttonText: z.string().min(1).default('Book Your Slot'),
-  buttonLink: z.string().min(1).default('/book'),
+  buttonLink: z.string().trim().min(1).max(2000).refine(value=>/^\/(?!\/)[^\\]*$/.test(value) || /^https?:\/\/[^\s]+$/i.test(value),'Use an internal path or HTTP(S) URL').default('/book'),
   imageUrl: z.string().nullable().optional(),
 });
 

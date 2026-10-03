@@ -1,5 +1,6 @@
 'use client';
 
+import { businessDate, businessInstant } from '@zeroone/domain';
 import { useState, useEffect } from 'react';
 import { getOffers, createOffer, updateOffer, toggleOfferActive, toggleOfferVisibility, deleteOffer, getPricing, Offer, Activity } from '@/lib/api';
 import { Icon } from '@/components/Icon';
@@ -21,7 +22,7 @@ export default function OffersPage() {
     discountValue: 20,
     applicableTo: 'ALL_ACTIVITIES' as 'ALL_ACTIVITIES' | 'SPECIFIC_ACTIVITY',
     activityId: '',
-    validFrom: new Date().toISOString().split('T')[0],
+    validFrom: businessDate(),
     validUntil: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     isActive: true,
     isVisibleOnWebsite: true,
@@ -58,7 +59,7 @@ export default function OffersPage() {
       discountValue: 20,
       applicableTo: 'ALL_ACTIVITIES',
       activityId: '',
-      validFrom: new Date().toISOString().split('T')[0],
+      validFrom: businessDate(),
       validUntil: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       isActive: true,
       isVisibleOnWebsite: true,
@@ -109,12 +110,12 @@ export default function OffersPage() {
   }
 
   async function handleDelete(id: string, title: string) {
-    if (!confirm(`Delete the offer "${title}"? This cannot be undone.`)) return;
+    if (!confirm(`Archive the offer "${title}"? Booking history will be retained.`)) return;
     try {
       await deleteOffer(id);
       await loadData();
     } catch (err: any) {
-      alert(err.message || 'Could not delete this offer');
+      alert(err.message || 'Could not archive this offer');
     }
   }
 
@@ -132,8 +133,8 @@ export default function OffersPage() {
         applicableTo: formData.applicableTo,
         activityId:
           formData.applicableTo === 'SPECIFIC_ACTIVITY' && formData.activityId ? formData.activityId : null,
-        validFrom: new Date(formData.validFrom + 'T00:00:00Z').toISOString(),
-        validUntil: new Date(formData.validUntil + 'T23:59:59Z').toISOString(),
+        validFrom: businessInstant(formData.validFrom).toISOString(),
+        validUntil: new Date(businessInstant(formData.validUntil).getTime()+86400000-1).toISOString(),
         isActive: formData.isActive,
         isVisibleOnWebsite: formData.isVisibleOnWebsite,
         minDuration: formData.minDuration ? Number(formData.minDuration) : null,
@@ -280,7 +281,7 @@ export default function OffersPage() {
                     <button
                       onClick={() => handleDelete(offer.id, offer.title)}
                       className="p-2 rounded-[3px] text-muted hover:text-stop hover:bg-raised transition-colors"
-                      aria-label={`Delete ${offer.title}`}
+                      aria-label={`Archive ${offer.title}`}
                     >
                       <Icon name="trash" size={15} />
                     </button>

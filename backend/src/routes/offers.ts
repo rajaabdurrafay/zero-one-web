@@ -7,14 +7,14 @@ import { requireAdminAuth } from '../middleware/adminAuth';
 const router = Router();
 
 const createOfferSchema = z.object({
-  title: z.string().min(1, 'Title is required'),
-  description: z.string().optional(),
+  title: z.string().trim().min(1, 'Title is required').max(100),
+  description: z.string().max(2000).nullable().optional(),
   discountType: z.nativeEnum(DiscountType),
-  discountValue: z.number().positive('Discount value must be positive'),
+  discountValue: z.number().finite().positive('Discount value must be positive'),
   applicableTo: z.nativeEnum(ApplicableTo).default(ApplicableTo.ALL_ACTIVITIES),
   activityId: z.string().optional().nullable(),
-  validFrom: z.string().transform(str => new Date(str)),
-  validUntil: z.string().transform(str => new Date(str)),
+  validFrom: z.string().datetime({offset:true}).transform(str => new Date(str)),
+  validUntil: z.string().datetime({offset:true}).transform(str => new Date(str)),
   isActive: z.boolean().default(true),
   isVisibleOnWebsite: z.boolean().default(true),
   minDuration: z.number().int().positive().optional().nullable(),
@@ -22,6 +22,7 @@ const createOfferSchema = z.object({
   bannerImageUrl: z.string().optional().nullable(),
 });
 
+function validOffer(data:any){return Number.isFinite(data.validFrom?.getTime()) && Number.isFinite(data.validUntil?.getTime()) && data.validUntil>data.validFrom && (data.discountType!=='PERCENTAGE' || data.discountValue<=100);}
 const updateOfferSchema = createOfferSchema.partial();
 
 // GET /api/offers - List all offers (Admin / query filter)
@@ -89,7 +90,7 @@ router.get('/active', async (req, res, next) => {
 // POST /api/offers/validate-code - Validate a promo code
 router.post('/validate-code', async (req, res, next) => {
   try {
-    const { promoCode, activityId, durationMinutes } = req.body;
+    const { promoCode, activityId, durationMinutes } = z.object({promoCode:z.string().trim().min(1).max(100),activityId:z.string().optional(),durationMinutes:z.number().finite().positive().optional()}).parse(req.body);
     if (!promoCode) {
       return res.status(400).json({ error: 'Promo code is required' });
     }
@@ -132,6 +133,7 @@ router.post('/validate-code', async (req, res, next) => {
 router.post('/', requireAdminAuth([AdminRole.SUPER_ADMIN, AdminRole.MANAGER]), async (req, res, next) => {
   try {
     const validatedData = createOfferSchema.parse(req.body);
+    if(!validOffer(validatedData))return res.status(400).json({error:'Invalid offer dates or percentage discount.'});
 
     if (validatedData.promoCode) {
       validatedData.promoCode = validatedData.promoCode.trim().toUpperCase();
@@ -158,6 +160,8 @@ router.patch('/:id', requireAdminAuth([AdminRole.SUPER_ADMIN, AdminRole.MANAGER]
   try {
     const { id } = req.params;
     const validatedData = updateOfferSchema.parse(req.body);
+    const existing=await prisma.offer.findUnique({where:{id}});if(!existing)return res.status(404).json({error:'Offer not found'});
+    if(!validOffer({...existing,...validatedData}))return res.status(400).json({error:'Invalid offer dates or percentage discount.'});
 
     if (validatedData.promoCode) {
       validatedData.promoCode = validatedData.promoCode.trim().toUpperCase();
@@ -224,11 +228,9 @@ router.patch('/:id/toggle-visibility', requireAdminAuth([AdminRole.SUPER_ADMIN, 
 router.delete('/:id', requireAdminAuth([AdminRole.SUPER_ADMIN, AdminRole.MANAGER]), async (req, res, next) => {
   try {
     const { id } = req.params;
-    await (prisma as any).offer.delete({
-      where: { id }
-    });
+    await prisma.offer.update({where:{id},data:{isActive:false,isVisibleOnWebsite:false}});
 
-    res.json({ message: 'Offer deleted successfully' });
+    res.json({ message: 'Offer archived successfully' });
   } catch (error) {
     next(error);
   }

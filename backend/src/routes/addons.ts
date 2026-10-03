@@ -26,7 +26,7 @@ const updateAddonSchema = z.object({
 });
 
 // 1. GET /api/addons -> Public / Customer list of available items
-router.get('/', async (req, res, next) => {
+router.get('/',(req,res,next)=>req.query.all==='true' ? requireAdminAuth()(req,res,next):next(), async (req, res, next) => {
   try {
     const { all } = req.query;
     // If all=true and authenticated, admin can see unavailable items too
@@ -153,11 +153,11 @@ router.patch('/:id', requireAdminAuth(), async (req, res, next) => {
 // 6. DELETE /api/addons/:id -> Delete addon (Admin only)
 router.delete('/:id', requireAdminAuth(), async (req, res, next) => {
   try {
-    await prisma.addonItem.delete({
-      where: { id: req.params.id }
+    await prisma.addonItem.update({
+      where: { id: req.params.id }, data:{isAvailable:false},
     });
 
-    res.json({ message: 'Addon item deleted successfully' });
+    res.json({ message: 'Addon item archived; booking history retained' });
   } catch (error) {
     next(error);
   }

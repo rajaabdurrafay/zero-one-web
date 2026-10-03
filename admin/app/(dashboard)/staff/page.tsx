@@ -122,8 +122,8 @@ export default function StaffManagementPage() {
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      showToast('error', 'Image size exceeds 5MB limit.');
+    if (file.size > 3 * 1024 * 1024) {
+      showToast('error', 'Image size exceeds 3MB limit.');
       return;
     }
 
@@ -147,8 +147,8 @@ export default function StaffManagementPage() {
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      showToast('error', 'Image size exceeds 5MB limit.');
+    if (file.size > 3 * 1024 * 1024) {
+      showToast('error', 'Image size exceeds 3MB limit.');
       return;
     }
 
@@ -282,7 +282,7 @@ export default function StaffManagementPage() {
 
     if (
       !confirm(
-        `Are you sure you want to PERMANENTLY delete ${member.name} (@${member.username})? This action cannot be undone.`
+        `Are you sure you want to deactivate ${member.name} (@${member.username})? Their history will be retained.`
       )
     ) {
       return;
@@ -291,7 +291,7 @@ export default function StaffManagementPage() {
     setActionLoadingId(member.id);
     try {
       const res = await deleteStaffMember(member.id);
-      showToast('success', res.message || 'Staff account deleted.');
+      showToast('success', res.message || 'Staff account deactivated.');
       await loadStaff();
     } catch (err: any) {
       showToast('error', err.message || 'Failed to delete staff account');
@@ -592,12 +592,12 @@ export default function StaffManagementPage() {
                             <Icon name={member.isActive ? 'lock' : 'check'} size={16} />
                           </button>
 
-                          {/* Delete Account */}
+                          {/* Deactivate Account */}
                           <button
                             onClick={() => handleDeleteStaff(member)}
                             disabled={isActionLoading || isSelf}
                             className="p-1.5 rounded-lg text-muted hover:text-stop hover:bg-stop/10 transition-colors disabled:opacity-30"
-                            title={isSelf ? 'Cannot delete yourself' : 'Delete Account'}
+                            title={isSelf ? 'Cannot delete yourself' : 'Deactivate Account'}
                           >
                             <Icon name="trash" size={16} />
                           </button>
@@ -678,7 +678,7 @@ export default function StaffManagementPage() {
                         </button>
                       )}
                     </div>
-                    <p className="text-[11px] text-muted">JPG, PNG or WebP (Max 5MB)</p>
+                    <p className="text-[11px] text-muted">JPG, PNG or WebP (Max 3MB)</p>
                   </div>
                 </div>
               </div>
@@ -858,7 +858,7 @@ export default function StaffManagementPage() {
                         </button>
                       )}
                     </div>
-                    <p className="text-[11px] text-muted">JPG, PNG or WebP (Max 5MB)</p>
+                    <p className="text-[11px] text-muted">JPG, PNG or WebP (Max 3MB)</p>
                   </div>
                 </div>
               </div>
