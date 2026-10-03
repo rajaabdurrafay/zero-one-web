@@ -1,3 +1,5 @@
+import { decodeImage } from '../utils/uploads';
+import { canonicalPhone } from '@zeroone/domain';
 import { Router } from 'express';
 import { z } from 'zod';
 import crypto from 'crypto';
@@ -11,14 +13,14 @@ import { requireCustomerAuth, AuthenticatedCustomerRequest } from '../middleware
 const router = Router();
 
 const signupSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters'),
-  phone: z.string().min(10, 'Valid mobile number is required'),
+  name: z.string().trim().min(2, 'Name must be at least 2 characters').max(100),
+  phone: z.string().transform((value,ctx)=>{try{return canonicalPhone(value)}catch{ctx.addIssue({code:z.ZodIssueCode.custom,message:'Valid Pakistani mobile number is required'});return z.NEVER}}),
   email: z.string().email('Invalid email address').optional().nullable(),
   password: z.string().min(8, 'Password must be at least 8 characters').max(128),
 });
 
 const loginSchema = z.object({
-  phone: z.string().min(1, 'Phone number is required'),
+  phone: signupSchema.shape.phone,
   password: z.string().min(1, 'Password is required').max(128),
 });
 
@@ -33,7 +35,7 @@ const resetPasswordSchema = z.object({
 
 // Normalize phone format (remove spaces, dashes)
 function cleanPhone(raw: string): string {
-  return raw.replace(/[\s\-]/g, '');
+  return canonicalPhone(raw);
 }
 
 // POST /api/auth/forgot-password - Request password reset link via Resend email
@@ -47,17 +49,9 @@ router.post('/forgot-password', async (req, res, next) => {
       message: 'If this email is registered, a password reset link has been sent to it.'
     };
 
-    const customer = await prisma.customer.findFirst({
-      where: {
-        email: {
-          equals: email
-        }
-      }
-    });
-
-    if (!customer || !customer.email) {
-      return res.json(genericResponse);
-    }
+    const accounts = await prisma.customer.findMany({where:{isRegistered:true,password:{not:null},OR:[{accountEmail:email},{email}]},take:2});
+    if (accounts.length !== 1 || !accounts[0].email) return res.json(genericResponse);
+    const customer = accounts[0];
 
     // Generate random reset token (valid for 1 hour)
     const resetToken = crypto.randomBytes(32).toString('hex');
@@ -77,13 +71,14 @@ router.post('/forgot-password', async (req, res, next) => {
     if (apiKey) {
       try {
         const resend = new Resend(apiKey);
-        await resend.emails.send({
-          from: 'onboarding@resend.dev',
-          to: customer.email,
+        const delivery = await resend.emails.send({
+          from: process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev',
+          to: customer.email!,
           subject: 'Reset Your ZeroOne Password',
           html: `<p>Click the link below to reset your password. This link expires in 1 hour.</p>
 <a href="${websiteUrl}/reset-password?token=${resetToken}">Reset Password</a>`
         });
+        if (delivery.error) throw new Error(delivery.error.message);
       } catch (emailErr) {
         console.error('Failed to dispatch password reset email via Resend:', emailErr);
       }
@@ -108,6 +103,7 @@ router.post('/reset-password', async (req, res, next) => {
     const customer = await prisma.customer.findFirst({
       where: {
         resetToken: crypto.createHash('sha256').update(data.token).digest('hex'),
+        isRegistered: true, password: {not:null},
         resetTokenExpiry: {
           gt: new Date()
         }
@@ -129,6 +125,7 @@ router.post('/reset-password', async (req, res, next) => {
         resetToken: null,
         resetTokenExpiry: null,
         isRegistered: true,
+        authVersion: {increment:1},
       }
     });
 
@@ -150,25 +147,21 @@ router.post('/signup', async (req, res, next) => {
     const data = signupSchema.parse(req.body);
     const phone = cleanPhone(data.phone);
 
-    // Check if customer with this phone already exists
-    const existing = await prisma.customer.findFirst({
-      where: { phone }
-    });
+    const variants = [phone,'0'+phone.slice(3),phone.slice(1),'00'+phone.slice(1)];
+    const email = data.email?.trim().toLowerCase() || null;
+    const existing = await prisma.customer.findFirst({where:{isRegistered:true,OR:[{accountPhone:phone},{phone:{in:variants}},...(email ? [{accountEmail:email},{email}] : [])]},select:{id:true}});
+    if (existing) return res.status(409).json({error:'An account with this phone or email already exists. Please login.'});
+    // Guest bookings remain separate until staff verifies their ownership.
 
-    if (existing && existing.isRegistered && existing.password) {
-      return res.status(400).json({
-        error: 'An account with this mobile number already exists. Please login instead.'
-      });
-    }
-
-    if (existing) return res.status(409).json({ error: 'This phone is linked to existing bookings. Contact staff to securely register your account.' });
     const hashedPassword = await hashPassword(data.password);
 
     const customer = await prisma.customer.create({
         data: {
           name: data.name.trim(),
           phone,
-          email: data.email ? data.email.trim() : null,
+          accountPhone:phone,
+          accountEmail:email,
+          email,
           password: hashedPassword,
           isRegistered: true,
         }
@@ -179,6 +172,7 @@ router.post('/signup', async (req, res, next) => {
       phone: customer.phone,
       name: customer.name,
       credentialTag: credentialTag(customer.password!),
+      authVersion: customer.authVersion,
     });
 
     res.status(201).json({
@@ -197,6 +191,7 @@ router.post('/signup', async (req, res, next) => {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: 'Validation failed', details: error.errors });
     }
+    if ((error as any)?.code === 'P2002') return res.status(409).json({error:'An account with this phone or email already exists.'});
     next(error);
   }
 });
@@ -207,9 +202,9 @@ router.post('/login', async (req, res, next) => {
     const data = loginSchema.parse(req.body);
     const phone = cleanPhone(data.phone);
 
-    const customer = await prisma.customer.findFirst({
-      where: { phone, isRegistered: true, password: { not: null } }
-    });
+    const variants=[phone,'0'+phone.slice(3),phone.slice(1),'00'+phone.slice(1)];
+    const accounts=await prisma.customer.findMany({where:{isRegistered:true,password:{not:null},OR:[{accountPhone:phone},{phone:{in:variants}}]},take:2});
+    const customer=accounts.length===1 ? accounts[0] : null;
 
     if (!customer || !customer.password) {
       return res.status(401).json({
@@ -224,6 +219,10 @@ router.post('/login', async (req, res, next) => {
       });
     }
 
+    if (!customer.accountPhone) {
+      // Claim only this verified legacy account; never merge guest records automatically.
+      await prisma.customer.update({where:{id:customer.id},data:{accountPhone:phone}});
+    }
     if (!customer.password.startsWith('scrypt:')) {
       customer.password = await hashPassword(data.password);
       await prisma.customer.update({ where: { id: customer.id }, data: { password: customer.password } });
@@ -233,6 +232,7 @@ router.post('/login', async (req, res, next) => {
       phone: customer.phone,
       name: customer.name,
       credentialTag: credentialTag(customer.password!),
+      authVersion: customer.authVersion,
     });
 
     res.json({
@@ -255,6 +255,10 @@ router.post('/login', async (req, res, next) => {
   }
 });
 
+// Logout revokes customer tokens across devices, even if a copied JWT remains.
+router.post('/logout',requireCustomerAuth,async(req:AuthenticatedCustomerRequest,res,next)=>{
+  try{await prisma.customer.update({where:{id:req.customer!.customerId},data:{authVersion:{increment:1}}});res.json({success:true});}catch(error){next(error)}
+});
 // GET /api/auth/me - Current customer profile
 router.get('/me', requireCustomerAuth, async (req: AuthenticatedCustomerRequest, res, next) => {
   try {
@@ -296,7 +300,7 @@ router.post('/profile-picture', requireCustomerAuth, async (req: AuthenticatedCu
 
     let base64Data = body.photoBase64;
     let ext = 'jpg';
-    const match = base64Data.match(/^data:image\/(png|jpeg|jpg|webp);base64,/);
+    const match = base64Data.match(/^data:image\/(png|jpeg|jpg|webp|gif);base64,/);
     if (match) {
       ext = match[1] === 'jpeg' ? 'jpg' : match[1];
       base64Data = base64Data.replace(/^data:image\/\w+;base64,/, '');

@@ -473,7 +473,7 @@ function CustomersContent() {
                         <div className="flex items-center gap-3">
                           {c.profilePictureUrl ? (
                             <img
-                              src={c.profilePictureUrl.startsWith('http') ? c.profilePictureUrl : `http://localhost:3001${c.profilePictureUrl}`}
+                              src={c.profilePictureUrl.startsWith('http') ? c.profilePictureUrl : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}${c.profilePictureUrl}`}
                               alt={c.name}
                               className="w-10 h-10 rounded-xl object-cover shrink-0 border border-line-soft shadow-xs"
                             />

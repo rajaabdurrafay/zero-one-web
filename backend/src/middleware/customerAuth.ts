@@ -8,7 +8,7 @@ async function authenticate(req: AuthenticatedCustomerRequest): Promise<boolean>
   const payload = verifyToken(header.slice(7).trim());
   if (!payload) return false;
   const account = await prisma.customer.findUnique({ where: { id: payload.customerId } });
-  if (!account?.password || !account.isRegistered || credentialTag(account.password) !== payload.credentialTag) return false;
+  if (!account?.password || !account.isRegistered || credentialTag(account.password) !== payload.credentialTag || (account.authVersion || 0) !== (payload.authVersion || 0)) return false;
   req.customer = { customerId: account.id, phone: account.phone, name: account.name };
   return true;
 }

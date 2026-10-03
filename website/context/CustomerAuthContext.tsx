@@ -16,7 +16,7 @@ interface CustomerAuthContextType {
   customer: CustomerUser | null;
   login: (token: string, customer: CustomerUser) => void;
   updateCustomer: (customer: Partial<CustomerUser>) => void;
-  logout: () => void;
+  logout: () => Promise<void>;
   isLoading: boolean;
 }
 
@@ -25,7 +25,7 @@ const CustomerAuthContext = createContext<CustomerAuthContextType>({
   customer: null,
   login: () => {},
   updateCustomer: () => {},
-  logout: () => {},
+  logout: async () => {},
   isLoading: true,
 });
 
@@ -38,23 +38,13 @@ export function CustomerAuthProvider({ children }: { children: React.ReactNode }
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem(TOKEN_KEY);
-      const savedToken = stored === 'cookie-session' ? stored : null;
-      if (stored && !savedToken) localStorage.removeItem(TOKEN_KEY);
-      const savedCustomer = localStorage.getItem(CUSTOMER_KEY);
-      if (savedToken && savedCustomer) {
-        setToken(savedToken);
-        setCustomer(JSON.parse(savedCustomer));
-        void fetch('/api/backend/api/auth/me').then(async response => {
-          if (!response.ok) { setToken(null); setCustomer(null); localStorage.removeItem(TOKEN_KEY); localStorage.removeItem(CUSTOMER_KEY); }
-        }).catch(() => {});
-      }
-    } catch (e) {
-      console.error('Failed to load customer auth from storage:', e);
-    } finally {
-      setIsLoading(false);
-    }
+    const controller = new AbortController();
+    void fetch('/api/backend/api/auth/me',{signal:controller.signal,cache:'no-store'}).then(async response=>{
+      if(!response.ok){setToken(null);setCustomer(null);try{localStorage.removeItem(TOKEN_KEY);localStorage.removeItem(CUSTOMER_KEY)}catch{}return;}
+      const profile=await response.json();setToken('cookie-session');setCustomer(profile);
+      try{localStorage.setItem(TOKEN_KEY,'cookie-session');localStorage.setItem(CUSTOMER_KEY,JSON.stringify(profile))}catch{}
+    }).catch(error=>{if(error.name!=='AbortError'){setToken(null);setCustomer(null)}}).finally(()=>{if(!controller.signal.aborted)setIsLoading(false)});
+    return ()=>controller.abort();
   }, []);
 
   const login = (newToken: string, newCustomer: CustomerUser) => {
@@ -82,8 +72,9 @@ export function CustomerAuthProvider({ children }: { children: React.ReactNode }
     });
   };
 
-  const logout = () => {
-    void fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
+  const logout = async () => {
+    const response=await fetch('/api/auth/logout', { method: 'POST' });
+    if(!response.ok) throw new Error('Logout failed. Please retry.');
     setToken(null);
     setCustomer(null);
     try {

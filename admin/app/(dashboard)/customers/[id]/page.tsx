@@ -6,6 +6,7 @@ import Link from 'next/link';
 import useSWR from 'swr';
 import {
   getCustomerById,
+  claimGuestBookings,
   adminResetCustomerPassword,
   type CustomerDetail,
 } from '@/lib/api';
@@ -33,7 +34,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
   const customerId = resolvedParams.id;
   const router = useRouter();
 
-  const [userRole, setUserRole] = useState<AdminRole>('SUPER_ADMIN');
+  const [userRole, setUserRole] = useState<AdminRole>('RECEPTIONIST');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Password Reset Modal State
@@ -129,6 +130,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
 
   return (
     <div className="space-y-6 pb-12">
+      {userRole!=='RECEPTIONIST' && <button className="btn btn-secondary" onClick={async()=>{const guestId=prompt('Guest customer ID after verifying their ownership:');if(!guestId)return;const note=prompt('Record how ownership was verified (at least 10 characters):');if(!note)return;try{const result=await claimGuestBookings(guestId,customerId,note);showToast('Linked '+result.claimedBookings+' verified bookings');void mutate()}catch(error){alert(error instanceof Error ? error.message:'Could not link bookings')}}}>Link verified guest bookings</button>}
       {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed top-20 right-6 z-50 p-4 rounded-xl bg-panel border border-brass text-text text-sm font-semibold shadow-2xl animate-in fade-in flex items-center gap-3">
@@ -188,7 +190,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
           <div className="flex items-start sm:items-center gap-4">
             {customer.profilePictureUrl ? (
               <img
-                src={customer.profilePictureUrl.startsWith('http') ? customer.profilePictureUrl : `http://localhost:3001${customer.profilePictureUrl}`}
+                src={customer.profilePictureUrl.startsWith('http') ? customer.profilePictureUrl : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}${customer.profilePictureUrl}`}
                 alt={customer.name}
                 className="w-16 h-16 rounded-2xl object-cover shrink-0 border border-line shadow-sm"
               />

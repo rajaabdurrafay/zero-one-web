@@ -72,7 +72,7 @@ export default function ProfilePage() {
   const currentAvatar = previewUrl || (customer.profilePictureUrl ? (
     customer.profilePictureUrl.startsWith('http')
       ? customer.profilePictureUrl
-      : `http://localhost:3001${customer.profilePictureUrl}`
+      : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}${customer.profilePictureUrl}`
   ) : null);
 
   return (
@@ -87,7 +87,7 @@ export default function ProfilePage() {
           <span>View My Bookings</span>
         </Link>
         <button
-          onClick={logout}
+          onClick={() => { void logout().catch(() => setErrorMsg('Sign out failed. Please retry.')); }}
           className="text-xs font-semibold text-brand-danger hover:underline cursor-pointer min-h-[44px] py-2 px-2 -mr-2"
         >
           Sign Out

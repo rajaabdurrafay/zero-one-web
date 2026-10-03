@@ -1,3 +1,9 @@
+import {customerSelect} from '../utils/customerSelect';
+import {z} from 'zod';
+import {createAuditLog} from '../utils/auditLogger';
+import {AuthenticatedAdminRequest} from '../middleware/adminAuth';
+import {pagination,pageResult} from '../middleware/apiContract';
+import { canonicalPhone } from '@zeroone/domain';
 import { Router } from 'express';
 import crypto from 'crypto';
 import { prisma } from '../db';
@@ -9,27 +15,11 @@ const router = Router();
 
 // Helper to calculate customer aggregates
 async function getAggregatedCustomerList(search?: string, sortBy: string = 'totalSpent', sortOrder: string = 'desc', tierFilter?: string) {
-  const customers = await prisma.customer.findMany({
-    include: {
-      bookings: {
-        where: {
-          status: {
-            in: [BookingStatus.CONFIRMED, BookingStatus.COMPLETED],
-          },
-        },
-        orderBy: {
-          startTime: 'desc',
-        },
-        select: {
-          id: true,
-          startTime: true,
-          totalPrice: true,
-          status: true,
-          isWalkIn: true,
-        },
-      },
-    },
-  });
+  const [customers,stats]=await Promise.all([
+    prisma.customer.findMany({select:{id:true,name:true,phone:true,email:true,profilePictureUrl:true,isRegistered:true,createdAt:true}}),
+    prisma.booking.groupBy({by:['customerId'],where:{status:{in:['CONFIRMED','COMPLETED']}},_count:{_all:true},_sum:{totalPrice:true},_min:{startTime:true},_max:{startTime:true}})
+  ]);
+  const statsById=new Map(stats.map(row=>[row.customerId,row]));
 
   const phoneMap = new Map<
     string,
@@ -52,13 +42,14 @@ async function getAggregatedCustomerList(search?: string, sortBy: string = 'tota
   >();
 
   for (const c of customers) {
-    const cleanPhone = (c.phone || '').trim();
+    let cleanPhone=(c.phone || '').trim();try{cleanPhone=canonicalPhone(cleanPhone)}catch{};
     if (!cleanPhone) continue;
 
-    const visits = c.bookings.length;
-    const spent = c.bookings.reduce((sum, b) => sum + (b.totalPrice || 0), 0);
-    const mostRecentVisit = c.bookings.length > 0 ? c.bookings[0].startTime.toISOString() : null;
-    const oldestVisit = c.bookings.length > 0 ? c.bookings[c.bookings.length - 1].startTime.toISOString() : null;
+    const stat=statsById.get(c.id);
+    const visits=stat?._count._all || 0;
+    const spent=stat?._sum.totalPrice || 0;
+    const mostRecentVisit=stat?._max.startTime?.toISOString() || null;
+    const oldestVisit=stat?._min.startTime?.toISOString() || null;
 
     if (!phoneMap.has(cleanPhone)) {
       const isVip = visits >= 5 || spent >= 5000;
@@ -98,6 +89,7 @@ async function getAggregatedCustomerList(search?: string, sortBy: string = 'tota
         existing.profilePictureUrl = c.profilePictureUrl;
       }
       if (c.isRegistered) {
+        existing.id=c.id;
         existing.isRegistered = true;
       }
 
@@ -182,7 +174,9 @@ router.get('/', requireAdminAuth(), async (req, res, next) => {
       sortOrder as string,
       tier as string | undefined
     );
-    res.json(customerList);
+    const pager=pagination(req,res);
+    if(pager.requested)pageResult(res,customerList.length,pager.page,pager.limit);
+    res.json(pager.requested ? customerList.slice(pager.skip,pager.skip+pager.limit):customerList);
   } catch (error) {
     next(error);
   }
@@ -221,7 +215,7 @@ router.get('/export', requireAdminAuth(), async (req, res, next) => {
 
     const escapeCsv = (val: any) => {
       if (val === null || val === undefined) return '""';
-      const str = String(val).replace(/"/g, '""');
+      const raw=String(val);const str=(/^[\s]*[=+@-]/.test(raw) ? "'"+raw:raw).replace(/"/g, '""');
       return `"${str}"`;
     };
 
@@ -299,12 +293,13 @@ router.get('/:id', requireAdminAuth(), async (req, res, next) => {
       return res.status(404).json({ error: 'Customer not found' });
     }
 
-    const cleanPhone = (baseCustomer.phone || '').trim();
+    let cleanPhone=(baseCustomer.phone || '').trim();try{cleanPhone=canonicalPhone(cleanPhone)}catch{}
+    const variants=cleanPhone.startsWith('+92') ? [cleanPhone,'0'+cleanPhone.slice(3),cleanPhone.slice(1),'00'+cleanPhone.slice(1)]:[cleanPhone];
 
     // Query all records sharing this phone number to aggregate bookings & profile
     const allRecords = await prisma.customer.findMany({
-      where: { phone: cleanPhone },
-      include: {
+      where: { phone: {in:variants} },
+      select: {...customerSelect,
         bookings: {
           orderBy: { startTime: 'desc' },
           include: {
@@ -402,6 +397,22 @@ router.get('/:id', requireAdminAuth(), async (req, res, next) => {
   }
 });
 
+// Staff explicitly verifies guest ownership; this never deletes the historical customer row.
+router.post('/:id/claim-bookings',requireAdminAuth([AdminRole.SUPER_ADMIN,AdminRole.MANAGER]),async(req:AuthenticatedAdminRequest,res,next)=>{
+  try{
+    const body=z.object({accountId:z.string().cuid(),verificationNote:z.string().trim().min(10).max(1000)}).parse(req.body);
+    const result=await prisma.$transaction(async tx=>{
+      const ids=[req.params.id,body.accountId].sort();for(const id of ids)await tx.$queryRaw`SELECT id FROM Customer WHERE id = ${id} FOR UPDATE`;
+      const source=await tx.customer.findUnique({where:{id:req.params.id}}),account=await tx.customer.findUnique({where:{id:body.accountId}});
+      if(!source || !account?.isRegistered || source.isRegistered || canonicalPhone(source.phone)!==canonicalPhone(account.phone))throw Object.assign(new Error('Select an unregistered guest and a matching registered account.'),{status:409});
+      const bookings=await tx.booking.updateMany({where:{customerId:source.id},data:{customerId:account.id}});
+      await tx.bookingGroup.updateMany({where:{customerId:source.id},data:{customerId:account.id}});
+      await tx.auditLog.create({data:{staffId:req.admin!.id,action:'UPDATE',entity:'CUSTOMER_BOOKING_CLAIM',entityId:source.id,details:{accountId:account.id,verificationNote:body.verificationNote,bookings:bookings.count}}});
+      return {claimedBookings:bookings.count,accountId:account.id};
+    },{isolationLevel:'ReadCommitted'});
+    res.json(result);
+  }catch(error){next(error)}
+});
 // POST /api/admin/customers/:id/reset-password - Admin manual password reset fallback (Super Admin & Manager only)
 router.post('/:id/reset-password', requireAdminAuth([AdminRole.SUPER_ADMIN, AdminRole.MANAGER]), async (req, res, next) => {
   try {
@@ -425,11 +436,13 @@ router.post('/:id/reset-password', requireAdminAuth([AdminRole.SUPER_ADMIN, Admi
 
     const hashedPassword = await hashPassword(newPassword);
 
-    // Update password for all customer records sharing this phone number
-    await prisma.customer.updateMany({
-      where: { phone: customer.phone },
+    // This staff operation targets only the selected identity; no implicit merges.
+    await prisma.customer.update({
+      where: { id: customer.id },
       data: {
         password: hashedPassword,
+        accountPhone:canonicalPhone(customer.phone),
+        authVersion:{increment:1},
         isRegistered: true,
         resetToken: null,
         resetTokenExpiry: null,
@@ -444,6 +457,7 @@ router.post('/:id/reset-password', requireAdminAuth([AdminRole.SUPER_ADMIN, Admi
       newPassword,
     });
   } catch (error) {
+    if((error as any)?.code==='P2002')return res.status(409).json({error:'This phone already has a registered account. Select that account; verify guest history separately.'});
     next(error);
   }
 });

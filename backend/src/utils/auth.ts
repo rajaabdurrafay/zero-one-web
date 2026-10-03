@@ -19,7 +19,7 @@ function getSecret(): string {
 }
 export type AdminRole = 'SUPER_ADMIN' | 'MANAGER' | 'RECEPTIONIST';
 export interface AdminTokenPayload { id: string; username: string; name: string; role: AdminRole; credentialTag: string; sessionId: string }
-export interface CustomerTokenPayload { customerId: string; phone: string; name: string; credentialTag: string }
+export interface CustomerTokenPayload { customerId: string; phone: string; name: string; credentialTag: string; authVersion?: number }
 export function credentialTag(passwordHash: string): string { return crypto.createHash('sha256').update(passwordHash).digest('hex'); }
 // Async scrypt for new passwords, with backward-compatible legacy PBKDF2 verification.
 export async function hashPassword(password: string): Promise<string> {

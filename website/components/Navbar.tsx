@@ -38,9 +38,9 @@ export function Navbar() {
     { href: '/contact', label: 'Contact' },
   ];
 
-  const handleLogout = () => {
-    logout();
-    router.push('/');
+  const handleLogout = async () => {
+    try { await logout(); router.push('/'); }
+    catch { window.alert('Sign out failed. Please retry.'); }
   };
 
   return (
@@ -100,7 +100,7 @@ export function Navbar() {
                 >
                   {customer.profilePictureUrl ? (
                     <img
-                      src={customer.profilePictureUrl.startsWith('http') ? customer.profilePictureUrl : `http://localhost:3001${customer.profilePictureUrl}`}
+                      src={customer.profilePictureUrl.startsWith('http') ? customer.profilePictureUrl : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}${customer.profilePictureUrl}`}
                       alt={customer.name}
                       className="w-6 h-6 rounded-full object-cover border border-brand-border"
                     />
@@ -202,7 +202,7 @@ export function Navbar() {
                   <div className="flex items-center gap-3 px-3 py-2 rounded-xl bg-brand-surface-raised">
                     {customer.profilePictureUrl ? (
                       <img
-                        src={customer.profilePictureUrl.startsWith('http') ? customer.profilePictureUrl : `http://localhost:3001${customer.profilePictureUrl}`}
+                        src={customer.profilePictureUrl.startsWith('http') ? customer.profilePictureUrl : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}${customer.profilePictureUrl}`}
                         alt={customer.name}
                         className="w-9 h-9 rounded-full object-cover shrink-0 border border-brand-border"
                       />
