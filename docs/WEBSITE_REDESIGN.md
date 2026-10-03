@@ -5,11 +5,11 @@ Date: 3 October 2026. Deployment and push have not been performed.
 
 ## Owner review updates
 
-The hero now spans almost the full viewport width with a 12 px desktop gutter and a viewport-height minimum. Navigation floats over it, with a separate 1320 px maximum width, 64 px desktop height and 116 px logo (rebalanced after owner review). On mobile, the header remains 60 px high for touch targets and the hero can grow to fit its copy/chips. Other content containers remain 1240 px. Motion now includes a short hero text/chip entrance sequence, section-local staggered reveals and a small, clamped scroll drift for the hero/banner photos. Native scrolling is retained; passive listeners schedule DOM updates through requestAnimationFrame without React scroll-state renders. Motion stops and all content is immediately exposed when reduced-motion is enabled, including when the preference changes mid-session. Keyboard focus exposes any pending reveal.
+The hero now spans almost the full viewport width with a 12 px desktop gutter and a viewport-height minimum. Navigation floats over it, with a separate 1320 px maximum width, 64 px desktop height and 116 px logo (rebalanced after owner review). On mobile, the header remains 60 px high for touch targets and the hero can grow to fit its copy/chips. Other content containers remain 1240 px. Motion now includes a short hero text/chip entrance sequence, section-local staggered reveals and a small, clamped scroll drift for the hero/banner photos. Native scrolling is retained; passive listeners schedule DOM updates through requestAnimationFrame without React scroll-state renders. Motion follows system reduced-motion by default. The Enable/Pause animations control stores an explicit per-site preference under zeroone-motion; opting in enables website motion even when the system preference reduces motion, without changing OS settings. Pausing or an unoverridden system preference exposes content immediately. Keyboard focus exposes any pending reveal.
 
 The header uses the existing `glass-nav` utility and `--theme-glass-*` tokens, so the existing admin Appearance glass setting controls transparency/blur/shadow independently in light and dark modes; no new admin toggle was added.
 
-All homepage illustration slots now use existing ZeroOne venue photographs from `website/public/images/`. The pricing illustration is replaced by a rounded snooker photograph with a readable caption. The owner selected live snooker pricing and approved review count in place of unconfirmed booking totals and empty ratings. A numeric zero means zero approved reviews in the returned public response; it is not a zero-star rating. Booking totals are no longer shown.
+All homepage illustration slots now use existing ZeroOne venue photographs from `website/public/images/`. The pricing illustration is replaced by a rounded snooker photograph with a readable caption. The latest owner choice replaces pricing/review metrics with 24/7 availability and Player visits. Visits use the new read-only public aggregate of COMPLETED bookings, including completed walk-ins; each completed session counts, including repeat visits. It does not estimate the number of people accompanying a booking. Values use compact K/M formatting without rounding upward. Unavailable data shows an unavailable state rather than a fabricated zero.
 
 ## Design and scope
 
@@ -19,7 +19,7 @@ The homepage includes the hero and information chips, three reusable feature car
 
 `website/components/redesign/` contains the section components and shared `FeatureCard`, `PillLink`, heading, activity metadata and lightweight intersection-observer reveal. `website/styles/redesign.css` scopes presentation to the new homepage classes. `website/app/page.tsx` assembles the sections and reads public pricing, offers and reviews in parallel.
 
-The existing Navbar/Footer choose the new variants only on the homepage. Other customer routes retain their established layout. Global changes are limited to self-hosted default fonts, a generic original 01 favicon, accessible primary-button contrast, and safe theme initialization. Custom font settings remain supported. Reduced-motion preferences disable both reveal/hover motion and theme transitions. The admin panel, backend, database schema, API implementation and booking wizard were not changed by this redesign.
+The existing Navbar/Footer choose the new variants only on the homepage. Other customer routes retain their established layout. Global changes are limited to self-hosted default fonts, a generic original 01 favicon, accessible primary-button contrast, and safe theme initialization. Custom font settings remain supported. Reduced-motion preferences disable both reveal/hover motion and theme transitions. The admin panel, database schema and booking wizard remain unchanged. The latest visits feature adds only the read-only /api/public-stats aggregate and a 10-second public cache entry; existing API contracts and billing/booking mutations remain unchanged.
 
 ## Booking and data behavior
 
@@ -34,7 +34,7 @@ The existing Navbar/Footer choose the new variants only on the homepage. Other c
 
 | Existing source file under `website/public/images/` | Original dimensions | Placement |
 | --- | --- | --- |
-| `hero-banner.jpg.webp` | 1280 × 960 | Fullscreen hero and booking banner |
+| `Snokker/snooker-table.jpg (3).webp` | Existing original venue photo | Brighter fullscreen hero and booking banner |
 | `Snokker/snooker-table.jpg.webp` | 765 × 1020 | Snooker activity, feature, pricing photo and experience guide |
 | `PS5/ps5-room.jpg.webp` | 1280 × 960 | Open console activity, accent deal cards and offer guide |
 | `Cinema/cinema.jpg.webp` | 1280 × 960 | Cinema activity, feature, review background and guide |
@@ -104,3 +104,9 @@ Both scripts start and close a task-owned localhost API fixture and the built cu
 No deployment was authorized. Push requires the owner's approval after reviewing git status and the diff summary. The branch inherits the earlier optimization commits; its redesign-only diff is against `optimize-finalize`. The licensed reference is retained outside commits, and no environment values, credentials, QA tool installations or database files are added to Git.
 
 Owner revision checks: website build/type-check passed, lint zero errors with the same 55 warnings. Browser regression checks include requested desktop header/logo geometry, fullscreen hero, real photo sources, real price/review metrics, and glass on/off behavior in addition to existing responsive and booking/account checks.
+
+## Visits and animation follow-up
+
+The actual owner browser reported prefers-reduced-motion: reduce, which explained the invisible motion. The new per-site Enable/Pause control respects that default while supporting explicit opt-in. Motion preference and live system preference changes are regression-tested. A missed Connect image path was corrected and all homepage photo loads are now checked.
+
+The visit aggregate exposes only totalPlayerVisits. It uses the existing indexed booking status and includes repeat COMPLETED session records; groups count per completed resource session, since physical party headcounts are not recorded. Historical/offline visits absent from the system are not invented. API failure returns 503 without database details. The count is cached for 10 seconds and successful mutations invalidate it. Tests inject the count dependency and never query a real DB; 29 unit/security tests passed. The local fixture uses zero visits by default and 2500 in the labelled live test scenario to verify 2.5K formatting, not production business figures.

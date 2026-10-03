@@ -62,6 +62,13 @@ async function startFixture() {
         emergencyClosedToday: false,
       });
     if (pathname === '/api/pricing') return send(scenario === 'offline' ? [] : activities);
+    if (pathname === '/api/public-stats') {
+      if (scenario === 'stats-unavailable') {
+        response.statusCode = 503;
+        return send({ error: 'Fixture statistics unavailable' });
+      }
+      return send({ totalPlayerVisits: scenario === 'live' ? 2500 : 0 });
+    }
     if (pathname === '/api/offers/active')
       return send(
         scenario === 'live'

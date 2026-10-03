@@ -48,7 +48,7 @@ async function main() {
       assert.equal(await page.locator('.zo-feature-grid .zo-feature').count(), 3);
       assert.equal(await page.locator('.zo-activity-card').count(), 6);
       assert.equal(await page.locator('.zo-benefit').count(), 4);
-      assert.match(await page.locator('.zo-stats').innerText(), /Rs\. 10 \/ min/);
+      assert.match(await page.locator('.zo-stats').innerText(), /24\/7/);
       assert.equal(await page.locator('.zo-stats > div').nth(2).locator('strong').innerText(), '0');
       assert.equal(
         await page.locator('.zo-home img[src*="redesign"]').count(),
@@ -136,6 +136,20 @@ async function main() {
         await page.evaluate(() => scrollTo(0, 0));
         await page.waitForTimeout(600);
       }
+      if (width !== 320) {
+        const images = await page.locator('.zo-home img').evaluateAll((elements) =>
+          elements
+            .filter((image) => image.getBoundingClientRect().width > 0)
+            .map((image) => ({
+              src: image.currentSrc,
+              loaded: image.complete && image.naturalWidth > 0,
+            })),
+        );
+        assert.ok(
+          images.every((image) => image.loaded),
+          'All visible venue images load successfully',
+        );
+      }
       if (width !== 320)
         await page.screenshot({
           path: path.join(output, `website-${mode.toLowerCase()}-${width}.png`),
@@ -179,6 +193,8 @@ async function main() {
     assert.equal(geometry.logoWidth, 116);
     assert.equal(geometry.heroWidth, 1840);
     assert.ok(geometry.heroHeight >= 868 && geometry.overlay);
+    await widePage.locator('.zo-hero > img').evaluate(image => image.decode());
+    await widePage.locator('.zo-nav-logo img:not(.hidden)').evaluate(image => image.decode());
     await widePage.screenshot({ path: path.join(output, 'website-wide-glass.png') });
     await widePage.close();
     results.push({
@@ -200,6 +216,18 @@ async function main() {
       /Fixture offer/,
     );
     assert.match(await page.locator('.zo-testimonial').innerText(), /Controlled review/);
+    assert.equal(
+      await page.locator('.zo-stats > div').nth(2).locator('strong').innerText(),
+      '2.5K',
+    );
+    fixture.setScenario('stats-unavailable');
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    assert.match(
+      await page.locator('.zo-stats').innerText(),
+      /Visit count temporarily unavailable/,
+    );
+    fixture.setScenario('live');
+    await page.reload({ waitUntil: 'domcontentloaded' });
     assert.match(await page.locator('.zo-hero').innerText(), /4.0 \/ 5/);
     fixture.setScenario('offline');
     await page.reload({ waitUntil: 'domcontentloaded' });
@@ -242,6 +270,14 @@ async function main() {
     await motionPage.waitForFunction(
       () => !document.querySelector('.zo-feature-grid .zo-reveal-pending'),
     );
+    await motionPage.locator('.zo-connect-form').scrollIntoViewIfNeeded();
+    await motionPage.waitForFunction(() =>
+      document.querySelector('.zo-feature-grid .zo-reveal-pending'),
+    );
+    await motionPage.locator('.zo-feature-grid').scrollIntoViewIfNeeded();
+    await motionPage.waitForFunction(
+      () => !document.querySelector('.zo-feature-grid .zo-reveal-pending'),
+    );
     await motionPage.emulateMedia({ reducedMotion: 'reduce' });
     await motionPage.waitForFunction(
       () => !document.querySelector('.zo-hero').style.getPropertyValue('--zo-photo-drift'),
@@ -251,6 +287,26 @@ async function main() {
       0,
       'Changing reduced motion immediately exposes all sections',
     );
+    await motionPage.getByRole('button', { name: 'Enable animations' }).click();
+    await motionPage.waitForFunction(
+      () => document.querySelector('[data-motion]').getAttribute('data-motion') === 'on',
+    );
+    assert.notEqual(
+      await motionPage
+        .locator('.zo-feature-accent .zo-feature-photo')
+        .first()
+        .evaluate((element) => getComputedStyle(element).transitionDuration),
+      '0s',
+      'Explicit website preference enables motion even with system reduced motion',
+    );
+    assert.equal(await motionPage.evaluate(() => localStorage.getItem('zeroone-motion')), 'on');
+    await motionPage.reload({ waitUntil: 'domcontentloaded' });
+    await motionPage.getByRole('button', { name: 'Pause animations' }).waitFor();
+    await motionPage.getByRole('button', { name: 'Pause animations' }).click();
+    await motionPage.waitForFunction(
+      () => !document.querySelector('.zo-hero').style.getPropertyValue('--zo-photo-drift'),
+    );
+    assert.equal(await motionPage.locator('.zo-reveal-pending').count(), 0);
     const planner = motionPage.locator('.zo-connect-form');
     await planner.locator('select').selectOption('cfixtureactivity000000001');
     await planner.getByRole('button', { name: 'Continue to Booking' }).click();
@@ -296,6 +352,8 @@ async function main() {
       featureHover: 'pass',
       scrollRevealAndPhotoDrift: 'pass',
       dynamicReducedMotion: 'pass',
+      explicitMotionPreference: 'pass',
+      compactVisitCountAndUnavailableState: 'pass',
       confirmedOpeningHours: 'pass',
       pausedBooking: 'pass',
       accountMenuAndLogout: 'pass',
