@@ -2,9 +2,10 @@ import { getPricing, getActiveOffers, getPublicReviews, type Activity, type Offe
 import { HeroSection } from '@/components/redesign/HeroSection';
 import { Reveal } from '@/components/redesign/Reveal';
 import { FeatureCardsSection } from '@/components/redesign/FeatureCardsSection';
-import { PopularActivities } from '@/components/sections/PopularActivities';
-import { HowItWorks } from '@/components/sections/HowItWorks';
-import { PromotionalSection } from '@/components/sections/PromotionalSection';
+import { ActivitiesSection } from '@/components/redesign/ActivitiesSection';
+import { WhyZeroOneSection } from '@/components/redesign/WhyZeroOneSection';
+import { StatsSection } from '@/components/redesign/StatsSection';
+import { BookingBanner } from '@/components/redesign/BookingBanner';
 import { LocationSection } from '@/components/sections/LocationSection';
 import { ReviewsSection } from '@/components/sections/ReviewsSection';
 import { SocialReelsSection } from '@/components/sections/SocialReelsSection';
@@ -32,10 +33,11 @@ export default async function HomePage() {
     <div className="zo-home"><Reveal>
       <HeroSection stats={reviews.stats} />
       <FeatureCardsSection offers={offers} />
-      <PopularActivities activities={activities} />
-      <PromotionalSection offers={offers} />
+      <ActivitiesSection activities={activities} />
+      <WhyZeroOneSection />
+      <StatsSection stats={reviews.stats} />
+      <BookingBanner />
       <SocialReelsSection />
-      <HowItWorks />
       <ReviewsSection />
       <LocationSection />
       <CTASection />
