@@ -1,13 +1,24 @@
-import type { ReviewsResponse } from '@/lib/api';
-import { experiences } from './content';
+import type { Activity, ReviewsResponse } from '@/lib/api';
+import { experiences, livePrice } from './content';
 
-export function StatsSection({ stats }: { stats: ReviewsResponse['stats'] }) {
+export function StatsSection({
+  stats,
+  activities,
+}: {
+  stats: ReviewsResponse['stats'];
+  activities: Activity[];
+}) {
+  const snooker = activities.find((item) => item.resourceType === 'SNOOKER');
   const items = [
     [String(experiences.length).padStart(2, '0'), 'Ways to play', 'Gaming, cinema and more'],
-    ['—', 'Sessions booked', 'Total to be confirmed'],
     [
-      stats.totalReviews > 0 ? `${stats.averageRating.toFixed(1)} / 5` : '—',
-      'Rated by our players',
+      snooker ? livePrice(snooker) : 'Rs. 10 / min',
+      'Snooker pricing',
+      snooker ? 'Live venue rate' : 'Indicative rate; confirm in booking',
+    ],
+    [
+      stats.totalReviews > 0 ? `${stats.averageRating.toFixed(1)} / 5` : '0',
+      stats.totalReviews > 0 ? 'Rated by our players' : 'Approved player reviews',
       stats.totalReviews > 0 ? `${stats.totalReviews} approved reviews` : 'Reviews coming soon',
     ],
     ['Karachi', 'Your local gaming spot', 'Gulistan-e-Jauhar'],

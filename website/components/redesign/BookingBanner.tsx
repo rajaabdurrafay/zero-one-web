@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import { imageRoot } from './content';
+import { venueImages } from './content';
 import { PillLink } from './ui';
 
 export function BookingBanner() {
@@ -7,8 +7,8 @@ export function BookingBanner() {
     <section className="zo-container" aria-labelledby="zo-booking-banner-title">
       <div className="zo-banner-card" data-reveal>
         <Image
-          src={`${imageRoot}/hero-venue.webp`}
-          alt="Gaming lounge illustration placeholder for the session booking banner"
+          src={venueImages.hero}
+          alt="ZeroOne gaming lounge and snooker tables"
           fill
           sizes="(max-width: 1280px) 100vw, 1240px"
         />

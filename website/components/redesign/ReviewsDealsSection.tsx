@@ -2,7 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import type { Offer, Review } from '@/lib/api';
 import { FeatureCard } from './FeatureCard';
-import { imageRoot, offerHref } from './content';
+import { venueImages, offerHref } from './content';
 
 export function ReviewsDealsSection({ reviews, offers }: { reviews: Review[]; offers: Offer[] }) {
   const review =
@@ -16,8 +16,8 @@ export function ReviewsDealsSection({ reviews, offers }: { reviews: Review[]; of
     >
       <article className="zo-testimonial" data-reveal>
         <Image
-          src={`${imageRoot}/private-cinema.webp`}
-          alt="Illustrated private room placeholder behind player feedback"
+          src={venueImages.cinema}
+          alt="ZeroOne private cinema seating"
           fill
           sizes="(max-width: 700px) 92vw, 45vw"
         />
@@ -51,8 +51,8 @@ export function ReviewsDealsSection({ reviews, offers }: { reviews: Review[]; of
         tag={offer ? 'Current deal' : 'Make your next move'}
         title={offer?.title || 'Your next great session is waiting.'}
         href={offerHref(offer)}
-        image={`${imageRoot}/current-deal.webp`}
-        alt="Gaming controller illustration placeholder for ZeroOne offers"
+        image={venueImages.deal}
+        alt="Console gaming setup at ZeroOne"
       />
     </section>
   );

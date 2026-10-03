@@ -35,7 +35,7 @@ export function ActivitiesSection({ activities }: { activities: Activity[] }) {
                 <div className="zo-activity-photo">
                   <Image
                     src={`${imageRoot}/${experience.image}`}
-                    alt={`${experience.name} illustration placeholder for a venue photograph`}
+                    alt={`${experience.name} at ZeroOne Cue & Play`}
                     fill
                     sizes="(max-width: 600px) 92vw, (max-width: 1000px) 45vw, 30vw"
                   />

@@ -1,6 +1,7 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import type { Activity } from '@/lib/api';
-import { experiences, bookingHref, livePrice } from './content';
+import { experiences, bookingHref, livePrice, venueImages } from './content';
 import { Arrow, PillLink, SectionHeading } from './ui';
 
 export function PricingSection({ activities }: { activities: Activity[] }) {
@@ -20,21 +21,18 @@ export function PricingSection({ activities }: { activities: Activity[] }) {
       />
       <div className="zo-pricing-grid">
         <div className="zo-price-art" data-reveal>
-          <svg viewBox="0 0 440 440" fill="none" aria-hidden="true">
-            <circle cx="220" cy="220" r="168" />
-            <circle cx="220" cy="220" r="115" />
-            <path d="M220 30v380M30 220h380M84 84l272 272M84 356 356 84" />
-            <path
-              className="zo-art-blob"
-              d="M220 76c40-8 24 72 59 64 47-12 83-54 94-16 12 43-55 62-30 98 26 38 84 48 59 81-29 37-75-19-99 12-31 41-7 108-51 102-42-6-25-79-66-73-42 7-80 65-103 25-23-38 48-58 34-92-18-41-91-47-66-87 24-37 64 7 92-23 32-35 35-81 77-91Z"
-            />
-          </svg>
+          <Image
+            src={venueImages.snooker}
+            alt="Full-size snooker tables at ZeroOne Cue & Play"
+            fill
+            sizes="(max-width: 800px) 92vw, 420px"
+          />
           <div>
             <span className="zo-eyebrow">ZeroOne Cue &amp; Play</span>
             <p>
-              Find your game.
+              Your table.
               <br />
-              Make it your night.
+              Your next great game.
             </p>
           </div>
         </div>

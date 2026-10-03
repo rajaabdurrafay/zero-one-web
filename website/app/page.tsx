@@ -42,7 +42,7 @@ export default async function HomePage() {
         <FeatureCardsSection offers={offers} />
         <ActivitiesSection activities={activities} />
         <WhyZeroOneSection />
-        <StatsSection stats={reviews.stats} />
+        <StatsSection stats={reviews.stats} activities={activities} />
         <BookingBanner />
         <PricingSection activities={activities} />
         <ReviewsDealsSection reviews={reviews.reviews} offers={offers} />

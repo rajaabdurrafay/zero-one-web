@@ -14,7 +14,7 @@ export function LatestOffersSection({ offers }: { offers: Offer[] }) {
         label: 'Current offer',
         description: offer.description || 'See this offer when you book your next session.',
         href: offerHref(offer),
-        image: index === 0 ? 'ps5-gaming.webp' : 'snooker.webp',
+        image: index === 0 ? 'PS5/ps5-room.jpg.webp' : 'Snokker/snooker-table.jpg.webp',
       }))
     : [
         {
@@ -22,14 +22,14 @@ export function LatestOffersSection({ offers }: { offers: Offer[] }) {
           label: 'Experience guide',
           description: 'Get your friends together for a little focus and a lot of fun.',
           href: '/activities',
-          image: 'snooker.webp',
+          image: 'Snokker/snooker-table.jpg.webp',
         },
         {
           title: 'A movie night with your name on it.',
           label: 'Experience guide',
           description: 'Pick the film, bring your people and make the room your own.',
           href: '/activities',
-          image: 'private-cinema.webp',
+          image: 'Cinema/cinema.jpg.webp',
         },
       ];
   return (
@@ -57,7 +57,7 @@ export function LatestOffersSection({ offers }: { offers: Offer[] }) {
               <div className="zo-news-photo">
                 <Image
                   src={`${imageRoot}/${card.image}`}
-                  alt="Gaming experience illustration placeholder"
+                  alt={`${card.title} — ZeroOne venue photograph`}
                   fill
                   sizes="(max-width: 700px) 92vw, 40vw"
                 />

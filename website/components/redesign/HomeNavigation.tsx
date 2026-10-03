@@ -38,9 +38,16 @@ export function HomeNavigation() {
       <a href="#main-content" className="zo-skip-link">
         Skip to content
       </a>
-      <nav className="zo-nav-inner zo-container" aria-label="Main navigation">
+      <nav
+        className="zo-nav-inner zo-container glass-nav"
+        aria-label="Main navigation"
+        style={{
+          backdropFilter: 'blur(var(--theme-glass-nav-blur, 0px))',
+          WebkitBackdropFilter: 'blur(var(--theme-glass-nav-blur, 0px))',
+        }}
+      >
         <Link prefetch={false} href="/" className="zo-nav-logo" aria-label="ZeroOne home">
-          <BrandLogo width={135} height={40} />
+          <BrandLogo width={99} height={30} />
         </Link>
         <div className="zo-nav-links">
           {links.map(([label, href]) => (

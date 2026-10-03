@@ -1,18 +1,18 @@
 import Image from 'next/image';
 import type { ReviewsResponse } from '@/lib/api';
 import { PillLink } from './ui';
-import { imageRoot } from './content';
+import { venueImages } from './content';
 
 export function HeroSection({ stats }: { stats: ReviewsResponse['stats'] }) {
   return (
     <section className="zo-hero zo-container" aria-labelledby="zo-hero-title">
       <Image
-        src={`${imageRoot}/hero-venue.webp`}
-        alt="Illustrated venue interior placeholder, awaiting ZeroOne's lounge photograph"
+        src={venueImages.hero}
+        alt="ZeroOne Cue & Play entrance and snooker lounge in Karachi"
         fill
         loading="eager"
         fetchPriority="high"
-        sizes="(max-width: 1280px) 100vw, 1240px"
+        sizes="100vw"
       />
       <div className="zo-hero-overlay" />
       <div className="zo-hero-copy">

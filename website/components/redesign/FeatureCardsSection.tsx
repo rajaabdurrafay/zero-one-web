@@ -1,6 +1,6 @@
 import type { Offer } from '@/lib/api';
 import { FeatureCard } from './FeatureCard';
-import { imageRoot, offerHref } from './content';
+import { venueImages, offerHref } from './content';
 
 export function FeatureCardsSection({ offers }: { offers: Offer[] }) {
   const offer = offers.find((item) => item.isActive && item.isVisibleOnWebsite !== false);
@@ -11,23 +11,23 @@ export function FeatureCardsSection({ offers }: { offers: Offer[] }) {
         <FeatureCard
           tag="More than a game"
           title="Good games. Better company."
-          image={`${imageRoot}/snooker.webp`}
-          alt="Snooker table illustration placeholder"
+          image={venueImages.snooker}
+          alt="Snooker tables inside ZeroOne"
           href="/activities"
         />
         <FeatureCard
           tag={offer ? 'Current offer' : 'Your next session'}
           title={offer?.title || 'A little play goes a long way.'}
-          image={`${imageRoot}/current-deal.webp`}
-          alt="Gaming controller illustration placeholder for the featured deal"
+          image={venueImages.deal}
+          alt="Console gaming room at ZeroOne"
           href={offerHref(offer)}
           variant="accent"
         />
         <FeatureCard
           tag="Make it your own"
           title="Your squad. Your private space."
-          image={`${imageRoot}/private-cinema.webp`}
-          alt="Private cinema illustration placeholder"
+          image={venueImages.cinema}
+          alt="Private cinema room at ZeroOne"
           href="/activities"
         />
       </div>

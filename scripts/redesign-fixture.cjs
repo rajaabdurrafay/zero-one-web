@@ -49,7 +49,12 @@ async function startFixture() {
     response.setHeader('Content-Type', 'application/json');
     const send = (value) => response.end(JSON.stringify(value));
     const pathname = new URL(request.url, 'http://localhost').pathname;
-    if (pathname === '/api/theme') return send({ ...dark, light, dark });
+    if (pathname === '/api/theme') {
+      const glassEffectEnabled = scenario === 'glass' || process.env.REDESIGN_GLASS === '1';
+      const previewLight = { ...light, glassEffectEnabled };
+      const previewDark = { ...dark, glassEffectEnabled };
+      return send({ ...previewDark, light: previewLight, dark: previewDark });
+    }
     if (pathname === '/api/system-settings')
       return send({
         maintenanceMode: false,

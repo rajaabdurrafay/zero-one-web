@@ -16,7 +16,7 @@
 }
 .zo-home {
   background: var(--zo-bg);
-  padding: 100px 0 0;
+  padding: 12px 0 0;
 }
 .zo-container {
   width: min(1240px, calc(100% - 40px));
@@ -235,7 +235,7 @@
     width: calc(100% - 32px);
   }
   .zo-home {
-    padding-top: 92px;
+    padding-top: 8px;
   }
   .zo-feature-grid {
     grid-template-columns: 1fr;
@@ -274,14 +274,16 @@
   }
 }
 .zo-hero {
-  min-height: 610px;
+  width: calc(100% - 24px);
+  min-height: max(720px, calc(100svh - 24px));
   position: relative;
   overflow: hidden;
   border-radius: var(--zo-radius);
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  padding: clamp(28px, 4vw, 54px);
+  justify-content: flex-end;
+  gap: clamp(40px, 7vh, 96px);
+  padding: 120px max(40px, calc((100% - 1240px) / 2)) 40px;
   color: #fff;
   isolation: isolate;
   background: #17232d;
@@ -352,8 +354,10 @@
 }
 @media (max-width: 700px) {
   .zo-hero {
-    min-height: 650px;
-    padding: 26px 22px;
+    width: calc(100% - 16px);
+    min-height: max(760px, calc(100svh - 16px));
+    padding: 110px 24px 24px;
+    gap: 24px;
   }
   .zo-hero-chips {
     grid-template-columns: 1fr;
@@ -627,29 +631,39 @@
   align-items: center;
 }
 .zo-price-art {
-  display: grid;
-  place-items: center;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-radius: var(--zo-radius);
+  min-height: 470px;
   max-width: 420px;
-  padding: 12px;
+  padding: 32px;
+  display: flex;
+  align-items: flex-end;
+  background: #101820;
 }
-.zo-price-art svg {
-  width: 100%;
-  stroke: var(--zo-border);
-  stroke-width: 1;
+.zo-price-art > img {
+  object-fit: cover;
+  z-index: -2;
 }
-.zo-price-art .zo-art-blob {
-  fill: color-mix(in srgb, var(--zo-accent) 70%, var(--zo-card));
-  stroke: none;
+.zo-price-art::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(0deg, #080e14ef, #080e1415 90%);
+  z-index: -1;
 }
 .zo-price-art > div {
-  text-align: center;
-  padding-top: 12px;
+  color: #fff;
 }
 .zo-price-art .zo-eyebrow {
   margin-bottom: 8px;
 }
 .zo-price-art p {
-  font-size: 14px;
+  font-family: var(--font-display), sans-serif;
+  font-size: 32px;
+  line-height: 1.2;
+  color: #fff;
 }
 .zo-price-row {
   display: grid;
@@ -691,8 +705,8 @@
     gap: 18px;
   }
   .zo-price-art {
-    max-width: 270px;
-    margin-inline: auto;
+    max-width: none;
+    min-height: 340px;
   }
 }
 @media (max-width: 600px) {
@@ -988,19 +1002,22 @@
   left: 0;
   right: 0;
   z-index: 50;
-  padding-block: 16px;
+  padding-block: 24px;
 }
 .zo-nav-inner {
-  min-height: 64px;
+  width: min(1500px, calc(100% - 64px));
+  min-height: 50px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 24px;
-  padding: 9px 18px 9px 24px;
+  padding: 2px 12px 2px 20px;
   border-radius: 99px;
-  border: 1px solid var(--zo-border);
-  background: color-mix(in srgb, var(--zo-card) 96%, transparent);
-  backdrop-filter: blur(14px);
+  border: 1px solid var(--theme-glass-border);
+  background: var(--theme-glass-bg);
+  backdrop-filter: blur(var(--theme-glass-nav-blur));
+  -webkit-backdrop-filter: blur(var(--theme-glass-nav-blur));
+  box-shadow: var(--theme-glass-shadow);
 }
 .zo-nav-logo {
   display: flex;
@@ -1009,7 +1026,7 @@
   min-height: 44px;
 }
 .zo-nav-logo img {
-  width: 130px;
+  width: 99px;
   height: auto;
 }
 .zo-nav-links {
@@ -1034,6 +1051,8 @@
   gap: 12px;
 }
 .zo-nav-actions .zo-pill {
+  min-height: 44px;
+  padding-block: 4px;
   font-size: 11px;
   padding-left: 18px;
   gap: 12px;
@@ -1232,12 +1251,13 @@
     padding-block: 12px;
   }
   .zo-nav-inner {
+    width: calc(100% - 32px);
     padding: 7px 9px 7px 17px;
     min-height: 60px;
     gap: 10px;
   }
   .zo-nav-logo img {
-    width: 105px;
+    width: 99px;
   }
   .zo-nav-actions {
     gap: 8px;

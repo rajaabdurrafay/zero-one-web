@@ -48,6 +48,20 @@ async function main() {
       assert.equal(await page.locator('.zo-feature-grid .zo-feature').count(), 3);
       assert.equal(await page.locator('.zo-activity-card').count(), 6);
       assert.equal(await page.locator('.zo-benefit').count(), 4);
+      assert.match(await page.locator('.zo-stats').innerText(), /Rs\. 10 \/ min/);
+      assert.equal(await page.locator('.zo-stats > div').nth(2).locator('strong').innerText(), '0');
+      assert.equal(
+        await page.locator('.zo-home img[src*="redesign"]').count(),
+        0,
+        'Real venue photos replace illustrations',
+      );
+      assert.match(
+        await page
+          .locator('.zo-nav-inner')
+          .evaluate((element) => getComputedStyle(element).backdropFilter),
+        /^(none|blur\(0px\))$/,
+        'Appearance toggle off disables blur',
+      );
       if (width === 1440) {
         await page.locator('.zo-desktop-theme button').click();
         assert.equal(
@@ -135,6 +149,41 @@ async function main() {
       });
       await context.close();
     }
+    fixture.setScenario('glass');
+    const widePage = await browser.newPage({ viewport: { width: 1864, height: 892 } });
+    await widePage.goto(fixture.url, { waitUntil: 'domcontentloaded' });
+    await widePage.waitForFunction(() =>
+      getComputedStyle(document.querySelector('.zo-nav-inner')).backdropFilter.includes('20px'),
+    );
+    const geometry = await widePage.evaluate(() => {
+      const nav = document.querySelector('.zo-nav-inner').getBoundingClientRect();
+      const hero = document.querySelector('.zo-hero').getBoundingClientRect();
+      const logo = [...document.querySelectorAll('.zo-nav-logo img')]
+        .find((image) => getComputedStyle(image).display !== 'none')
+        .getBoundingClientRect();
+      return {
+        navWidth: nav.width,
+        navHeight: nav.height,
+        logoWidth: logo.width,
+        heroWidth: hero.width,
+        heroHeight: hero.height,
+        overlay: nav.top > hero.top && nav.bottom < hero.bottom,
+      };
+    });
+    assert.equal(geometry.navWidth, 1500);
+    assert.equal(geometry.navHeight, 50);
+    assert.equal(geometry.logoWidth, 99);
+    assert.equal(geometry.heroWidth, 1840);
+    assert.ok(geometry.heroHeight >= 868 && geometry.overlay);
+    await widePage.screenshot({ path: path.join(output, 'website-wide-glass.png') });
+    await widePage.close();
+    results.push({
+      requestedHeaderGeometry: 'pass',
+      fullscreenHero: 'pass',
+      appearanceGlassToggle: 'pass',
+      realVenuePhotos: 'pass',
+      realRatesAndReviewCounts: 'pass',
+    });
     fixture.setScenario('live');
     const page = await browser.newPage({ reducedMotion: 'reduce' });
     await page.goto(fixture.url, { waitUntil: 'domcontentloaded' });
