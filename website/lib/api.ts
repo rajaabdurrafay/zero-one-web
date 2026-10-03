@@ -598,6 +598,19 @@ export interface ReviewsResponse {
   };
 }
 
+export interface PublicVisitStats {
+  totalPlayerVisits: number;
+}
+
+export function getPublicVisitStats(): Promise<PublicVisitStats | null> {
+  return apiFetch<PublicVisitStats>('/api/public-stats').then(stats => {
+    if (!Number.isSafeInteger(stats.totalPlayerVisits) || stats.totalPlayerVisits < 0) {
+      throw new Error('Invalid visit count');
+    }
+    return stats;
+  }).catch(() => null);
+}
+
 export function getPublicReviews(params?: { featured?: boolean; limit?: number }): Promise<ReviewsResponse> {
   const query = new URLSearchParams();
   if (params?.featured) query.set('featured', 'true');

@@ -1,7 +1,7 @@
 import {Request,Response,NextFunction} from 'express';
 // Per-process bounded cache: invalidated on every successful API mutation.
 // Only these exact public catalog routes can enter the cache; never booking/auth/payment data.
-const routes=new Set(['/api/pricing','/api/theme','/api/public-settings','/api/system-settings','/api/popup-settings','/api/offers/active','/api/gallery','/api/reels','/api/reviews']);
+const routes=new Set(['/api/pricing','/api/theme','/api/public-settings','/api/system-settings','/api/popup-settings','/api/offers/active','/api/gallery','/api/reels','/api/reviews','/api/public-stats']);
 const entries=new Map<string,{expires:number;body:unknown}>();
 export function publicCache(req:Request,res:Response,next:NextFunction){
   if(!['GET','HEAD'].includes(req.method)){res.once('finish',()=>{if(res.statusCode<400)entries.clear()});return next();}

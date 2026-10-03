@@ -2,6 +2,7 @@ import {
   getPricing,
   getActiveOffers,
   getPublicReviews,
+  getPublicVisitStats,
   type Activity,
   type Offer,
 } from '@/lib/api';
@@ -29,10 +30,11 @@ async function fetchActivities(): Promise<Activity[]> {
 }
 
 export default async function HomePage() {
-  const [activities, offers, reviews] = await Promise.all([
+  const [activities, offers, reviews, visitStats] = await Promise.all([
     fetchActivities(),
     getActiveOffers().catch(() => [] as Offer[]),
     getPublicReviews({ limit: 3 }),
+    getPublicVisitStats(),
   ]);
 
   return (
@@ -42,7 +44,7 @@ export default async function HomePage() {
         <FeatureCardsSection offers={offers} />
         <ActivitiesSection activities={activities} />
         <WhyZeroOneSection />
-        <StatsSection stats={reviews.stats} activities={activities} />
+        <StatsSection visitStats={visitStats} />
         <BookingBanner />
         <PricingSection activities={activities} />
         <ReviewsDealsSection reviews={reviews.reviews} offers={offers} />

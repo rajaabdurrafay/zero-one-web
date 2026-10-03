@@ -1,25 +1,17 @@
-import type { Activity, ReviewsResponse } from '@/lib/api';
-import { experiences, livePrice } from './content';
+import type { PublicVisitStats } from '@/lib/api';
+import { formatCount } from '@/lib/formatCount';
+import { experiences } from './content';
 
-export function StatsSection({
-  stats,
-  activities,
-}: {
-  stats: ReviewsResponse['stats'];
-  activities: Activity[];
-}) {
-  const snooker = activities.find((item) => item.resourceType === 'SNOOKER');
+export function StatsSection({ visitStats }: { visitStats: PublicVisitStats | null }) {
   const items = [
     [String(experiences.length).padStart(2, '0'), 'Ways to play', 'Gaming, cinema and more'],
+    ['24/7', 'Always game time', 'Open around the clock'],
     [
-      snooker ? livePrice(snooker) : 'Rs. 10 / min',
-      'Snooker pricing',
-      snooker ? 'Live venue rate' : 'Indicative rate; confirm in booking',
-    ],
-    [
-      stats.totalReviews > 0 ? `${stats.averageRating.toFixed(1)} / 5` : '0',
-      stats.totalReviews > 0 ? 'Rated by our players' : 'Approved player reviews',
-      stats.totalReviews > 0 ? `${stats.totalReviews} approved reviews` : 'Reviews coming soon',
+      visitStats ? formatCount(visitStats.totalPlayerVisits) : '—',
+      'Player visits',
+      visitStats
+        ? 'Completed sessions · every visit counts'
+        : 'Visit count temporarily unavailable',
     ],
     ['Karachi', 'Your local gaming spot', 'Gulistan-e-Jauhar'],
   ];
