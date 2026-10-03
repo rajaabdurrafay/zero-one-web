@@ -6,9 +6,10 @@ import { ActivitiesSection } from '@/components/redesign/ActivitiesSection';
 import { WhyZeroOneSection } from '@/components/redesign/WhyZeroOneSection';
 import { StatsSection } from '@/components/redesign/StatsSection';
 import { BookingBanner } from '@/components/redesign/BookingBanner';
+import { PricingSection } from '@/components/redesign/PricingSection';
 import { LocationSection } from '@/components/sections/LocationSection';
-import { ReviewsSection } from '@/components/sections/ReviewsSection';
-import { SocialReelsSection } from '@/components/sections/SocialReelsSection';
+import { ReviewsDealsSection } from '@/components/redesign/ReviewsDealsSection';
+import { LatestOffersSection } from '@/components/redesign/LatestOffersSection';
 import { CTASection } from '@/components/sections/CTASection';
 
 export const dynamic = 'force-dynamic';
@@ -37,8 +38,9 @@ export default async function HomePage() {
       <WhyZeroOneSection />
       <StatsSection stats={reviews.stats} />
       <BookingBanner />
-      <SocialReelsSection />
-      <ReviewsSection />
+      <PricingSection activities={activities} />
+      <ReviewsDealsSection reviews={reviews.reviews} offers={offers} />
+      <LatestOffersSection offers={offers} />
       <LocationSection />
       <CTASection />
     </Reveal></div>
