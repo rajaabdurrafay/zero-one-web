@@ -2,7 +2,7 @@
 
 ## Existing database
 
-Use the existing MySQL schema and credentials. No schema change is required for this release. Do not run prisma db push, migrate dev, seed or the removed PostgreSQL theme migration against production. Establish a reviewed migration baseline before any future schema changes; the repository currently has no production migration history.
+This branch requires the additive columns/indexes described in docs/SCHEMA_CHANGES.sql and docs/HANDOVER.md. They have NOT been applied to production. Review the actual MySQL schema, rehearse on an isolated restored copy, back up and obtain owner approval before applying them. Do not run prisma db push, migrate dev, seed or the removed PostgreSQL theme migration against production. Establish a reviewed migration baseline before any future schema changes; the repository currently has no production migration history.
 
 Before deployment, take an encrypted MySQL dump and a separate backup of backend/uploads. The sanitized dashboard JSON export is not a complete restoration source. Keep the old release and its configuration for rollback. Do not share .env files or database dumps with a source-code handover.
 
@@ -42,4 +42,4 @@ Rate limits use process-local memory. Multi-instance hosting needs a shared rate
 
 ## Rollback
 
-Stop the new apps, restore the previous code release and its matching configuration, reinstall with that release's lockfile and rebuild. This release has no schema migration to reverse. Restore the database only for confirmed data corruption, using an agreed maintenance window; routine code rollback does not require a data restore. Preserve uploads created after deployment. Rotated authentication keys invalidate sessions; staff and customers sign in again.
+Stop the new apps, restore the previous code release and its matching configuration, reinstall with that release's lockfile and rebuild. Prefer code rollback with additive schema columns/indexes retained. Never remove them or restore data without a separate reviewed plan and owner approval. Restore the database only for confirmed data corruption, using an agreed maintenance window; routine code rollback does not require a data restore. Preserve uploads created after deployment. Rotated authentication keys invalidate sessions; staff and customers sign in again.

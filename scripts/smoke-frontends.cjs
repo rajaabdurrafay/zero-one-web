@@ -37,7 +37,7 @@ function cookie(response, name) {
   return found.split(';')[0];
 }
 async function main() {
-  let lastAuthorization;
+  let lastAuthorization, logoutRevoked = false, rejectLogout = false;
   backend = http.createServer((request, response) => {
     lastAuthorization = request.headers.authorization;
     response.setHeader('Content-Type', 'application/json');
@@ -49,7 +49,8 @@ async function main() {
     }
     if (request.url === '/api/auth/login') return send({token:'fixture-customer-token',customer:{id:'customer1',name:'Test',phone:'03000000000',isRegistered:true}});
     if (request.url === '/api/auth/me') return send({id:'customer1',name:'Test'});
-    if (request.url === '/api/theme') return send({});
+    if (request.url.startsWith('/api/theme')) return send({primaryColor:'#123456',primaryDarkColor:'#123456',accentColor:'#334455',accentDarkColor:'#334455',backgroundColor:'#090d16',textColor:'#f8fafc',displayFont:'Inter',bodyFont:'Inter'});
+    if (request.url === '/api/auth/logout') { if(rejectLogout){response.statusCode=503;return send({error:'Temporarily unavailable'})} logoutRevoked = lastAuthorization === 'Bearer fixture-customer-token'; return send({success:true}); }
     return send({success:true,authorized:Boolean(lastAuthorization)});
   });
   await new Promise(resolve => backend.listen(0, '127.0.0.1', resolve));
@@ -57,6 +58,7 @@ async function main() {
   const admin = 'http://localhost:4310', website = 'http://localhost:4312';
   start('admin', 4310, api); start('website', 4312, api);
   await Promise.all([ready(admin + '/login'), ready(website + '/api/revalidate')]);
+  assert.match(await (await fetch(admin+'/login')).text(), /#123456/, 'Server-rendered admin theme uses configured backend');
 
   const adminLogin = await fetch(admin + '/api/auth/login', {method:'POST',headers:{Origin:admin,'Content-Type':'application/json'},body:JSON.stringify({username:'test',password:'test-password'})});
   assert.equal(adminLogin.status,200);
@@ -78,8 +80,13 @@ async function main() {
   const profile = await fetch(website+'/api/backend/api/auth/me',{headers:{Cookie:customerCookie}});
   assert.equal(profile.status,200); assert.equal(lastAuthorization,'Bearer fixture-customer-token');
   assert.equal((await fetch(website+'/api/backend/api/bookings',{method:'POST',headers:{Cookie:customerCookie,Origin:'https://attacker.invalid'},body:'{}'})).status,403);
+  rejectLogout = true;
+  const failedLogout = await fetch(website+'/api/auth/logout',{method:'POST',headers:{Origin:website,Cookie:customerCookie}});
+  assert.equal(failedLogout.status,502);assert.equal(failedLogout.headers.getSetCookie().length,0,'Failed revocation retains the cookie for retry');
+  rejectLogout = false;
   const logout = await fetch(website+'/api/auth/logout',{method:'POST',headers:{Origin:website,Cookie:customerCookie}});
   assert.equal(logout.status,200); assert.ok(logout.headers.getSetCookie().some(value=>value.startsWith('zeroone-customer-session=;')));
+  assert.equal(logoutRevoked,true,'Logout revokes backend credential before clearing cookie');
   console.log('PASS customer HttpOnly login, relay, CSRF and cookie logout');
 
   assert.equal((await fetch(website+'/api/revalidate',{method:'POST'})).status,401);

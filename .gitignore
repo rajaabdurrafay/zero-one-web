@@ -60,3 +60,4 @@ coverage/
 # Local security reports and private database exports
 security-audit*.json
 *.sql
+!docs/SCHEMA_CHANGES.sql

@@ -3,6 +3,17 @@ on: [push, pull_request]
 jobs:
   validate:
     runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: fixture-only-local
+          MYSQL_DATABASE: zeroone_test_ci
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -pfixture-only-local"
+          --health-interval=10s --health-timeout=5s --health-retries=10
     env:
       DATABASE_URL: mysql://fixture:fixture@localhost:3306/fixture
       JWT_SECRET: fixture-only-jwt-key-for-database-free-ci-123456789
@@ -17,6 +28,9 @@ jobs:
       - run: npm run build
       - run: npm run typecheck
       - run: npm test
+      - run: npm run test:db
+        env:
+          TEST_DATABASE_URL: mysql://root:fixture-only-local@127.0.0.1:3306/zeroone_test_ci
       - run: npm run lint
       - run: npm run test:frontends
       - run: npm run audit:production
