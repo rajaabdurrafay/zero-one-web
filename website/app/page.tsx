@@ -7,10 +7,9 @@ import { WhyZeroOneSection } from '@/components/redesign/WhyZeroOneSection';
 import { StatsSection } from '@/components/redesign/StatsSection';
 import { BookingBanner } from '@/components/redesign/BookingBanner';
 import { PricingSection } from '@/components/redesign/PricingSection';
-import { LocationSection } from '@/components/sections/LocationSection';
+import { ConnectSection } from '@/components/redesign/ConnectSection';
 import { ReviewsDealsSection } from '@/components/redesign/ReviewsDealsSection';
 import { LatestOffersSection } from '@/components/redesign/LatestOffersSection';
-import { CTASection } from '@/components/sections/CTASection';
 
 export const dynamic = 'force-dynamic';
 
@@ -41,8 +40,7 @@ export default async function HomePage() {
       <PricingSection activities={activities} />
       <ReviewsDealsSection reviews={reviews.reviews} offers={offers} />
       <LatestOffersSection offers={offers} />
-      <LocationSection />
-      <CTASection />
+      <ConnectSection activities={activities} />
     </Reveal></div>
   );
 }

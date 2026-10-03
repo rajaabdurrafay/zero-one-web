@@ -150,3 +150,19 @@
 .zo-news-copy .zo-circle-arrow { background: var(--zo-raised); align-self: flex-end; margin-top: auto; }
 @media (max-width: 900px) { .zo-news-card { grid-template-columns: 1fr; gap: 6px; } .zo-news-photo { min-height: 230px; } .zo-news-copy { padding: 20px; } }
 @media (max-width: 600px) { .zo-news-grid { grid-template-columns: 1fr; } .zo-latest { margin-inline: 6px; border-radius: 24px; } }
+.zo-connect-card { display: grid; grid-template-columns: 1fr 1fr; border-radius: var(--zo-radius); background: var(--zo-card); border: 1px solid var(--zo-border); overflow: hidden; }
+.zo-connect-copy { padding: clamp(28px, 4vw, 50px); }
+.zo-connect-copy > p { font-size: 14px; margin-block: 22px 26px; max-width: 410px; }
+.zo-connect-form label { display: block; font-size: 12px; font-weight: 500; margin-bottom: 10px; }
+.zo-connect-form select { width: 100%; min-height: 52px; padding: 12px 16px; border: 1px solid var(--zo-border); border-radius: 12px; background: var(--zo-bg); color: var(--zo-ink); font: inherit; font-size: 13px; }
+.zo-connect-form select:focus-visible { outline: 3px solid var(--zo-accent); outline-offset: 3px; }
+.zo-connect-form > p { margin-block: 12px 26px; font-size: 11px; }
+.zo-connect-links { display: flex; flex-direction: column; gap: 4px; margin-top: 26px; }
+.zo-connect-links > a { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px; font-size: 12px; }
+.zo-connect-photo { position: relative; min-height: 530px; background: #17232d; }
+.zo-connect-photo > img { object-fit: cover; }
+.zo-location-chip { position: absolute; bottom: 24px; left: 24px; right: 24px; padding: 16px; background: var(--zo-card); border: 1px solid var(--zo-border); border-radius: 18px; display: flex; gap: 14px; align-items: center; }
+.zo-location-chip .zo-circle-arrow { background: var(--zo-accent); color: var(--theme-primary-contrast, #fff); }
+.zo-location-chip strong { display: block; font-size: 12px; font-weight: 500; }
+.zo-location-chip small { display: block; font-size: 11px; color: var(--zo-muted); margin-top: 4px; }
+@media (max-width: 700px) { .zo-connect-card { grid-template-columns: 1fr; } .zo-connect-photo { min-height: 350px; } .zo-connect-copy { padding: 28px 24px; } .zo-location-chip { left: 16px; right: 16px; bottom: 16px; } }
