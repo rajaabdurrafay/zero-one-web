@@ -6,7 +6,7 @@ export function Arrow({ className = '' }: { className?: string }) {
 }
 
 export function PillLink({ href, children, secondary = false }: { href: string; children: ReactNode; secondary?: boolean }) {
-  return <Link className={`zo-pill${secondary ? ' zo-pill-secondary' : ''}`} href={href}><span>{children}</span><span className="zo-pill-arrow"><Arrow /></span></Link>;
+  return <Link prefetch={false} className={`zo-pill${secondary ? ' zo-pill-secondary' : ''}`} href={href}><span>{children}</span><span className="zo-pill-arrow"><Arrow /></span></Link>;
 }
 
 export function SectionHeading({ label, title, description, centered = false }: { label: string; title: string; description?: string; centered?: boolean }) {

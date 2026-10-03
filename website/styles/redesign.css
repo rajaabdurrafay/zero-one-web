@@ -166,3 +166,41 @@
 .zo-location-chip strong { display: block; font-size: 12px; font-weight: 500; }
 .zo-location-chip small { display: block; font-size: 11px; color: var(--zo-muted); margin-top: 4px; }
 @media (max-width: 700px) { .zo-connect-card { grid-template-columns: 1fr; } .zo-connect-photo { min-height: 350px; } .zo-connect-copy { padding: 28px 24px; } .zo-location-chip { left: 16px; right: 16px; bottom: 16px; } }
+.zo-navigation { position: fixed; top: 0; left: 0; right: 0; z-index: 50; padding-block: 16px; }
+.zo-nav-inner { min-height: 64px; display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 9px 18px 9px 24px; border-radius: 99px; border: 1px solid var(--zo-border); background: color-mix(in srgb, var(--zo-card) 96%, transparent); backdrop-filter: blur(14px); }
+.zo-nav-logo { display: flex; align-items: center; flex-shrink: 0; min-height: 44px; }
+.zo-nav-logo img { width: 130px; height: auto; }
+.zo-nav-links { display: flex; align-items: center; gap: 18px; }
+.zo-nav-links a { font-size: 11px; min-height: 44px; display: flex; align-items: center; font-weight: 500; }
+.zo-nav-links a:hover { text-decoration: underline; text-underline-offset: 5px; }
+.zo-nav-actions { display: flex; align-items: center; gap: 12px; }
+.zo-nav-actions .zo-pill { font-size: 11px; padding-left: 18px; gap: 12px; }
+.zo-nav-account { min-width: 48px; font-size: 11px; }
+.zo-nav-account a { display: flex; align-items: center; min-height: 44px; }
+.zo-menu-trigger { display: none; width: 44px; height: 44px; align-items: center; justify-content: center; flex-direction: column; gap: 6px; border: 1px solid var(--zo-border); border-radius: 50%; background: var(--zo-raised); }
+.zo-menu-trigger span { display: block; width: 16px; height: 1px; background: currentColor; }
+.zo-skip-link { position: absolute; top: 16px; left: 24px; padding: 12px 22px; background: var(--zo-card); border-radius: 99px; transform: translateY(-160%); z-index: 60; font-size: 13px; }
+.zo-skip-link:focus { transform: translateY(0); }
+.zo-mobile-nav { color: var(--zo-ink); background: var(--zo-card); border: 1px solid var(--zo-border); border-radius: 24px; padding: 24px; width: min(480px, calc(100% - 32px)); max-height: calc(100dvh - 120px); overflow-y: auto; margin: 96px auto auto; }
+.zo-mobile-nav::backdrop { background: #090d1670; backdrop-filter: blur(4px); }
+.zo-mobile-nav-heading { display: flex; align-items: center; justify-content: space-between; font-size: 14px; font-weight: 600; margin-bottom: 16px; }
+.zo-mobile-nav-heading button { min-width: 44px; min-height: 44px; font-size: 24px; border-radius: 50%; background: var(--zo-raised); }
+.zo-mobile-nav nav a, .zo-mobile-nav > a { display: flex; align-items: center; justify-content: space-between; min-height: 44px; font-size: 14px; padding-block: 6px; border-bottom: 1px solid var(--zo-border); }
+.zo-mobile-nav-bottom { display: flex; align-items: center; gap: 12px; margin-block: 18px; font-size: 12px; }
+.zo-mobile-auth { display: flex; gap: 24px; }
+.zo-mobile-auth a, .zo-nav-signout { display: flex; align-items: center; min-height: 44px; font-size: 13px; }
+.zo-footer { background: color-mix(in srgb, var(--theme-primary-dark) 24%, #090d16); color: #f8fafc; padding-block: 54px 24px; border-radius: 32px 32px 0 0; }
+.zo-footer-cta { display: flex; align-items: center; justify-content: space-between; gap: 28px; padding-bottom: 44px; border-bottom: 1px solid #ffffff26; }
+.zo-footer-cta .zo-eyebrow { color: #d1d7e1; }
+.zo-footer-grid { display: grid; grid-template-columns: 1.5fr repeat(3, 1fr); gap: 44px; padding-block: 44px; }
+.zo-footer h3 { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 18px; color: #f8fafc; }
+.zo-footer a { display: flex; align-items: center; min-height: 44px; font-size: 12px; color: #e3e7ee; width: fit-content; }
+.zo-footer .zo-pill { color: var(--theme-primary-contrast, #fff); font-weight: 600; }
+.zo-footer a:hover { text-decoration: underline; text-underline-offset: 4px; }
+.zo-footer-brand p { max-width: 250px; margin-block: 20px; color: #c7cedb; font-size: 13px; line-height: 1.8; }
+.zo-footer address { font-style: normal; font-size: 12px; color: #c7cedb; line-height: 1.8; }
+.zo-footer-bottom { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 16px; border-top: 1px solid #ffffff26; padding-top: 22px; font-size: 10px; color: #c7cedb; align-items: center; }
+.zo-footer-bottom a { font-size: 10px; }
+@media (max-width: 1150px) { .zo-nav-links, .zo-nav-account, .zo-desktop-theme { display: none; } .zo-menu-trigger { display: flex; } }
+@media (max-width: 800px) { .zo-footer-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 36px 24px; } }
+@media (max-width: 600px) { .zo-navigation { padding-block: 12px; } .zo-nav-inner { padding: 7px 9px 7px 17px; min-height: 60px; gap: 10px; } .zo-nav-logo img { width: 105px; } .zo-nav-actions { gap: 8px; } .zo-nav-actions .zo-pill { min-height: 44px; font-size: 10px; gap: 5px; padding-left: 12px; } .zo-nav-actions .zo-pill-arrow { width: 28px; height: 28px; } .zo-footer-cta { align-items: flex-start; flex-direction: column; } .zo-footer-grid { gap: 32px 20px; } .zo-footer-brand { grid-column: 1 / -1; } .zo-footer-bottom { align-items: flex-start; flex-direction: column; } }

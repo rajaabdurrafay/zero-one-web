@@ -12,7 +12,7 @@ export function PricingSection({ activities }: { activities: Activity[] }) {
       <div className="zo-price-list" data-reveal>
         {experiences.map(experience => {
           const activity = activities.find(item => item.resourceType === experience.type);
-          return <Link href={bookingHref(activity)} className="zo-price-row" key={experience.type}><span>{experience.name}</span><strong>{activity ? livePrice(activity) : experience.suggested}</strong><span className="zo-circle-arrow"><Arrow /></span></Link>;
+          return <Link prefetch={false} href={bookingHref(activity)} className="zo-price-row" key={experience.type}><span>{experience.name}</span><strong>{activity ? livePrice(activity) : experience.suggested}</strong><span className="zo-circle-arrow"><Arrow /></span></Link>;
         })}
         {missingRates && <p className="zo-price-note">Indicative rates where live pricing is unavailable. Final rates are confirmed in booking.</p>}
         <PillLink href="/book">Find Your Session</PillLink>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState, useMemo } from 'react';
+import React, { createContext, useContext, useLayoutEffect, useState, useMemo } from 'react';
 import type { ThemeSettings } from '@/lib/api';
 import { computeThemeVariables } from '@/lib/themeUtils';
 
@@ -70,19 +70,8 @@ export function ThemeProvider({
     [initialTheme]
   );
 
-  const [mode, setModeState] = useState<ThemeMode>(() => {
-    if (typeof window === 'undefined') return initialTheme?.mode || 'DARK';
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored === 'LIGHT' || stored === 'DARK') return stored;
-      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
-        return 'LIGHT';
-      }
-    } catch {
-      // ignore
-    }
-    return 'DARK';
-  });
+  // First client render must match SSR. Restore the saved mode before paint.
+  const [mode, setModeState] = useState<ThemeMode>(initialTheme?.mode || 'DARK');
 
   const activeTheme = mode === 'LIGHT' ? lightTheme : darkTheme;
 
@@ -115,7 +104,7 @@ export function ThemeProvider({
     }, 300);
   };
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       let resolvedMode: ThemeMode = 'DARK';

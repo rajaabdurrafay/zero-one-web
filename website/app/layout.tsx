@@ -8,10 +8,11 @@ import { ThemeProvider } from '@/context/ThemeContext';
 import { SystemStatusProvider } from '@/components/SystemStatusProvider';
 import { getTheme, getSystemSettings } from '@/lib/api';
 import { computeThemeVariables } from '@/lib/themeUtils';
+import { bodyFont as optimizedBodyFont, headingFont } from './fonts';
 
 export const metadata: Metadata = {
   title: "ZeroOne Cue & Play — Karachi's Premium Gaming Lounge & Snooker Club",
-  description: "Karachi's premier snooker lounge, PS5 gaming hall, private cinema, table tennis & car simulator — open 24/7 at Kamran Chowrangi, Gulistan-e-Jauhar.",
+  description: "Snooker, PS5 gaming, private cinema, table tennis and car simulator sessions at ZeroOne Cue & Play, Gulistan-e-Jauhar, Karachi.",
 };
 
 export default async function RootLayout({
@@ -27,22 +28,19 @@ export default async function RootLayout({
   const displayFont = theme.displayFont || 'Space Grotesk';
   const bodyFont = theme.bodyFont || 'Inter';
 
-  const families = [
-    `${displayFont}:wght@400;500;700;900`,
-    `${bodyFont}:wght@400;500;700`,
-  ];
-  const googleFontsUrl = `https://fonts.googleapis.com/css2?${families
+  const families = [...new Set([displayFont, bodyFont, theme.light?.displayFont, theme.light?.bodyFont, theme.dark?.displayFont, theme.dark?.bodyFont])].filter((name): name is string => Boolean(name) && name !== 'Inter' && name !== 'Space Grotesk').map(name => `${name}:wght@400;500;700`);
+  const googleFontsUrl = families.length ? `https://fonts.googleapis.com/css2?${families
     .map((f) => `family=${encodeURIComponent(f)}`)
-    .join('&')}&display=swap`;
+    .join('&')}&display=swap` : null;
 
   const themeVariables = computeThemeVariables(theme) as React.CSSProperties;
 
   return (
-    <html lang="en" className="overflow-x-hidden" style={{ ...themeVariables, scrollBehavior: 'smooth' }}>
+    <html lang="en" className={`overflow-x-hidden ${optimizedBodyFont.variable} ${headingFont.variable}`} style={{ ...themeVariables, scrollBehavior: 'smooth' }}>
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        {googleFontsUrl && <><link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href={googleFontsUrl} rel="stylesheet" />
+        <link href={googleFontsUrl} rel="stylesheet" /></>}
       </head>
       <body
         style={themeVariables}
@@ -52,7 +50,7 @@ export default async function RootLayout({
           <ThemeProvider initialTheme={theme}>
             <CustomerAuthProvider>
               <Navbar />
-              <main className="flex-1">{children}</main>
+              <main id="main-content" tabIndex={-1} className="flex-1">{children}</main>
               <Footer />
               <SitePopupModal />
             </CustomerAuthProvider>

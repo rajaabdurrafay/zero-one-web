@@ -35,11 +35,12 @@ export function computeThemeVariables(theme: {
   const bgLum = getLuminance(theme.backgroundColor);
   const isLight = bgLum > 0.4;
   const isGlass = Boolean(theme.glassEffectEnabled);
+  const primaryLuminance = getLuminance(theme.primaryColor);
 
   const fontVars: Record<string, string> = {
-    '--theme-primary-contrast': (1.05 / (getLuminance(theme.primaryColor) + .05)) >= ((getLuminance(theme.primaryColor) + .05) / (getLuminance('#111111') + .05)) ? '#ffffff' : '#111111',
-    '--font-display': `"${theme.displayFont || 'Space Grotesk'}", system-ui, sans-serif`,
-    '--font-sans': `"${theme.bodyFont || 'Inter'}", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`,
+    '--theme-primary-contrast': (1.05 / (primaryLuminance + .05)) >= ((primaryLuminance + .05) / .05) ? '#ffffff' : '#000000',
+    '--font-display': `${theme.displayFont === 'Inter' ? 'var(--zero-font-body)' : !theme.displayFont || theme.displayFont === 'Space Grotesk' ? 'var(--zero-font-heading)' : `"${theme.displayFont}"`}, system-ui, sans-serif`,
+    '--font-sans': `${theme.bodyFont === 'Space Grotesk' ? 'var(--zero-font-heading)' : !theme.bodyFont || theme.bodyFont === 'Inter' ? 'var(--zero-font-body)' : `"${theme.bodyFont}"`}, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`,
     '--base-size-scale': String(theme.baseSizeScale ?? 1),
   };
 

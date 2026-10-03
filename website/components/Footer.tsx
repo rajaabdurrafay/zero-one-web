@@ -2,14 +2,19 @@
 
 import Link from 'next/link';
 import { BrandLogo } from '@/components/BrandLogo';
+import { usePathname } from 'next/navigation';
+import { HomeFooter } from '@/components/redesign/HomeFooter';
 
 export function Footer() {
+  const pathname = usePathname();
   const brandName = process.env.NEXT_PUBLIC_BRAND_NAME || 'ZeroOne Cue & Play';
   const phone = process.env.NEXT_PUBLIC_CONTACT_PHONE || '0371-2160471';
   const email = process.env.NEXT_PUBLIC_CONTACT_EMAIL || 'info@cueandplay.pk';
   const address = process.env.NEXT_PUBLIC_LOCATION_ADDRESS || 'F-1, Mezzanine Floor, Block-3A Kamran Chowrangi, Gulistan-e-Jauhar, Karachi';
   const instagram = process.env.NEXT_PUBLIC_INSTAGRAM_URL || 'https://www.instagram.com/cueandplay.pk';
   const tiktok = process.env.NEXT_PUBLIC_TIKTOK_URL || 'https://www.tiktok.com/@cueandplay.pk';
+
+  if (pathname === '/') return <HomeFooter />;
 
   return (
     <footer className="border-t border-brand-border bg-brand-surface text-brand-text-muted mt-20 transition-colors">
