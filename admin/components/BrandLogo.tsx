@@ -39,8 +39,9 @@ export function BrandLogo({
 
   if (finalCustomLogo) {
     return (
-      <img
-        src={finalCustomLogo}
+      <Image
+        width={width} height={height} priority={priority}
+        src={finalCustomLogo.startsWith('/uploads/') ? (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001')+finalCustomLogo:finalCustomLogo}
         alt={alt}
         className={className}
         style={{ maxWidth: '100%', objectFit: 'contain' }}

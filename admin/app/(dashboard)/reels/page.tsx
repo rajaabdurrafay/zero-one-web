@@ -223,7 +223,7 @@ export default function AdminReelsPage() {
   const getFullThumbnailUrl = (url: string) => {
     if (!url) return '/images/social-placeholder.jpg';
     if (url.startsWith('http')) return url;
-    if (url.startsWith('/uploads/')) return `http://localhost:3001${url}`;
+    if (url.startsWith('/uploads/')) return `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}${url}`;
     return url;
   };
 

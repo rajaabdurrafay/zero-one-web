@@ -143,8 +143,8 @@ export default function AdminGalleryPage() {
   // Base URL for Images (Assuming local testing runs on port 3001)
   const getFullImageUrl = (url: string) => {
     if (url.startsWith('http')) return url;
-    if (url.startsWith('/uploads/')) return `http://localhost:3001${url}`;
-    if (url.startsWith('/images/')) return `http://localhost:3002${url}`;
+    if (url.startsWith('/uploads/')) return `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}${url}`;
+    if (url.startsWith('/images/')) return `${process.env.NEXT_PUBLIC_WEBSITE_URL || 'http://localhost:3002'}${url}`;
     return url;
   };
 

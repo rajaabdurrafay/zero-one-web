@@ -1,6 +1,7 @@
 import type { NextConfig } from 'next';
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  images:{remotePatterns:[{protocol:(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001').startsWith('https:') ? 'https':'http',hostname:new URL(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001').hostname,port:new URL(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001').port,pathname:'/uploads/**'}]},
   async headers() {
     return [{ source: '/:path*', headers: [
       { key: 'X-Content-Type-Options', value: 'nosniff' },

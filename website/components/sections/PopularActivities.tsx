@@ -132,9 +132,6 @@ export function PopularActivities({ activities }: PopularActivitiesProps) {
                     <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-brand-surface-raised text-brand-text-muted border border-brand-border">
                       {details.badge}
                     </span>
-                    <span className="text-[11px] font-bold text-amber-600 bg-amber-500/10 px-2 py-0.5 rounded-full">
-                      {details.rating}
-                    </span>
                   </div>
                 </div>
 

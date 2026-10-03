@@ -67,21 +67,12 @@ const ACTIVITY_METADATA: Record<
   },
 };
 
-const DEFAULT_ACTIVITIES: Activity[] = [
-  { id: '1', name: 'Snooker Hall', resourceType: 'SNOOKER', pricingUnit: 'PER_MINUTE', basePrice: 10, halfHourPrice: null, fullHourPrice: null, createdAt: '' },
-  { id: '2', name: 'PS5 Open Gaming', resourceType: 'PS5_OPEN', pricingUnit: 'PER_HOUR', basePrice: 600, halfHourPrice: null, fullHourPrice: null, createdAt: '' },
-  { id: '3', name: 'PS5 Private Room', resourceType: 'PS5_PRIVATE', pricingUnit: 'PER_HOUR', basePrice: 900, halfHourPrice: null, fullHourPrice: null, createdAt: '' },
-  { id: '4', name: 'Private Cinema', resourceType: 'CINEMA', pricingUnit: 'PER_HOUR', basePrice: 1300, halfHourPrice: null, fullHourPrice: null, createdAt: '' },
-  { id: '5', name: 'Table Tennis (Private)', resourceType: 'TABLE_TENNIS', pricingUnit: 'PER_HOUR', basePrice: 800, halfHourPrice: null, fullHourPrice: null, createdAt: '' },
-  { id: '6', name: 'Car Simulator', resourceType: 'CAR_SIMULATOR', pricingUnit: 'PER_HOUR', basePrice: 900, halfHourPrice: 500, fullHourPrice: 900, createdAt: '' },
-];
-
 async function fetchActivities(): Promise<Activity[]> {
   try {
     const data = await getPricing();
-    return data && data.length > 0 ? data : DEFAULT_ACTIVITIES;
+    return Array.isArray(data) ? data:[];
   } catch (e) {
-    return DEFAULT_ACTIVITIES;
+    return [];
   }
 }
 
@@ -93,6 +84,7 @@ export default async function ActivitiesPage() {
 
   return (
     <div className="space-y-16 sm:space-y-24 pb-16 pt-24 sm:pt-28">
+      {!activities.length && <p className="text-center text-brand-text-muted">Live pricing is temporarily unavailable. Please contact the venue.</p>}
       {/* Top Banner */}
       <section className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-surface-raised border border-brand-border text-xs font-semibold text-brand-text-muted">

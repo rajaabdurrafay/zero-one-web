@@ -1,9 +1,10 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import { getPublicGallery, type GalleryImage } from '@/lib/api';
-import { Lightbox } from '@/components/Lightbox';
+import dynamic from 'next/dynamic';
+const Lightbox=dynamic(()=>import('@/components/Lightbox').then(module=>module.Lightbox),{ssr:false});
 import { Icon } from '@/components/Icon';
 
 export default function GalleryPage() {
@@ -109,7 +110,7 @@ export default function GalleryPage() {
                   fill
                   className="object-cover transition-transform duration-500 group-hover:scale-105"
                   sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                  unoptimized={image.imageUrl.startsWith('/uploads/')}
+
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-6">
                   {image.caption && (
@@ -128,14 +129,13 @@ export default function GalleryPage() {
       </section>
 
       {/* Lightbox Overlay */}
-      <Lightbox
+      {lightboxOpen && <Lightbox
         images={filteredImages}
         currentIndex={lightboxIndex}
         isOpen={lightboxOpen}
         onClose={() => setLightboxOpen(false)}
         onNavigate={(newIdx) => setLightboxIndex(newIdx)}
-      />
+      />}
     </div>
   );
 }
-

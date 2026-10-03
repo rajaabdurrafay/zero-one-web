@@ -4,48 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { getPublicReels, type SocialReel } from '@/lib/api';
 import { Icon } from '@/components/Icon';
 
-const DEFAULT_REELS: SocialReel[] = [
-  {
-    id: 'default-1',
-    platform: 'INSTAGRAM',
-    url: 'https://www.instagram.com/cueandplay.pk',
-    thumbnailUrl: '/images/social-reel-1.jpg',
-    caption: 'Top snooker breaks & clutches at ZeroOne Arena',
-    displayOrder: 1,
-    isActive: true,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'default-2',
-    platform: 'TIKTOK',
-    url: 'https://www.tiktok.com/@cueandplay.pk',
-    thumbnailUrl: '/images/social-reel-2.jpg',
-    caption: 'Squad gaming inside our Private 120" Cinema Room',
-    displayOrder: 2,
-    isActive: true,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'default-3',
-    platform: 'INSTAGRAM',
-    url: 'https://www.instagram.com/cueandplay.pk',
-    thumbnailUrl: '/images/social-reel-3.jpg',
-    caption: 'Direct-drive motion sim hot lap challenge',
-    displayOrder: 3,
-    isActive: true,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'default-4',
-    platform: 'INSTAGRAM',
-    url: 'https://www.instagram.com/cueandplay.pk',
-    thumbnailUrl: '/images/social-reel-4.jpg',
-    caption: 'Weekend vibes, café snacks and competitive matches',
-    displayOrder: 4,
-    isActive: true,
-    createdAt: new Date().toISOString(),
-  },
-];
+const DEFAULT_REELS:SocialReel[]=[];
 
 export function SocialReelsSection() {
   const [reels, setReels] = useState<SocialReel[]>([]);
@@ -101,7 +60,7 @@ export function SocialReelsSection() {
   const getFullThumbnailUrl = (url?: string | null) => {
     if (!url) return '';
     if (url.startsWith('http')) return url;
-    if (url.startsWith('/uploads/')) return `http://localhost:3001${url}`;
+    if (url.startsWith('/uploads/')) return `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}${url}`;
     if (url.startsWith('/images/')) return url;
     return url;
   };
