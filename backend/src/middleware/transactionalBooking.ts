@@ -21,8 +21,15 @@ export function transactionalBooking(handler: (req: any, res: Response, next: Ne
         const existingAddonIds: string[] = [];
         const bookingIds: string[] = [];
         let groupId = req.params.groupId;
-        if (req.params.id) {
-          const booking = await tx.booking.findUnique({ where: { id: req.params.id }, select: { id: true, resourceId: true, bookingGroupId: true, addons: { select: { addonItemId: true } } } });
+        const sessionId = req.baseUrl?.includes('/sessions') ? req.params.id : undefined;
+        if (sessionId) {
+          const session = await tx.session.findUnique({where:{id:sessionId},select:{resourceId:true,bookingId:true}});
+          if (session) resourceIds.add(session.resourceId);
+          if (session?.bookingId) req.body = {...req.body, bookingId:session.bookingId};
+        }
+        const targetBookingId = sessionId ? req.body?.bookingId : (req.params.id || req.body?.bookingId);
+        if (targetBookingId) {
+          const booking = await tx.booking.findUnique({ where: { id: targetBookingId }, select: { id: true, resourceId: true, bookingGroupId: true, addons: { select: { addonItemId: true } } } });
           if (booking) resourceIds.add(booking.resourceId);
           if (booking) { bookingIds.push(booking.id); existingAddonIds.push(...booking.addons.map(addon => addon.addonItemId)); }
           if (booking?.bookingGroupId) groupId = booking.bookingGroupId;
@@ -35,6 +42,7 @@ export function transactionalBooking(handler: (req: any, res: Response, next: Ne
         // Stable lock order prevents create/reschedule races across separate Node processes.
         for (const id of [...resourceIds].sort()) await tx.$queryRaw`SELECT id FROM Resource WHERE id = ${id} FOR UPDATE`;
         for (const id of [...new Set(bookingIds)].sort()) await tx.$queryRaw`SELECT id FROM Booking WHERE id = ${id} FOR UPDATE`;
+        if (sessionId) await tx.$queryRaw`SELECT id FROM Session WHERE id = ${sessionId} FOR UPDATE`;
         if (groupId) await tx.$queryRaw`SELECT id FROM BookingGroup WHERE id = ${groupId} FOR UPDATE`;
         const addonIds = [...new Set<string>([...existingAddonIds, ...(Array.isArray(req.body?.addons) ? req.body.addons : []).map((item: any) => item?.addonItemId).filter((id: unknown) => typeof id === 'string')])].sort();
         for (const id of addonIds) await tx.$queryRaw`SELECT id FROM AddonItem WHERE id = ${id} FOR UPDATE`;

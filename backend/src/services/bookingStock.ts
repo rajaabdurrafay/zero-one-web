@@ -1,5 +1,7 @@
 import { BookingStatus } from '@prisma/client';
 import { prisma } from '../db';
+import { assertBookingTransition } from './bookingState';
+import {hasConflict} from './bookingConflict';
 
 export function reservesStock(status: BookingStatus): boolean {
   return status !== BookingStatus.CANCELLED && status !== BookingStatus.REJECTED;
@@ -7,15 +9,12 @@ export function reservesStock(status: BookingStatus): boolean {
 // Call inside the same booking transaction as the status change. Atomic increments
 // and conditional decrements protect inventory against retries/concurrent staff edits.
 export async function transitionBookingStock(bookingId: string, previous: BookingStatus, next: BookingStatus): Promise<void> {
+  assertBookingTransition(previous,next);
   if (reservesStock(previous) === reservesStock(next)) return;
   if (reservesStock(next)) {
     const booking = await prisma.booking.findUnique({ where: { id: bookingId } });
     if (booking) {
-      const conflict = await prisma.booking.findFirst({ where: {
-        id: { not: bookingId }, resourceId: booking.resourceId,
-        status: { in: [BookingStatus.PENDING, BookingStatus.PENDING_PAYMENT, BookingStatus.AWAITING_VERIFICATION, BookingStatus.CONFIRMED] },
-        startTime: { lt: booking.endTime }, endTime: { gt: booking.startTime }
-      } });
+      const conflict = await hasConflict(booking.resourceId,booking.startTime,booking.endTime,bookingId);
       if (conflict) throw Object.assign(new Error('This time slot is no longer available. Contact staff for a new booking.'), { status: 409 });
     }
   }

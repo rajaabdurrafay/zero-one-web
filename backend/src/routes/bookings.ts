@@ -1,3 +1,8 @@
+import { decodeImage } from '../utils/uploads';
+import { pagination, pageResult } from '../middleware/apiContract';
+import { activityPrice, quote, Snapshot, money, allocatePayments, businessDate, businessInstant } from '@zeroone/domain';
+import { hasConflict } from '../services/bookingConflict';
+import { repriceBooking, pricingSnapshot, reconcileGroup } from '../services/bookingTotals';
 import { transitionBookingStock } from '../services/bookingStock';
 import { transactionalBooking } from '../middleware/transactionalBooking';
 import { requireBookingAccess } from '../middleware/bookingAccess';
@@ -21,8 +26,8 @@ const router = Router();
 const createBookingSchema = z.object({
   resourceId: z.string().cuid(),
   customer: z.object({
-    name: z.string().min(1),
-    phone: z.string().min(10),
+    name: z.string().trim().min(1).max(100),
+    phone: z.string().trim().min(10).max(20),
     email: z.string().email().optional()
   }),
   startTime: z.string().datetime(),
@@ -43,8 +48,8 @@ const createBookingSchema = z.object({
 
 const createGroupBookingSchema = z.object({
   customer: z.object({
-    name: z.string().min(1),
-    phone: z.string().min(10),
+    name: z.string().trim().min(1).max(100),
+    phone: z.string().trim().min(10).max(20),
     email: z.string().email().optional()
   }),
   isWalkIn: z.boolean().optional().default(false),
@@ -78,75 +83,6 @@ const updateBookingSchema = z.object({
   verifiedAt: z.string().datetime().optional(),
   rejectionReason: z.string().optional()
 });
-
-// Check for time conflicts: (existing.startTime < new.endTime) AND (existing.endTime > new.startTime)
-async function hasConflict(resourceId: string, startTime: Date, endTime: Date, excludeBookingId?: string) {
-  const conflicts = await prisma.booking.findFirst({
-    where: {
-      resourceId,
-      status: {
-        in: [
-          BookingStatus.PENDING,
-          BookingStatus.PENDING_PAYMENT,
-          BookingStatus.AWAITING_VERIFICATION,
-          BookingStatus.CONFIRMED
-        ]
-      },
-      ...(excludeBookingId && { id: { not: excludeBookingId } }),
-      startTime: { lt: endTime },
-      endTime: { gt: startTime }
-    }
-  });
-
-  return conflicts !== null;
-}
-
-// Calculate price based on activity pricing
-async function calculatePrice(resourceId: string, startTime: Date, endTime: Date): Promise<number> {
-  const resource = await prisma.resource.findUnique({
-    where: { id: resourceId }
-  });
-
-  if (!resource) {
-    throw new Error('Resource not found');
-  }
-
-  const activity = await prisma.activity.findUnique({
-    where: { resourceType: resource.type }
-  });
-
-  if (!activity) {
-    throw new Error('Activity pricing not configured');
-  }
-
-  const durationMs = endTime.getTime() - startTime.getTime();
-  const durationInMinutes = Math.ceil(durationMs / (1000 * 60));
-
-  // Tiered / Slab pricing (if both halfHourPrice and fullHourPrice are configured)
-  if (activity.halfHourPrice !== null && activity.halfHourPrice !== undefined &&
-      activity.fullHourPrice !== null && activity.fullHourPrice !== undefined) {
-    const totalHours = Math.floor(durationInMinutes / 60);
-    const remainingMinutes = durationInMinutes % 60;
-    let price = totalHours * activity.fullHourPrice;
-
-    if (remainingMinutes === 30) {
-      price += activity.halfHourPrice;
-    } else if (remainingMinutes > 0) {
-      // Prorate remaining minutes based on half-hour rate
-      price += (activity.halfHourPrice / 30) * remainingMinutes;
-    }
-
-    return Math.round(price);
-  }
-
-  // Regular linear pricing
-  if (activity.pricingUnit === 'PER_MINUTE') {
-    return Math.round(durationInMinutes * activity.basePrice);
-  } else {
-    // PER_HOUR: exact prorated calculation (e.g. 90 mins @ Rs 800/hr = Rs 1200)
-    return Math.round((durationInMinutes / 60) * activity.basePrice);
-  }
-}
 
 // POST /api/bookings - Create booking
 router.post('/', optionalCustomerAuth, transactionalBooking(async (req: AuthenticatedCustomerRequest, res, next) => {
@@ -225,9 +161,7 @@ router.post('/', optionalCustomerAuth, transactionalBooking(async (req: Authenti
     }
 
     // Future limit validation: reject booking if startTime is more than 7 days ahead
-    const maxFutureDate = new Date(now);
-    maxFutureDate.setDate(maxFutureDate.getDate() + 7);
-    maxFutureDate.setHours(23, 59, 59, 999);
+    const maxFutureDate = new Date(businessInstant(businessDate(now)).getTime()+8*86400000-1);
     if (startTime > maxFutureDate) {
       return res.status(400).json({
         error: 'Booking too far in advance',
@@ -240,7 +174,7 @@ router.post('/', optionalCustomerAuth, transactionalBooking(async (req: Authenti
       where: { id: data.resourceId }
     });
 
-    if (!resource) {
+    if (!resource?.isActive) {
       return res.status(404).json({ error: 'Resource not found' });
     }
 
@@ -282,7 +216,8 @@ router.post('/', optionalCustomerAuth, transactionalBooking(async (req: Authenti
     }
 
     // Calculate total price
-    let totalPrice = await calculatePrice(data.resourceId, startTime, endTime);
+    let totalPrice = activityPrice(activity,durationMinutes);
+    const billSnapshot:Snapshot={rate:{pricingUnit:activity.pricingUnit,basePrice:activity.basePrice,halfHourPrice:activity.halfHourPrice,fullHourPrice:activity.fullHourPrice},offer:null};
     let discountAmount = 0;
     let appliedOfferId: string | undefined = undefined;
 
@@ -309,12 +244,9 @@ router.post('/', optionalCustomerAuth, transactionalBooking(async (req: Authenti
 
         if (isEligible) {
           appliedOfferId = offer.id;
-          if (offer.discountType === 'PERCENTAGE') {
-            discountAmount = Math.round((totalPrice * offer.discountValue) / 100);
-          } else {
-            discountAmount = Math.min(totalPrice, Math.round(offer.discountValue));
-          }
-          totalPrice = Math.max(0, totalPrice - discountAmount);
+          billSnapshot.offer={discountType:offer.discountType,discountValue:offer.discountValue,minDuration:offer.minDuration};
+          const bill=quote(activity,durationMinutes,billSnapshot.offer);
+          discountAmount=bill.discountAmount;totalPrice=bill.payablePrice;
         }
       }
     }
@@ -353,7 +285,7 @@ router.post('/', optionalCustomerAuth, transactionalBooking(async (req: Authenti
       try {
         let base64Data = data.screenshotBase64;
         let ext = 'png';
-        const match = base64Data.match(/^data:image\/(png|jpeg|jpg|webp);base64,/);
+        const match = base64Data.match(/^data:image\/(png|jpeg|jpg|webp|gif);base64,/);
         if (match) {
           ext = match[1] === 'jpeg' ? 'jpg' : match[1];
           base64Data = base64Data.replace(/^data:image\/\w+;base64,/, '');
@@ -446,6 +378,7 @@ router.post('/', optionalCustomerAuth, transactionalBooking(async (req: Authenti
         endTime,
         totalPrice,
         discountAmount,
+        pricingSnapshot: billSnapshot as any,
         appliedOfferId,
         isWalkIn: data.isWalkIn,
         status: initialStatus,
@@ -544,9 +477,7 @@ router.post('/group', optionalCustomerAuth, transactionalBooking(async (req: Aut
     }
 
     const now = new Date();
-    const maxFutureDate = new Date(now);
-    maxFutureDate.setDate(maxFutureDate.getDate() + 7);
-    maxFutureDate.setHours(23, 59, 59, 999);
+    const maxFutureDate = new Date(businessInstant(businessDate(now)).getTime()+8*86400000-1);
 
     // Item validation and calculation
     const validatedItems: Array<{
@@ -558,6 +489,7 @@ router.post('/group', optionalCustomerAuth, transactionalBooking(async (req: Aut
       appliedOfferId?: string;
       resourceName: string;
       activityName: string;
+      pricingSnapshot:Snapshot;
     }> = [];
 
     let groupTotalAmount = 0;
@@ -594,7 +526,7 @@ router.post('/group', optionalCustomerAuth, transactionalBooking(async (req: Aut
         where: { id: item.resourceId }
       });
 
-      if (!resource) {
+      if (!resource?.isActive) {
         return res.status(404).json({
           error: 'Resource not found',
           message: `Item #${i + 1}: Selected resource does not exist`,
@@ -645,7 +577,8 @@ router.post('/group', optionalCustomerAuth, transactionalBooking(async (req: Aut
       }
 
       // Calculate price
-      let itemPrice = await calculatePrice(item.resourceId, startTime, endTime);
+      let itemPrice = activityPrice(activity,durationMinutes);
+      const billSnapshot:Snapshot={rate:{pricingUnit:activity.pricingUnit,basePrice:activity.basePrice,halfHourPrice:activity.halfHourPrice,fullHourPrice:activity.fullHourPrice},offer:null};
       let itemDiscount = 0;
       let appliedOfferId: string | undefined = undefined;
 
@@ -671,12 +604,9 @@ router.post('/group', optionalCustomerAuth, transactionalBooking(async (req: Aut
 
           if (isEligible) {
             appliedOfferId = offer.id;
-            if (offer.discountType === 'PERCENTAGE') {
-              itemDiscount = Math.round((itemPrice * offer.discountValue) / 100);
-            } else {
-              itemDiscount = Math.min(itemPrice, Math.round(offer.discountValue));
-            }
-            itemPrice = Math.max(0, itemPrice - itemDiscount);
+            billSnapshot.offer={discountType:offer.discountType,discountValue:offer.discountValue,minDuration:offer.minDuration};
+            const bill=quote(activity,durationMinutes,billSnapshot.offer);
+            itemDiscount=bill.discountAmount;itemPrice=bill.payablePrice;
           }
         }
       }
@@ -690,6 +620,7 @@ router.post('/group', optionalCustomerAuth, transactionalBooking(async (req: Aut
         discountAmount: itemDiscount,
         appliedOfferId,
         resourceName: resource.name,
+        pricingSnapshot:billSnapshot,
         activityName: activity.name
       });
     }
@@ -702,7 +633,7 @@ router.post('/group', optionalCustomerAuth, transactionalBooking(async (req: Aut
       });
     }
 
-    if (!customer && data.customer?.phone) {
+    if (!customer && isAdminRequest && data.customer?.phone) {
       customer = await prisma.customer.findFirst({
         where: { phone: data.customer.phone }
       });
@@ -727,7 +658,7 @@ router.post('/group', optionalCustomerAuth, transactionalBooking(async (req: Aut
       try {
         let base64Data = data.screenshotBase64;
         let ext = 'png';
-        const match = base64Data.match(/^data:image\/(png|jpeg|jpg|webp);base64,/);
+        const match = base64Data.match(/^data:image\/(png|jpeg|jpg|webp|gif);base64,/);
         if (match) {
           ext = match[1] === 'jpeg' ? 'jpg' : match[1];
           base64Data = base64Data.replace(/^data:image\/\w+;base64,/, '');
@@ -823,9 +754,11 @@ router.post('/group', optionalCustomerAuth, transactionalBooking(async (req: Aut
       }
     });
 
+    const childTotals=validatedItems.map((item,index)=>money(item.totalPrice+(index===0 ? groupAddonItemsToCreate.reduce((sum,a)=>sum+a.priceAtBooking*a.quantity,0):0)));
+    const childPayments=allocatePayments(bookingGroup.amountPaid || 0,childTotals);
     // Create all child booking records linked to bookingGroup.id (attach addons to first child booking)
     const createdBookings = await Promise.all(
-      validatedItems.map((item, index) =>
+      validatedItems.map(async (item, index) =>
         prisma.booking.create({
           data: {
             bookingGroupId: bookingGroup.id,
@@ -837,11 +770,12 @@ router.post('/group', optionalCustomerAuth, transactionalBooking(async (req: Aut
               ? item.totalPrice + groupAddonItemsToCreate.reduce((sum, a) => sum + a.priceAtBooking * a.quantity, 0)
               : item.totalPrice,
             discountAmount: item.discountAmount,
+            pricingSnapshot: item.pricingSnapshot as any,
             appliedOfferId: item.appliedOfferId,
             isWalkIn: data.isWalkIn,
             status: initialStatus,
             paymentMethod: defaultPaymentMethod,
-            amountPaid: data.isWalkIn ? item.totalPrice : undefined,
+            amountPaid: childPayments[index],
             paymentScreenshotUrl,
             paymentSubmittedAt,
             verifiedAt: data.isWalkIn ? new Date() : undefined,
@@ -938,7 +872,7 @@ router.post('/group/:groupId/upload-payment', requireBookingAccess(true), transa
 
     let base64Data = body.screenshotBase64;
     let ext = 'png';
-    const match = base64Data.match(/^data:image\/(png|jpeg|jpg|webp);base64,/);
+    const match = base64Data.match(/^data:image\/(png|jpeg|jpg|webp|gif);base64,/);
     if (match) {
       ext = match[1] === 'jpeg' ? 'jpg' : match[1];
       base64Data = base64Data.replace(/^data:image\/\w+;base64,/, '');
@@ -1027,7 +961,7 @@ router.post('/group/:groupId/verify', requireAdminAuth(), transactionalBooking(a
       return res.status(404).json({ error: 'Group booking not found' });
     }
 
-    if (bookingGroup.status === BookingStatus.CANCELLED) return res.status(400).json({ error: 'Cancelled booking groups cannot be verified.' });
+    if (['CANCELLED','COMPLETED'].includes(bookingGroup.status)) return res.status(409).json({ error: 'Finalized booking groups cannot be verified.' });
     const stockBookings = await prisma.booking.findMany({ where: { bookingGroupId: groupId } });
     for (const child of stockBookings) await transitionBookingStock(child.id, child.status, body.status);
     const verifiedAt = body.status === BookingStatus.CONFIRMED ? new Date() : null;
@@ -1043,15 +977,9 @@ router.post('/group/:groupId/verify', requireAdminAuth(), transactionalBooking(a
       }
     });
 
-    // Update all child bookings
-    await prisma.booking.updateMany({
-      where: { bookingGroupId: groupId },
-      data: {
-        status: body.status,
-        verifiedAt,
-        rejectionReason: body.status === BookingStatus.REJECTED ? body.rejectionReason : null
-      }
-    });
+    // Allocate the recorded group payment once; child totals and balances remain consistent.
+    const payments=allocatePayments(body.amountPaid ?? bookingGroup.amountPaid ?? 0,stockBookings.map(child=>child.totalPrice));
+    for(const [index,child] of stockBookings.entries()) await prisma.booking.update({where:{id:child.id},data:{status:body.status,verifiedAt,rejectionReason:body.status==='REJECTED' ? body.rejectionReason:null,amountPaid:payments[index]}});
 
     if ((req as AuthenticatedAdminRequest).admin?.id) {
       await createAuditLog(
@@ -1160,7 +1088,7 @@ router.get('/group/:groupId/receipt-pdf', requireAdminAuth(), async (req, res, n
         },
       });
       const customLogo = theme?.logoUrlLight || theme?.logoUrlDark;
-      if (customLogo) {
+      if (customLogo && /^\/uploads\/branding\/[a-zA-Z0-9_-]+\.(png|jpg|jpeg|webp|gif)$/.test(customLogo)) {
         const cleanPath = customLogo.replace(/^\//, '');
         const fullCustomLogoPath = path.join(process.cwd(), cleanPath);
         if (fs.existsSync(fullCustomLogoPath)) {
@@ -1434,13 +1362,15 @@ router.post('/:id/cancel', requireCustomerAuth, transactionalBooking(async (req:
       return res.status(403).json({ error: 'Unauthorized to cancel this booking' });
     }
 
-    if (booking.status === BookingStatus.CANCELLED) {
+    if (booking.status === 'CANCELLED') {
       return res.status(400).json({ error: 'Booking is already cancelled' });
     }
 
     if (booking.status === BookingStatus.COMPLETED) {
       return res.status(400).json({ error: 'Cannot cancel a completed booking' });
     }
+    const liveSession=await prisma.session.findFirst({where:{bookingId:id,status:{in:['RUNNING','PAUSED']}},select:{id:true}});
+    if(liveSession)return res.status(409).json({error:'An active session cannot be cancelled. Contact staff.'});
 
     const updated = await prisma.booking.update({
       where: { id },
@@ -1456,6 +1386,7 @@ router.post('/:id/cancel', requireCustomerAuth, transactionalBooking(async (req:
     });
 
     await transitionBookingStock(id, booking.status, BookingStatus.CANCELLED);
+    await reconcileGroup(booking.bookingGroupId);
 
     res.json({ message: 'Booking cancelled successfully', booking: updated });
   } catch (error) {
@@ -1489,7 +1420,7 @@ router.post('/:id/reupload-payment', requireCustomerAuth, transactionalBooking(a
     // Process Base64 image
     let base64Data = body.screenshotBase64;
     let ext = 'png';
-    const match = base64Data.match(/^data:image\/(png|jpeg|jpg|webp);base64,/);
+    const match = base64Data.match(/^data:image\/(png|jpeg|jpg|webp|gif);base64,/);
     if (match) {
       ext = match[1] === 'jpeg' ? 'jpg' : match[1];
       base64Data = base64Data.replace(/^data:image\/\w+;base64,/, '');
@@ -1688,7 +1619,7 @@ router.get('/', requireAdminAuth(), async (req, res, next) => {
       orderByClause = { createdAt: orderDirection };
     }
 
-    const bookings = await prisma.booking.findMany({
+    const bookingQuery:any = {
       where: {
         ...(startRange || endRange
           ? {
@@ -1728,7 +1659,10 @@ router.get('/', requireAdminAuth(), async (req, res, next) => {
         }
       },
       orderBy: orderByClause
-    });
+    };
+    const pager=pagination(req,res);
+    const bookings=await prisma.booking.findMany({...bookingQuery,...(pager.requested ? {skip:pager.skip,take:pager.limit}:{})});
+    if(pager.requested)pageResult(res,await prisma.booking.count({where:bookingQuery.where}),pager.page,pager.limit);
 
     res.json(bookings);
   } catch (error) {
@@ -1792,7 +1726,9 @@ router.patch('/:id', requireAdminAuth(), transactionalBooking(async (req, res, n
       return res.status(404).json({ error: 'Booking not found' });
     }
 
-    if (existingBooking.status === BookingStatus.CANCELLED && data.status && data.status !== BookingStatus.CANCELLED) return res.status(400).json({ error: 'Cancelled bookings cannot be reopened. Create a new booking.' });
+    if (['CANCELLED','COMPLETED'].includes(existingBooking.status) && (data.startTime || data.endTime || (data.status && data.status !== existingBooking.status))) return res.status(400).json({ error: 'Cancelled bookings cannot be reopened. Create a new booking.' });
+    const liveSession = await prisma.session.findFirst({where:{bookingId:id,status:{in:['RUNNING','PAUSED']}},select:{id:true}});
+    if (liveSession && (data.status || data.startTime || data.endTime)) return res.status(409).json({error:'Stop the active session before modifying its booking.'});
     if (data.status) await transitionBookingStock(id, existingBooking.status, data.status);
 
     // If time is being changed, check for conflicts
@@ -1819,7 +1755,7 @@ router.patch('/:id', requireAdminAuth(), transactionalBooking(async (req, res, n
       }
 
       // Recalculate price if time changed
-      const newTotalPrice = await calculatePrice(existingBooking.resourceId, newStartTime, newEndTime);
+      const newTotals = await repriceBooking(existingBooking, Math.ceil((newEndTime.getTime()-newStartTime.getTime())/60000));
 
       const booking = await prisma.booking.update({
         where: { id },
@@ -1827,7 +1763,7 @@ router.patch('/:id', requireAdminAuth(), transactionalBooking(async (req, res, n
           ...data,
           startTime: newStartTime,
           endTime: newEndTime,
-          totalPrice: newTotalPrice
+          ...newTotals
         },
         include: {
           resource: true,
@@ -1835,6 +1771,7 @@ router.patch('/:id', requireAdminAuth(), transactionalBooking(async (req, res, n
         }
       });
 
+      await reconcileGroup(booking.bookingGroupId);
       return res.json(booking);
     }
 
@@ -1873,7 +1810,7 @@ router.patch('/:id', requireAdminAuth(), transactionalBooking(async (req, res, n
           });
         }
       } catch (err) {
-        console.error('Failed to update group status on booking patch:', err);
+        throw err;
       }
     }
 
@@ -1911,14 +1848,14 @@ router.post('/:id/upload-payment', requireBookingAccess(false), transactionalBoo
       return res.status(404).json({ error: 'Booking not found' });
     }
 
-    if (booking.status === BookingStatus.CANCELLED) {
+    if (!['PENDING','PENDING_PAYMENT','AWAITING_VERIFICATION','REJECTED'].includes(booking.status)) {
       return res.status(400).json({ error: 'This booking has expired or been cancelled.' });
     }
 
     // Process Base64 image
     let base64Data = body.screenshotBase64;
     let ext = 'png';
-    const match = base64Data.match(/^data:image\/(png|jpeg|jpg|webp);base64,/);
+    const match = base64Data.match(/^data:image\/(png|jpeg|jpg|webp|gif);base64,/);
     if (match) {
       ext = match[1] === 'jpeg' ? 'jpg' : match[1];
       base64Data = base64Data.replace(/^data:image\/\w+;base64,/, '');
@@ -1975,7 +1912,10 @@ router.post('/:id/upload-payment', requireBookingAccess(false), transactionalBoo
         });
         // Reserve released stock for each rejected sibling before resubmission.
         const siblings = await prisma.booking.findMany({ where: { bookingGroupId: booking.bookingGroupId } });
-        for (const sibling of siblings) await transitionBookingStock(sibling.id, sibling.status, BookingStatus.AWAITING_VERIFICATION);
+        for (const sibling of siblings) {
+          if (!['PENDING','PENDING_PAYMENT','AWAITING_VERIFICATION','REJECTED'].includes(sibling.status)) return res.status(409).json({error:'Group contains a booking that cannot accept payment.'});
+          await transitionBookingStock(sibling.id, sibling.status, BookingStatus.AWAITING_VERIFICATION);
+        }
         // Also sync sibling bookings in the group
         await prisma.booking.updateMany({
           where: { bookingGroupId: booking.bookingGroupId },
@@ -1988,7 +1928,7 @@ router.post('/:id/upload-payment', requireBookingAccess(false), transactionalBoo
           }
         });
       } catch (err) {
-        console.error('Failed to cascade group payment sync:', err);
+        throw err;
       }
     }
 
@@ -2072,7 +2012,7 @@ router.get('/:id/receipt-pdf', requireAdminAuth(), async (req, res, next) => {
         },
       });
       const customLogo = theme?.logoUrlLight || theme?.logoUrlDark;
-      if (customLogo) {
+      if (customLogo && /^\/uploads\/branding\/[a-zA-Z0-9_-]+\.(png|jpg|jpeg|webp|gif)$/.test(customLogo)) {
         const cleanPath = customLogo.replace(/^\//, '');
         const fullCustomLogoPath = path.join(process.cwd(), cleanPath);
         if (fs.existsSync(fullCustomLogoPath)) {
@@ -2286,4 +2226,3 @@ router.get('/:id/receipt-pdf', requireAdminAuth(), async (req, res, next) => {
 });
 
 export { router as bookingsRouter };
-

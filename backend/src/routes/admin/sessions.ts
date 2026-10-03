@@ -1,3 +1,7 @@
+import { quote, elapsedSeconds, Snapshot } from '@zeroone/domain';
+import {pagination,pageResult} from '../../middleware/apiContract';
+import { hasConflict } from '../../services/bookingConflict';
+import { pricingSnapshot, repriceBooking, reconcileGroup } from '../../services/bookingTotals';
 import { transactionalBooking } from '../../middleware/transactionalBooking';
 import { customerSelect } from '../../utils/customerSelect';
 import { Router } from 'express';
@@ -7,6 +11,15 @@ import { SessionMode, SessionStatus, SessionAction, BookingStatus, PricingUnit }
 import { requireAdminAuth, AuthenticatedAdminRequest } from '../../middleware/adminAuth';
 
 const router = Router();
+router.get('/history',requireAdminAuth(),async(req,res,next)=>{
+  try{
+    const pager=pagination(req,res);
+    const where={status:SessionStatus.COMPLETED};
+    const sessions=await prisma.session.findMany({where,skip:pager.skip,take:pager.limit,orderBy:{endedAt:'desc'},include:{resource:{select:{name:true,type:true}},booking:{select:{id:true,totalPrice:true,amountPaid:true,customer:{select:{name:true}}}}}});
+    pageResult(res,await prisma.session.count({where}),pager.page,pager.limit);
+    res.json(sessions);
+  }catch(error){next(error)}
+});
 
 // Validation Schemas
 const startSessionSchema = z.object({
@@ -18,57 +31,14 @@ const startSessionSchema = z.object({
 });
 
 const sessionActionSchema = z.object({
-  action: z.nativeEnum(SessionAction),
+  action: z.enum(['PAUSE','RESUME','EXTEND']),
   minutes: z.number().int().positive().optional(),
 });
 
 const stopSessionSchema = z.object({
   paymentMethod: z.enum(['CASH', 'ONLINE_JAZZCASH', 'ONLINE_EASYPAISA', 'ONLINE_BANK']).optional().default('CASH'),
+  amountPaid: z.number().finite().nonnegative().optional(),
 });
-
-// Helper: Calculate session bill amount based on Resource and Duration
-async function calculateSessionBill(resourceId: string, durationMinutes: number): Promise<number> {
-  const resource = await prisma.resource.findUnique({
-    where: { id: resourceId }
-  });
-
-  if (!resource) {
-    throw new Error('Resource not found');
-  }
-
-  const activity = await prisma.activity.findUnique({
-    where: { resourceType: resource.type }
-  });
-
-  if (!activity) {
-    throw new Error('Activity pricing not found');
-  }
-
-  // Tiered pricing check
-  if (
-    activity.halfHourPrice !== null &&
-    activity.halfHourPrice !== undefined &&
-    activity.fullHourPrice !== null &&
-    activity.fullHourPrice !== undefined
-  ) {
-    const totalHours = Math.floor(durationMinutes / 60);
-    const remainingMinutes = durationMinutes % 60;
-    let price = totalHours * activity.fullHourPrice;
-
-    if (remainingMinutes === 30) {
-      price += activity.halfHourPrice;
-    } else if (remainingMinutes > 0) {
-      price += (activity.halfHourPrice / 30) * remainingMinutes;
-    }
-    return Math.round(price);
-  }
-
-  if (activity.pricingUnit === PricingUnit.PER_MINUTE) {
-    return Math.round(durationMinutes * activity.basePrice);
-  } else {
-    return Math.round((durationMinutes / 60) * activity.basePrice);
-  }
-}
 
 // 1. GET /api/admin/sessions -> List all resources with their active live session (or status)
 router.get('/', requireAdminAuth(), async (req, res, next) => {
@@ -127,6 +97,9 @@ router.get('/', requireAdminAuth(), async (req, res, next) => {
         activeSession: activeSession
           ? {
               ...activeSession,
+              serverTime: new Date().toISOString(),
+              elapsedSeconds: elapsedSeconds(activeSession),
+              accruedAmount: activeSession.pricingSnapshot ? quote((activeSession.pricingSnapshot as unknown as Snapshot).rate,activeSession.mode === 'COUNT_UP' ? Math.max(1,Math.ceil(elapsedSeconds(activeSession)/60)) : (activeSession.plannedMinutes || 60)+activeSession.extendedMinutes,(activeSession.pricingSnapshot as unknown as Snapshot).offer,activeSession.booking?.addons || []).payablePrice : null,
               customerDisplay:
                 activeSession.booking?.customer?.name ||
                 activeSession.customerName ||
@@ -177,6 +150,10 @@ router.post('/', requireAdminAuth(), transactionalBooking(async (req: Authentica
     const data = startSessionSchema.parse(req.body);
     const adminId = req.admin!.id;
 
+    const resource = await prisma.resource.findUnique({where:{id:data.resourceId},select:{isActive:true,type:true}});
+    if (!resource?.isActive) return res.status(400).json({error:'Resource is unavailable.'});
+    const settings = await prisma.systemSettings.findUnique({where:{id:'system_settings'},select:{walkInsEnabled:true,emergencyClosedToday:true}});
+    if (settings?.emergencyClosedToday || (!data.bookingId && settings?.walkInsEnabled === false)) return res.status(409).json({error:'Live walk-ins are disabled.'});
     // Check if resource is already in an active session
     const existingActive = await prisma.session.findFirst({
       where: {
@@ -224,10 +201,22 @@ router.post('/', requireAdminAuth(), transactionalBooking(async (req: Authentica
       plannedMinutes = 60;
     }
 
+    const snapshot = booking?.pricingSnapshot as unknown as Snapshot || await pricingSnapshot(data.resourceId,booking?.appliedOfferId);
+    const now = new Date();
+    if(booking && booking.endTime<=now)return res.status(409).json({error:'Reschedule the expired booking before starting a session.'});
+    if (booking && data.mode === 'COUNTDOWN') {
+      const bookedMinutes = Math.ceil((booking.endTime.getTime()-booking.startTime.getTime())/60000);
+      if (data.plannedMinutes && data.plannedMinutes !== bookedMinutes) return res.status(400).json({error:'Countdown duration must match the paid booking. Extend after starting.'});
+      plannedMinutes = bookedMinutes;
+    }
+    const reservationEnd = data.mode === 'COUNTDOWN' ? new Date(now.getTime()+(plannedMinutes || 60)*60000) : booking?.endTime || new Date('9999-12-31T00:00:00Z');
+    if (reservationEnd <= now || await hasConflict(data.resourceId,now,reservationEnd,booking?.id)) return res.status(409).json({error:'Session conflicts with a reserved slot.'});
+    if (booking) await prisma.booking.update({where:{id:booking.id},data:{startTime:now,endTime:reservationEnd}});
     // Create session record & initial START log
     const session = await prisma.session.create({
       data: {
         resourceId: data.resourceId,
+        pricingSnapshot: snapshot as any,
         bookingId: data.bookingId || null,
         customerName,
         mode: data.mode,
@@ -261,7 +250,7 @@ router.post('/', requireAdminAuth(), transactionalBooking(async (req: Authentica
 }));
 
 // 4. PATCH /api/admin/sessions/:id/action -> Multi-tool action (PAUSE, RESUME, EXTEND)
-router.patch('/:id/action', requireAdminAuth(), async (req: AuthenticatedAdminRequest, res, next) => {
+router.patch('/:id/action', requireAdminAuth(), transactionalBooking(async (req: AuthenticatedAdminRequest, res, next) => {
   try {
     const { id } = req.params;
     const { action, minutes } = sessionActionSchema.parse(req.body);
@@ -315,6 +304,11 @@ router.patch('/:id/action', requireAdminAuth(), async (req: AuthenticatedAdminRe
         ? Math.max(0, Math.floor((now.getTime() - session.pausedAt.getTime()) / 1000))
         : 0;
 
+      if (session.booking && session.mode === 'COUNTDOWN') {
+        const newEnd = new Date(session.booking.endTime.getTime()+pausedDurationSec*1000);
+        if (await hasConflict(session.resourceId,now,newEnd,session.bookingId || undefined,session.id)) return res.status(409).json({error:'Resuming would overlap another reservation.'});
+        await prisma.booking.update({where:{id:session.booking.id},data:{endTime:newEnd}});
+      }
       const updated = await prisma.session.update({
         where: { id },
         data: {
@@ -343,17 +337,24 @@ router.patch('/:id/action', requireAdminAuth(), async (req: AuthenticatedAdminRe
       // If tied to a booking, recalculate booking end time & total price
       if (session.bookingId && session.booking) {
         const newEndTime = new Date(session.booking.endTime.getTime() + minutes * 60 * 1000);
-        const additionalPrice = await calculateSessionBill(session.resourceId, minutes);
+        if (await hasConflict(session.resourceId,session.booking.startTime,newEndTime,session.bookingId,session.id)) return res.status(409).json({error:'Extension overlaps another reservation.'});
+        const billableMinutes=session.mode==='COUNTDOWN' ? (session.plannedMinutes || 60)+session.extendedMinutes+minutes : Math.ceil((newEndTime.getTime()-session.booking.startTime.getTime())/60000);
+        const totals = await repriceBooking(session.booking,billableMinutes);
 
         await prisma.booking.update({
           where: { id: session.bookingId },
           data: {
             endTime: newEndTime,
-            totalPrice: session.booking.totalPrice + additionalPrice
+            ...totals
           }
         });
       }
 
+      if (!session.booking) {
+        const end = new Date(session.startedAt.getTime()+((session.plannedMinutes || 60)+session.extendedMinutes+minutes)*60000+session.totalPausedSeconds*1000);
+        if (await hasConflict(session.resourceId,session.startedAt,end,undefined,session.id)) return res.status(409).json({error:'Extension overlaps another reservation.'});
+      }
+      await reconcileGroup(session.booking?.bookingGroupId);
       const updated = await prisma.session.update({
         where: { id },
         data: {
@@ -379,10 +380,10 @@ router.patch('/:id/action', requireAdminAuth(), async (req: AuthenticatedAdminRe
     }
     next(error);
   }
-});
+}));
 
 // 5. POST /api/admin/sessions/:id/stop -> Stop session, calculate bill, reconcile booking
-router.post('/:id/stop', requireAdminAuth(), async (req: AuthenticatedAdminRequest, res, next) => {
+router.post('/:id/stop', requireAdminAuth(), transactionalBooking(async (req: AuthenticatedAdminRequest, res, next) => {
   try {
     const { id } = req.params;
     const body = stopSessionSchema.parse(req.body);
@@ -407,7 +408,7 @@ router.post('/:id/stop', requireAdminAuth(), async (req: AuthenticatedAdminReque
     }
 
     if (session.status === SessionStatus.COMPLETED) {
-      return res.status(400).json({ error: 'Session is already completed' });
+      return res.json({message:'Session completed successfully',session,totalElapsedMinutes:Math.max(1,Math.ceil(elapsedSeconds(session)/60)),finalAmount:session.finalAmount});
     }
 
     // Calculate actual elapsed active minutes
@@ -429,19 +430,18 @@ router.post('/:id/stop', requireAdminAuth(), async (req: AuthenticatedAdminReque
       // If COUNTDOWN, the booking totalPrice already covers planned + extended time.
       // If COUNT_UP, compute exact price based on elapsed minutes.
       if (session.mode === SessionMode.COUNT_UP) {
-        const baseActivityCost = await calculateSessionBill(session.resourceId, totalElapsedMinutes);
-        const addonsCost = session.booking.addons.reduce(
-          (sum, a) => sum + a.priceAtBooking * a.quantity,
-          0
-        );
-        finalAmount = baseActivityCost + addonsCost;
+        const snapshot = session.pricingSnapshot as unknown as Snapshot || await pricingSnapshot(session.resourceId,session.booking.appliedOfferId);
+        const bill = quote(snapshot.rate,totalElapsedMinutes,snapshot.offer,session.booking.addons);
+        finalAmount = bill.payablePrice;
 
         await prisma.booking.update({
           where: { id: session.bookingId! },
           data: {
             endTime: now,
             totalPrice: finalAmount,
-            status: BookingStatus.COMPLETED
+            discountAmount: bill.discountAmount,
+            status: BookingStatus.COMPLETED,
+            ...(body.amountPaid !== undefined ? {amountPaid:body.amountPaid,paymentMethod:body.paymentMethod}:{}),
           }
         });
       } else {
@@ -449,18 +449,15 @@ router.post('/:id/stop', requireAdminAuth(), async (req: AuthenticatedAdminReque
         await prisma.booking.update({
           where: { id: session.bookingId! },
           data: {
-            status: BookingStatus.COMPLETED
+            status: BookingStatus.COMPLETED,
+            ...(body.amountPaid !== undefined ? {amountPaid:body.amountPaid,paymentMethod:body.paymentMethod}:{}),
           }
         });
       }
     } else {
       // Walk-in direct without prior booking record
-      finalAmount = await calculateSessionBill(
-        session.resourceId,
-        session.mode === SessionMode.COUNTDOWN
-          ? (session.plannedMinutes || 60) + session.extendedMinutes
-          : totalElapsedMinutes
-      );
+      const snapshot = session.pricingSnapshot as unknown as Snapshot || await pricingSnapshot(session.resourceId);
+      finalAmount = quote(snapshot.rate,session.mode === 'COUNTDOWN' ? (session.plannedMinutes || 60)+session.extendedMinutes : totalElapsedMinutes,snapshot.offer).payablePrice;
 
       // Create or find a Walk-In customer record
       let walkInCustomer = await prisma.customer.findFirst({
@@ -478,7 +475,7 @@ router.post('/:id/stop', requireAdminAuth(), async (req: AuthenticatedAdminReque
       }
 
       // Create completed booking to record revenue in dashboard & analytics
-      await prisma.booking.create({
+      const finalBooking = await prisma.booking.create({
         data: {
           resourceId: session.resourceId,
           customerId: walkInCustomer.id,
@@ -488,12 +485,17 @@ router.post('/:id/stop', requireAdminAuth(), async (req: AuthenticatedAdminReque
           totalPrice: finalAmount,
           isWalkIn: true,
           paymentMethod: body.paymentMethod as any,
-          amountPaid: finalAmount,
+          amountPaid: body.amountPaid ?? finalAmount,
+          pricingSnapshot: session.pricingSnapshot as any,
           verifiedAt: now
         }
       });
-    }
 
+      // Persist the generated revenue record: retries return the same completed session.
+      await prisma.session.update({where:{id},data:{bookingId:finalBooking.id}});
+    }
+    if (session.booking?.bookingGroupId && body.amountPaid !== undefined) await prisma.bookingGroup.update({where:{id:session.booking.bookingGroupId},data:{amountPaid:{increment:body.amountPaid-(session.booking.amountPaid || 0)}}});
+    await reconcileGroup(session.booking?.bookingGroupId);
     const completedSession = await prisma.session.update({
       where: { id },
       data: {
@@ -524,7 +526,7 @@ router.post('/:id/stop', requireAdminAuth(), async (req: AuthenticatedAdminReque
   } catch (error) {
     next(error);
   }
-});
+}));
 
 export { router as sessionsRouter };
 export default router;

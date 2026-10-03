@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../db';
 import { ResourceType, BookingStatus } from '@prisma/client';
+import { businessInstant } from '@zeroone/domain';
 import { autoCancelExpiredPendingPayments, autoCompleteExpiredBookings } from '../services/bookingAutomation';
 
 const router = Router();
@@ -19,6 +20,7 @@ router.get('/', async (req, res, next) => {
 
     const query = querySchema.parse(req.query);
     const [year, month, day] = query.date.split('-').map(Number);
+    businessInstant(query.date);
 
     // Pakistan Standard Time (UTC+5) boundaries for the selected date
     // PKT 00:00:00 = UTC (day - 5h)
@@ -31,12 +33,14 @@ router.get('/', async (req, res, next) => {
         ...(query.resourceType && { type: query.resourceType })
       },
       include: {
+        sessions: {where:{status:{in:['RUNNING','PAUSED']},startedAt:{lt:endOfDay}},select:{id:true,startedAt:true}},
         bookings: {
           where: {
             startTime: { lt: endOfDay },
             endTime: { gt: startOfDay },
             status: { in: [BookingStatus.PENDING, BookingStatus.PENDING_PAYMENT, BookingStatus.AWAITING_VERIFICATION, BookingStatus.CONFIRMED] }
           },
+          select: {id:true,startTime:true,endTime:true},
           orderBy: { startTime: 'asc' }
         }
       }
@@ -50,6 +54,7 @@ router.get('/', async (req, res, next) => {
         startTime: booking.startTime.toISOString(),
         endTime: booking.endTime.toISOString()
       }));
+      for (const session of resource.sessions) busySlots.push({bookingId:session.id,startTime:new Date(Math.max(startOfDay.getTime(),session.startedAt.getTime())).toISOString(),endTime:endOfDay.toISOString()});
 
       return {
         id: resource.id,
