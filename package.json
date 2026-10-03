@@ -5,7 +5,8 @@
   "workspaces": [
     "backend",
     "website",
-    "admin"
+    "admin",
+    "shared"
   ],
   "scripts": {
     "dev:backend": "npm run dev --workspace=backend",

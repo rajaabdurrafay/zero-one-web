@@ -122,6 +122,9 @@ model Customer {
   phone             String
   email             String?
   password          String?
+  accountPhone      String?        @unique
+  accountEmail      String?        @unique
+  authVersion       Int            @default(0)
   isRegistered      Boolean        @default(false)
   profilePictureUrl String?
   resetToken        String?
@@ -132,6 +135,8 @@ model Customer {
   updatedAt         DateTime       @updatedAt
 
   @@index([phone])
+  @@index([resetToken])
+  @@index([email])
 }
 
 model Offer {
@@ -191,6 +196,7 @@ model Booking {
   status               BookingStatus  @default(PENDING_PAYMENT)
   totalPrice           Float
   discountAmount       Float?         @default(0)
+  pricingSnapshot      Json?
   appliedOfferId       String?
   appliedOffer         Offer?         @relation(fields: [appliedOfferId], references: [id])
   isWalkIn             Boolean        @default(false)
@@ -349,6 +355,7 @@ model Session {
   pausedAt           DateTime?
   totalPausedSeconds Int           @default(0)
   finalAmount        Float?
+  pricingSnapshot    Json?
   startedByUserId    String
   startedByUser      AdminUser     @relation(fields: [startedByUserId], references: [id])
   logs               SessionLog[]
@@ -356,6 +363,7 @@ model Session {
   updatedAt          DateTime      @updatedAt
 
   @@index([resourceId])
+  @@index([resourceId, status])
   @@index([status])
   @@index([startedAt])
 }
@@ -436,6 +444,7 @@ model AttendanceLog {
   id              String    @id @default(cuid())
   adminUserId     String
   adminUser       AdminUser @relation(fields: [adminUserId], references: [id])
+  loginSessionId  String?
   loginAt         DateTime
   logoutAt        DateTime?
   durationMinutes Int? // Calculated on logout
@@ -444,6 +453,7 @@ model AttendanceLog {
   @@index([adminUserId])
   @@index([date])
   @@index([adminUserId, date])
+  @@index([loginSessionId])
 }
 
 model LoginSession {

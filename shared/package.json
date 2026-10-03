@@ -1,0 +1,1 @@
+{"name":"@zeroone/domain","version":"1.0.0","private":true,"main":"index.js","types":"index.d.ts","scripts":{"typecheck":"node --check index.js"}}
