@@ -68,7 +68,7 @@ export default function LocationPage() {
                   href="https://maps.google.com/?q=Kamran+Chowrangi+Gulistan-e-Jauhar+Karachi"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full py-3.5 px-4 rounded-xl text-center text-sm font-black text-white bg-gradient-to-r from-brand-primary to-brand-accent hover:opacity-90 shadow-lg shadow-brand-primary/30 transition-all flex items-center justify-center gap-2"
+                  className="w-full py-3.5 px-4 rounded-xl text-center text-sm font-black text-white zo-solid-accent bg-brand-primary hover:opacity-90 shadow-lg shadow-brand-primary/30 transition-all flex items-center justify-center gap-2"
                 >
                   <Icon name="externalLink" size={15} />
                   <span>Open in Google Maps</span>

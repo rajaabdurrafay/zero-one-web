@@ -64,7 +64,7 @@ export function Lightbox({ images, currentIndex, isOpen, onClose, onNavigate }: 
       onClick={onClose}
     >
       {/* Top Bar Navigation */}
-      <div className="absolute top-0 left-0 right-0 p-4 sm:p-6 flex items-center justify-between z-10 bg-gradient-to-b from-black/80 to-transparent">
+      <div className="absolute top-0 left-0 right-0 p-4 sm:p-6 flex items-center justify-between z-10 bg-black/60">
         <div className="text-white text-sm font-bold tracking-widest pl-2">
           {currentIndex + 1} / {images.length}
         </div>

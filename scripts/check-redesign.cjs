@@ -344,6 +344,25 @@ async function main() {
     await accountPage.locator('.zo-account-menu').getByRole('button', { name: 'Sign Out' }).click();
     await accountPage.locator('.zo-nav-account').getByRole('link', { name: 'Sign In' }).waitFor();
     await accountPage.close();
+    for (const scenario of ['account-photo', 'account-broken', 'account']) {
+      fixture.setScenario(scenario);
+      const avatarPage = await browser.newPage({ viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce' });
+      await avatarPage.goto(fixture.url, { waitUntil: 'domcontentloaded' });
+      const summary = avatarPage.locator('.zo-account-menu summary');
+      await summary.waitFor();
+      assert.equal(await summary.getAttribute('aria-label'), 'Account');
+      if (scenario === 'account-photo') {
+        await summary.locator('img').evaluate(image => image.decode());
+        assert.equal(await summary.locator('img').evaluate(image => image.naturalWidth > 0), true);
+        await summary.screenshot({ path: path.join(output, 'account-avatar.png') });
+      } else {
+        await summary.locator('svg').waitFor();
+        assert.equal(await summary.locator('img').count(), 0, 'Missing or failed profile photos show the account icon');
+      }
+      await summary.click();
+      await avatarPage.getByRole('link', { name: 'My Profile', exact: true }).waitFor();
+      await avatarPage.close();
+    }
     results.push({
       liveOffersAndReviews: 'pass',
       bookingActivityPreselection: 'pass',
@@ -358,6 +377,7 @@ async function main() {
       confirmedOpeningHours: 'pass',
       pausedBooking: 'pass',
       accountMenuAndLogout: 'pass',
+      accountPhotoAndIconFallback: 'pass',
     });
     fs.writeFileSync(path.join(output, 'browser-results.json'), JSON.stringify(results, null, 2));
     console.log(JSON.stringify(results, null, 2));

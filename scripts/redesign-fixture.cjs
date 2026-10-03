@@ -110,9 +110,10 @@ async function startFixture() {
       );
     if (pathname === '/api/popup-settings') return send({ isEnabled: false });
     if (pathname === '/api/auth/me') {
-      if (scenario === 'account')
+      if (['account','account-photo','account-broken'].includes(scenario))
         return send({
           id: 'fixture-account',
+          profilePictureUrl: scenario === 'account-photo' ? '/images/Snokker/snooker-table.jpg.webp' : scenario === 'account-broken' ? '/missing-avatar.png' : null,
           name: 'Fixture Player',
           phone: '03000000000',
           isRegistered: true,

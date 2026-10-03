@@ -129,7 +129,7 @@
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.85));
+  background: rgba(8, 14, 20, 0.62);
 }
 .zo-account-art > div {
   position: absolute;
@@ -323,14 +323,16 @@
 .zo-pages .text-brand-danger {
   color: color-mix(in srgb, var(--color-brand-danger) 65%, var(--zo-ink));
 }
-.zo-pages button.bg-gradient-to-r {
+.zo-pages button.zo-solid-accent {
   background: var(--zo-accent);
   color: var(--theme-primary-contrast, #fff);
   box-shadow: none;
 }
-.zo-pages button.bg-gradient-to-r:not(.snap-start) {
+.zo-pages button.zo-solid-accent:not(.snap-start) {
   border-radius: 100px;
 }
-.zo-pages button.bg-gradient-to-r .text-brand-text-main {
+.zo-pages button.zo-solid-accent .text-brand-text-main {
   color: inherit;
 }
+
+.zo-solid-accent { background-color: var(--theme-primary); color: var(--theme-primary-contrast, #fff); }

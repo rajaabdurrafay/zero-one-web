@@ -98,6 +98,8 @@ async function main() {
             null,
           );
         }
+        const gradients = await page.locator('main *, .zo-navigation *').evaluateAll(nodes => nodes.filter(node => node.getBoundingClientRect().width > 0 && getComputedStyle(node).backgroundImage.includes('gradient')).map(node => node.className));
+        assert.deepEqual(gradients, [], `${route} uses flat colors`);
         const scan = await new AxeBuilder({ page })
           .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
           .analyze();

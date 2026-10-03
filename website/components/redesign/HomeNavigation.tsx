@@ -3,6 +3,7 @@
 import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { AccountAvatar } from "./AccountAvatar";
 import { BrandLogo } from "@/components/BrandLogo";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { useCustomerAuth } from "@/context/CustomerAuthContext";
@@ -95,7 +96,9 @@ export function HomeNavigation() {
           <div className="zo-nav-account">
             {customer ? (
               <details className="zo-account-menu">
-                <summary>Account</summary>
+                <summary aria-label="Account" title="Your account">
+                  <AccountAvatar photo={customer.profilePictureUrl} />
+                </summary>
                 <div>
                   <Link prefetch={false} href="/profile">
                     My Profile
@@ -115,8 +118,13 @@ export function HomeNavigation() {
                 </div>
               </details>
             ) : (
-              <Link prefetch={false} href="/login">
-                Sign In
+              <Link
+                prefetch={false}
+                href="/login"
+                aria-label="Sign In"
+                title="Sign In"
+              >
+                <AccountAvatar />
               </Link>
             )}
           </div>

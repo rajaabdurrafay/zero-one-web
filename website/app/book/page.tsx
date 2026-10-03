@@ -848,7 +848,7 @@ function BookingContent() {
                 key={s}
                 className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold border-2 transition-all ${
                   step === s
-                    ? 'border-brand-primary bg-gradient-to-r from-brand-primary to-brand-primary-hover text-white shadow-lg shadow-brand-primary/30 scale-110'
+                    ? 'border-brand-primary zo-solid-accent bg-brand-primary text-white shadow-lg shadow-brand-primary/30 scale-110'
                     : step > s
                     ? 'border-emerald-500 bg-emerald-600 text-white'
                     : 'border-brand-border bg-brand-surface text-brand-text-muted'
@@ -878,7 +878,7 @@ function BookingContent() {
 
       {/* Applied Deal Banner */}
       {appliedOffer && step <= 5 && (
-        <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-brand-accent/15 via-brand-primary/10 to-brand-bg border border-brand-accent/40 text-brand-text-main flex items-center justify-between gap-3 shadow-md animate-in fade-in slide-in-from-top-2 duration-300">
+        <div className="mb-6 p-4 rounded-2xl bg-brand-primary/10 border border-brand-accent/40 text-brand-text-main flex items-center justify-between gap-3 shadow-md animate-in fade-in slide-in-from-top-2 duration-300">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-xl bg-brand-accent/20 text-brand-accent">
               <Icon name="flame" size={20} />
@@ -1079,7 +1079,7 @@ function BookingContent() {
                 <button
                   type="button"
                   onClick={() => setStep(4)}
-                  className="w-full sm:w-auto px-6 py-2.5 rounded-xl font-bold text-xs sm:text-sm text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:opacity-95 shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 transition-all active:scale-95"
+                  className="w-full sm:w-auto px-6 py-2.5 rounded-xl font-bold text-xs sm:text-sm text-white zo-solid-accent bg-brand-primary hover:opacity-95 shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 transition-all active:scale-95"
                 >
                   <span>Proceed to Contact Details ({groupCart.length} {groupCart.length === 1 ? 'Item' : 'Items'})</span>
                   <Icon name="check" size={14} />
@@ -1115,7 +1115,7 @@ function BookingContent() {
                 type="button"
                 disabled={!selectedActivityId}
                 onClick={() => setStep(2)}
-                className="w-full sm:w-auto px-8 py-3.5 rounded-xl font-bold text-sm text-white bg-gradient-to-r from-brand-primary via-brand-primary-hover to-brand-accent hover:opacity-90 disabled:opacity-40 shadow-lg shadow-brand-primary/25 active:scale-95 transition-all"
+                className="w-full sm:w-auto px-8 py-3.5 rounded-xl font-bold text-sm text-white zo-solid-accent bg-brand-primary hover:opacity-90 disabled:opacity-40 shadow-lg shadow-brand-primary/25 active:scale-95 transition-all"
               >
                 {isGroupMode && groupCart.length > 0 ? 'Configure Selected Arena →' : 'Continue to Date & Duration →'}
               </button>
@@ -1195,7 +1195,7 @@ function BookingContent() {
                               onClick={() => setDuration(slab.mins)}
                               className={`p-3.5 rounded-xl border text-left transition-all relative flex flex-col justify-between ${
                                 isSelected
-                                  ? 'bg-gradient-to-r from-brand-primary via-brand-primary-hover to-brand-accent border-brand-primary text-white shadow-lg shadow-brand-primary/30 scale-[1.02]'
+                                  ? 'zo-solid-accent bg-brand-primary border-brand-primary text-white shadow-lg shadow-brand-primary/30 scale-[1.02]'
                                   : 'bg-brand-bg border-brand-border text-brand-text-muted hover:border-brand-border-light hover:bg-brand-card hover:text-brand-text-main'
                               }`}
                             >
@@ -1290,7 +1290,7 @@ function BookingContent() {
                               onClick={() => setDuration(chip.mins)}
                               className={`px-3.5 py-2 rounded-lg border text-xs font-semibold transition-all ${
                                 duration === chip.mins
-                                  ? 'bg-gradient-to-r from-brand-primary to-brand-accent border-brand-primary text-white shadow-sm'
+                                  ? 'zo-solid-accent bg-brand-primary border-brand-primary text-white shadow-sm'
                                   : 'bg-brand-bg border-brand-border text-brand-text-muted hover:text-brand-text-main hover:border-brand-border-light'
                               }`}
                             >
@@ -1355,7 +1355,7 @@ function BookingContent() {
                             onClick={() => setDuration(mins)}
                             className={`px-3.5 py-1.5 rounded-lg border text-xs font-semibold transition-all ${
                               duration === mins
-                                ? 'bg-gradient-to-r from-brand-primary to-brand-accent border-brand-primary text-white shadow-sm'
+                                ? 'zo-solid-accent bg-brand-primary border-brand-primary text-white shadow-sm'
                                 : 'bg-brand-bg border-brand-border text-brand-text-muted hover:text-brand-text-main hover:border-brand-border-light'
                             }`}
                           >
@@ -1400,7 +1400,7 @@ function BookingContent() {
                   : duration < 60)
               }
               onClick={() => setStep(3)}
-              className="px-8 py-3.5 rounded-xl font-bold text-sm text-white bg-gradient-to-r from-brand-primary via-brand-primary-hover to-brand-accent hover:opacity-90 disabled:opacity-40 shadow-lg shadow-brand-primary/25 active:scale-95 transition-all"
+              className="px-8 py-3.5 rounded-xl font-bold text-sm text-white zo-solid-accent bg-brand-primary hover:opacity-90 disabled:opacity-40 shadow-lg shadow-brand-primary/25 active:scale-95 transition-all"
             >
               Find Available Slots →
             </button>
@@ -1455,7 +1455,7 @@ function BookingContent() {
                       }}
                       className={`py-3 px-3 rounded-xl text-xs sm:text-sm font-bold border transition-all flex flex-col items-center justify-center ${
                         isSelected
-                          ? 'bg-gradient-to-r from-brand-primary via-brand-primary-hover to-brand-accent border-brand-primary text-white shadow-lg shadow-brand-primary/30 scale-105'
+                          ? 'zo-solid-accent bg-brand-primary border-brand-primary text-white shadow-lg shadow-brand-primary/30 scale-105'
                           : available
                           ? 'bg-brand-bg border-brand-border text-emerald-400 hover:border-emerald-500/50 hover:bg-brand-card'
                           : 'bg-brand-bg/40 border-transparent text-brand-text-muted/40 cursor-not-allowed line-through'
@@ -1490,7 +1490,7 @@ function BookingContent() {
                   setStep(4);
                 }
               }}
-              className="px-8 py-3.5 rounded-xl font-bold text-sm text-white bg-gradient-to-r from-brand-primary via-brand-primary-hover to-brand-accent hover:opacity-90 disabled:opacity-40 shadow-lg shadow-brand-primary/25 active:scale-95 transition-all"
+              className="px-8 py-3.5 rounded-xl font-bold text-sm text-white zo-solid-accent bg-brand-primary hover:opacity-90 disabled:opacity-40 shadow-lg shadow-brand-primary/25 active:scale-95 transition-all"
             >
               {isGroupMode ? 'Add to Group Cart +' : 'Enter Customer Details →'}
             </button>
@@ -1599,7 +1599,7 @@ function BookingContent() {
                   setStep(5);
                 }
               }}
-              className="px-8 py-3.5 rounded-xl font-bold text-sm text-white bg-gradient-to-r from-brand-primary via-brand-primary-hover to-brand-accent hover:opacity-90 disabled:opacity-40 shadow-lg shadow-brand-primary/25 active:scale-95 transition-all"
+              className="px-8 py-3.5 rounded-xl font-bold text-sm text-white zo-solid-accent bg-brand-primary hover:opacity-90 disabled:opacity-40 shadow-lg shadow-brand-primary/25 active:scale-95 transition-all"
             >
               Review Booking →
             </button>
@@ -1828,7 +1828,7 @@ function BookingContent() {
                   type="button"
                   disabled={!promoCodeInput.trim() || promoStatus.loading}
                   onClick={handleApplyPromoCode}
-                  className="px-5 py-2.5 bg-gradient-to-r from-brand-primary to-brand-accent hover:opacity-90 disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow transition-all"
+                  className="px-5 py-2.5 zo-solid-accent bg-brand-primary hover:opacity-90 disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow transition-all"
                 >
                   {promoStatus.loading ? '...' : 'Apply'}
                 </button>
@@ -1902,7 +1902,7 @@ function BookingContent() {
               type="button"
               disabled={submitting}
               onClick={isGroupMode ? handleConfirmGroupBooking : handleConfirmBooking}
-              className="w-full sm:w-auto px-10 py-4 rounded-xl font-bold text-sm text-white bg-gradient-to-r from-brand-primary via-brand-primary-hover to-brand-accent hover:opacity-90 shadow-xl shadow-brand-primary/30 active:scale-95 transition-all flex items-center justify-center gap-2"
+              className="w-full sm:w-auto px-10 py-4 rounded-xl font-bold text-sm text-white zo-solid-accent bg-brand-primary hover:opacity-90 shadow-xl shadow-brand-primary/30 active:scale-95 transition-all flex items-center justify-center gap-2"
             >
               {submitting ? (
                 <>
@@ -1921,7 +1921,7 @@ function BookingContent() {
       {step === 6 && (confirmedBooking || confirmedGroupBooking) && (
         <div className="space-y-6 animate-in fade-in zoom-in duration-300">
           {/* Top Timer Bar */}
-          <div className="bg-gradient-to-r from-amber-500/10 via-amber-500/20 to-amber-500/10 border border-amber-500/30 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-400 flex items-center justify-center text-lg font-black">
                 <Icon name="clock" size={20} />
@@ -1987,7 +1987,7 @@ function BookingContent() {
                     <span className="text-xs text-brand-text-muted uppercase tracking-wider block">
                       Advance Payable
                     </span>
-                    <span className="text-2xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-brand-primary via-brand-primary-hover to-brand-accent">
+                    <span className="text-2xl sm:text-3xl font-black text-brand-primary">
                       ₨{(isGroupMode && confirmedGroupBooking ? confirmedGroupBooking.totalAmount : confirmedBooking?.totalPrice || 0).toLocaleString()}
                     </span>
                   </div>
@@ -2221,7 +2221,7 @@ function BookingContent() {
                   type="button"
                   disabled={!filePreview || uploadingPayment}
                   onClick={isGroupMode ? handleUploadGroupPayment : handleUploadPayment}
-                  className="w-full sm:w-auto px-10 py-4 rounded-xl font-black text-sm text-white bg-gradient-to-r from-emerald-600 via-teal-600 to-brand-primary hover:opacity-95 disabled:opacity-40 shadow-xl shadow-emerald-500/25 active:scale-95 transition-all flex items-center justify-center gap-2 min-h-[48px]"
+                  className="w-full sm:w-auto px-10 py-4 rounded-xl font-black text-sm text-white zo-solid-accent bg-brand-primary hover:opacity-95 disabled:opacity-40 shadow-xl shadow-emerald-500/25 active:scale-95 transition-all flex items-center justify-center gap-2 min-h-[48px]"
                 >
                   {uploadingPayment ? (
                     <>
@@ -2278,7 +2278,7 @@ function BookingContent() {
           <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3.5">
             <Link
               href="/my-bookings"
-              className="w-full sm:w-auto px-8 py-3.5 rounded-xl font-bold text-xs sm:text-sm text-white bg-gradient-to-r from-brand-accent to-brand-primary hover:opacity-90 shadow-lg shadow-brand-primary/30 transition-all"
+              className="w-full sm:w-auto px-8 py-3.5 rounded-xl font-bold text-xs sm:text-sm text-white zo-solid-accent bg-brand-primary hover:opacity-90 shadow-lg shadow-brand-primary/30 transition-all"
             >
               View in My Bookings →
             </Link>
@@ -2333,11 +2333,11 @@ function BookingContent() {
           <div className="max-w-lg mx-auto printable-slip-wrapper">
             <div className="relative bg-brand-surface border border-brand-border rounded-3xl zo-panel overflow-hidden shadow-2xl printable-slip-card ring-1 ring-brand-primary/20">
               {/* Glowing Top Edge */}
-              <div className="h-1.5 w-full bg-gradient-to-r from-brand-primary via-emerald-400 to-brand-accent" />
+              <div className="h-1.5 w-full zo-solid-accent bg-brand-primary" />
 
               {/* Receipt Header */}
               <div className="p-6 sm:p-7 border-b border-dashed border-brand-border text-center relative bg-brand-bg/60">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-brand-primary via-brand-primary-hover to-brand-accent flex items-center justify-center font-black text-xl mx-auto shadow-lg shadow-brand-primary/25 text-white mb-2.5">
+                <div className="w-12 h-12 rounded-2xl zo-solid-accent bg-brand-primary flex items-center justify-center font-black text-xl mx-auto shadow-lg shadow-brand-primary/25 text-white mb-2.5">
                   01
                 </div>
                 <h2 className="text-xl font-black tracking-wider text-brand-text-main">ZERO ONE GAMING ZONE</h2>
@@ -2491,7 +2491,7 @@ function BookingContent() {
                     </span>
                     <span className="text-[11px] text-brand-text-muted">Pay at counter upon arrival</span>
                   </div>
-                  <span className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-brand-primary via-brand-primary-hover to-brand-accent">
+                  <span className="text-3xl font-black text-brand-primary">
                     ₨{(isGroupMode && confirmedGroupBooking ? confirmedGroupBooking.totalAmount : confirmedBooking?.totalPrice || 0).toLocaleString()}
                   </span>
                 </div>
@@ -2582,7 +2582,7 @@ function BookingContent() {
               <button
                 type="button"
                 onClick={() => setStep(4)}
-                className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:opacity-95 shadow-md shadow-emerald-600/20 flex items-center gap-1.5 transition-all"
+                className="px-4 py-2 rounded-xl text-xs font-bold text-white zo-solid-accent bg-brand-primary hover:opacity-95 shadow-md shadow-emerald-600/20 flex items-center gap-1.5 transition-all"
               >
                 <span>Checkout Now →</span>
               </button>

@@ -332,7 +332,7 @@ export default function ContactPage() {
                 <button
                   type="submit"
                   disabled={loading || !isFormValid}
-                  className="w-full py-4 rounded-xl text-sm font-black text-white bg-gradient-to-r from-brand-primary via-brand-primary-hover to-brand-accent hover:opacity-90 shadow-lg shadow-brand-primary/30 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-40"
+                  className="w-full py-4 rounded-xl text-sm font-black text-white zo-solid-accent bg-brand-primary hover:opacity-90 shadow-lg shadow-brand-primary/30 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-40"
                 >
                   {loading ? (
                     <span>Sending message...</span>

@@ -86,8 +86,8 @@ export function HeroSection({ offers }: HeroSectionProps) {
           sizes="100vw"
         />
 
-        {/* Dark gradient overlay for text contrast and depth */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/50 to-black/35 pointer-events-none" />
+        {/* Dark overlay for text contrast and depth */}
+        <div className="absolute inset-0 bg-black/60 pointer-events-none" />
 
         {/* Top Space for Navigation Floating inside Frame */}
         <div className="relative z-10 pt-16 sm:pt-20">

@@ -289,7 +289,7 @@ export default function MyBookingsPage() {
       <div className="bg-brand-surface border border-brand-border rounded-3xl zo-panel p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-6 shadow-xl relative overflow-hidden">
         <div className="absolute top-0 right-0 -mr-16 -mt-16 w-48 h-48 bg-brand-primary/10 rounded-full blur-3xl pointer-events-none" />
         <div className="flex items-center gap-4 relative">
-          <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-tr from-brand-primary via-brand-primary-hover to-brand-accent flex items-center justify-center font-black text-2xl text-white shadow-lg shadow-brand-primary/30">
+          <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl zo-solid-accent bg-brand-primary flex items-center justify-center font-black text-2xl text-white shadow-lg shadow-brand-primary/30">
             {customer?.name?.charAt(0).toUpperCase() || 'U'}
           </div>
           <div>
@@ -307,7 +307,7 @@ export default function MyBookingsPage() {
         <div className="flex flex-wrap items-center gap-3 self-start sm:self-auto relative">
           <Link
             href="/book"
-            className="px-5 py-2.5 min-h-[44px] flex items-center justify-center rounded-xl font-bold text-xs sm:text-sm text-white bg-gradient-to-r from-brand-primary via-brand-primary-hover to-brand-accent hover:opacity-90 shadow-md shadow-brand-primary/30 transition-all"
+            className="px-5 py-2.5 min-h-[44px] flex items-center justify-center rounded-xl font-bold text-xs sm:text-sm text-white zo-solid-accent bg-brand-primary hover:opacity-90 shadow-md shadow-brand-primary/30 transition-all"
           >
             + New Booking
           </Link>
@@ -403,7 +403,7 @@ export default function MyBookingsPage() {
           {activeTab === 'upcoming' && (
             <Link
               href="/book"
-              className="inline-flex mt-2 px-6 py-3 min-h-[44px] items-center justify-center rounded-xl font-bold text-xs text-white bg-gradient-to-r from-brand-primary via-brand-primary-hover to-brand-accent shadow-md shadow-brand-primary/30"
+              className="inline-flex mt-2 px-6 py-3 min-h-[44px] items-center justify-center rounded-xl font-bold text-xs text-white zo-solid-accent bg-brand-primary shadow-md shadow-brand-primary/30"
             >
               Book a Slot Now →
             </Link>
@@ -545,7 +545,7 @@ export default function MyBookingsPage() {
                           setSelectedFile(null);
                           setFilePreview(null);
                         }}
-                        className="px-3.5 py-1.5 min-h-[44px] rounded-xl text-xs font-bold text-white bg-gradient-to-r from-brand-primary to-brand-accent hover:opacity-90 shadow-md shadow-brand-primary/30 transition-all flex items-center gap-1.5 cursor-pointer"
+                        className="px-3.5 py-1.5 min-h-[44px] rounded-xl text-xs font-bold text-white zo-solid-accent bg-brand-primary hover:opacity-90 shadow-md shadow-brand-primary/30 transition-all flex items-center gap-1.5 cursor-pointer"
                       >
                         <Icon name="camera" size={13} />
                         <span>{isRejected ? 'Re-upload Screenshot' : 'Update Payment Proof'}</span>
@@ -644,7 +644,7 @@ export default function MyBookingsPage() {
                 type="button"
                 disabled={!filePreview || reuploadSubmitting}
                 onClick={handleReuploadSubmit}
-                className="px-6 py-2.5 min-h-[44px] rounded-xl text-xs font-black text-white bg-gradient-to-r from-brand-primary via-brand-primary-hover to-brand-accent hover:opacity-90 disabled:opacity-40 shadow-lg shadow-brand-primary/30 transition-all flex items-center gap-2 cursor-pointer"
+                className="px-6 py-2.5 min-h-[44px] rounded-xl text-xs font-black text-white zo-solid-accent bg-brand-primary hover:opacity-90 disabled:opacity-40 shadow-lg shadow-brand-primary/30 transition-all flex items-center gap-2 cursor-pointer"
               >
                 {reuploadSubmitting ? (
                   <>

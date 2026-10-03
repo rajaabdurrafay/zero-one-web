@@ -56,7 +56,7 @@ export function computeThemeVariables(theme: {
           '--theme-glass-border': `color-mix(in srgb, ${theme.textColor} 10%, transparent)`,
           '--theme-glass-border-light': `color-mix(in srgb, ${theme.textColor} 6%, transparent)`,
           '--theme-glass-shadow': '0 8px 32px 0 rgba(0, 0, 0, 0.05)',
-          '--theme-glass-pattern': 'radial-gradient(ellipse at top left, rgba(0,0,0,0.03) 0%, transparent 60%), radial-gradient(ellipse at bottom right, rgba(0,0,0,0.03) 0%, transparent 60%)',
+          '--theme-glass-pattern': 'none',
         }
       : {
           '--theme-glass-enabled': '1',
@@ -68,7 +68,7 @@ export function computeThemeVariables(theme: {
           '--theme-glass-border': 'rgba(255, 255, 255, 0.12)',
           '--theme-glass-border-light': 'rgba(255, 255, 255, 0.08)',
           '--theme-glass-shadow': '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
-          '--theme-glass-pattern': 'radial-gradient(ellipse at top left, rgba(255,255,255,0.04) 0%, transparent 60%), radial-gradient(ellipse at bottom right, rgba(255,255,255,0.03) 0%, transparent 60%)',
+          '--theme-glass-pattern': 'none',
         }
     : {
         '--theme-glass-enabled': '0',

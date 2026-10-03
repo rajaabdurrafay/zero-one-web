@@ -104,7 +104,7 @@ function ResetPasswordContent() {
 
           <Link
             href="/login"
-            className="inline-block w-full py-3.5 px-4 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-brand-primary via-brand-primary-hover to-brand-accent hover:opacity-90 shadow-lg shadow-brand-primary/30 transition-all text-center"
+            className="inline-block w-full py-3.5 px-4 rounded-xl text-sm font-bold text-white zo-solid-accent bg-brand-primary hover:opacity-90 shadow-lg shadow-brand-primary/30 transition-all text-center"
           >
             Go to Login Now →
           </Link>
@@ -142,7 +142,7 @@ function ResetPasswordContent() {
           <button
             type="submit"
             disabled={loading || !newPassword || !confirmPassword}
-            className="w-full mt-2 py-3.5 px-4 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-brand-primary via-brand-primary-hover to-brand-accent hover:opacity-90 disabled:opacity-50 shadow-lg shadow-brand-primary/30 active:scale-95 transition-all flex items-center justify-center gap-2"
+            className="w-full mt-2 py-3.5 px-4 rounded-xl text-sm font-bold text-white zo-solid-accent bg-brand-primary hover:opacity-90 disabled:opacity-50 shadow-lg shadow-brand-primary/30 active:scale-95 transition-all flex items-center justify-center gap-2"
           >
             {loading ? (
               <>

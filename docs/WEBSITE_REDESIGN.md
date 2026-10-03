@@ -130,3 +130,11 @@ Responsive decisions: content stays at 1240px with mobile gutters; marketing ima
 Verification uses `scripts/check-customer-pages.cjs` with the same optional Playwright, axe and Chrome environment variables as `scripts/check-redesign.cjs`. It covers all 14 customer routes in desktop light, mobile dark and 320px light, including active navigation, overflow, runtime errors, accessibility, booking entry, gallery keyboard opening, logo theme and text encoding. All API responses are local in-memory fixtures; no real database is used. The fixture's empty account-booking response exists only for these tests.
 
 No admin changes, migrations, database resets, file cleanup, deployment or push are included.
+
+### Solid color and account avatar follow-up
+
+All website gradient fills have been removed at their source: primary buttons, selected booking states, decorative panels, text fills, receipt accents, image shades and glass pattern. Photo readability uses a uniform translucent shade; Appearance still controls glass blur. Primary actions use the existing theme primary color and its contrast token. Status colors remain semantic.
+
+The desktop header uses a circular account icon for signed-out users and logged-in users without a photo. When a customer has a profile picture it appears in that control; failed image loads fall back to the icon. Accessible names remain Sign In / Account, and the existing profile, bookings and sign-out menu remains available. Mobile retains the existing navigation menu and account links.
+
+Regression checks assert flat rendered backgrounds across customer routes and cover profile-photo success, absent-photo and failed-photo fallback without a real account or database.

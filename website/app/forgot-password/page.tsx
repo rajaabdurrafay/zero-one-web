@@ -75,7 +75,7 @@ export default function ForgotPasswordPage() {
 
             <Link
               href="/login"
-              className="inline-block w-full py-3.5 px-4 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-brand-primary via-brand-primary-hover to-brand-accent hover:opacity-90 shadow-lg shadow-brand-primary/30 transition-all text-center"
+              className="inline-block w-full py-3.5 px-4 rounded-xl text-sm font-bold text-white zo-solid-accent bg-brand-primary hover:opacity-90 shadow-lg shadow-brand-primary/30 transition-all text-center"
             >
               Return to Login
             </Link>
@@ -110,7 +110,7 @@ export default function ForgotPasswordPage() {
             <button
               type="submit"
               disabled={loading || !isEmailValid}
-              className="w-full mt-2 py-3.5 px-4 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-brand-primary via-brand-primary-hover to-brand-accent hover:opacity-90 disabled:opacity-40 shadow-lg shadow-brand-primary/30 active:scale-95 transition-all flex items-center justify-center gap-2"
+              className="w-full mt-2 py-3.5 px-4 rounded-xl text-sm font-bold text-white zo-solid-accent bg-brand-primary hover:opacity-90 disabled:opacity-40 shadow-lg shadow-brand-primary/30 active:scale-95 transition-all flex items-center justify-center gap-2"
             >
               {loading ? (
                 <>

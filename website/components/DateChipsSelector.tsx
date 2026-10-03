@@ -53,7 +53,7 @@ export default function DateChipsSelector({
                 onClick={() => onSelectDate(day.dateStr)}
                 className={`flex-none min-w-[72px] sm:min-w-0 snap-start p-2.5 sm:p-3 rounded-xl border text-center transition-all flex flex-col items-center justify-between min-h-[64px] ${
                   isSelected
-                    ? 'bg-gradient-to-r from-brand-primary via-brand-primary-hover to-brand-accent border-brand-primary text-white shadow-md'
+                    ? 'zo-solid-accent bg-brand-primary border-brand-primary text-white shadow-md'
                     : 'bg-brand-bg border-brand-border text-brand-text-muted hover:text-brand-text-main hover:border-brand-border-light hover:bg-brand-card'
                 }`}
               >

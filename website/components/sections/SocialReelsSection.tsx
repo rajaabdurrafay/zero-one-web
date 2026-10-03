@@ -99,21 +99,18 @@ export function SocialReelsSection() {
           name: 'TikTok',
           badgeColor: 'bg-black text-cyan-400 border-cyan-500/30',
           dot: 'bg-cyan-400',
-          bgGradient: 'from-black via-zinc-900 to-cyan-950/40',
         };
       case 'YOUTUBE':
         return {
           name: 'YouTube',
           badgeColor: 'bg-red-500/10 text-red-500 border-red-500/20',
           dot: 'bg-red-500',
-          bgGradient: 'from-zinc-950 via-zinc-900 to-red-950/40',
         };
       default:
         return {
           name: 'Instagram',
           badgeColor: 'bg-pink-500/10 text-pink-500 border-pink-500/20',
           dot: 'bg-pink-500',
-          bgGradient: 'from-zinc-950 via-purple-950/40 to-pink-950/50',
         };
     }
   };
@@ -166,8 +163,8 @@ export function SocialReelsSection() {
 
       {/* Horizontal Carousel Container */}
       <div className="relative w-full">
-        <div className="absolute left-0 top-0 bottom-0 w-8 sm:w-16 bg-gradient-to-r from-brand-bg to-transparent z-10 pointer-events-none" />
-        <div className="absolute right-0 top-0 bottom-0 w-8 sm:w-16 bg-gradient-to-l from-brand-bg to-transparent z-10 pointer-events-none" />
+        <div className="absolute left-0 top-0 bottom-0 w-8 sm:w-16 bg-brand-bg z-10 pointer-events-none" />
+        <div className="absolute right-0 top-0 bottom-0 w-8 sm:w-16 bg-brand-bg z-10 pointer-events-none" />
 
         <div
           ref={sliderRef}
@@ -217,7 +214,7 @@ export function SocialReelsSection() {
                           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                         />
                       ) : (
-                        <div className={`w-full h-full bg-gradient-to-br ${details.bgGradient} flex flex-col items-center justify-center p-6 text-center`}>
+                        <div className={`w-full h-full zo-solid-accent bg-brand-primary flex flex-col items-center justify-center p-6 text-center`}>
                           <div className="w-14 h-14 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white mb-3 shadow-inner group-hover:scale-110 transition-transform">
                             <Icon name="video" size={24} className="text-white" />
                           </div>
@@ -230,7 +227,7 @@ export function SocialReelsSection() {
                         </div>
                       )}
 
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-black/30 pointer-events-none" />
+                      <div className="absolute inset-0 bg-black/60 pointer-events-none" />
 
                       <div className="absolute top-3.5 left-3.5 right-3.5 flex items-center justify-between pointer-events-none">
                         <span
