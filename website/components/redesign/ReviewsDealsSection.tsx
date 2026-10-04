@@ -1,10 +1,9 @@
-import type { Offer, Review } from '@/lib/api';
+import type { Review } from '@/lib/api';
 import { FeatureCard } from './FeatureCard';
-import { venueImages, offerHref } from './content';
+import { venueImages } from './content';
 import { ReviewCarousel } from './ReviewCarousel';
 
-export function ReviewsDealsSection({ reviews, offers }: { reviews: Review[]; offers: Offer[] }) {
-  const offer = offers.find((item) => item.isActive && item.isVisibleOnWebsite !== false);
+export function ReviewsDealsSection({ reviews }: { reviews: Review[] }) {
   return (
     <section
       className="zo-container zo-review-deal-grid"
@@ -15,7 +14,7 @@ export function ReviewsDealsSection({ reviews, offers }: { reviews: Review[]; of
         variant="accent"
         tag="Make your next move"
         title="Your next great session is waiting."
-        href={offerHref(offer)}
+        href="/activities"
         image={venueImages.deal}
         alt="Console gaming setup at ZeroOne"
       />

@@ -47,7 +47,7 @@ export default async function HomePage() {
         <StatsSection visitStats={visitStats} />
         <BookingBanner />
         <PricingSection activities={activities} />
-        <ReviewsDealsSection reviews={reviews.reviews} offers={offers} />
+        <ReviewsDealsSection reviews={reviews.reviews} />
         <LatestOffersSection offers={offers} />
         <ConnectSection activities={activities} />
       </Reveal>
