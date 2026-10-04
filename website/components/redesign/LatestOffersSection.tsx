@@ -8,6 +8,7 @@ export function LatestOffersSection({ offers }: { offers: Offer[] }) {
   const live = offers
     .filter((item) => item.isActive && item.isVisibleOnWebsite !== false)
     .slice(0, 2);
+  const singleOffer = live.length === 1;
   const cards = live.length
     ? live.map((offer, index) => ({
         title: offer.title,
@@ -45,13 +46,13 @@ export function LatestOffersSection({ offers }: { offers: Offer[] }) {
           }
           centered
         />
-        <div className="zo-news-grid">
+        <div className={`zo-news-grid${singleOffer ? ' zo-news-grid-single' : ''}`}>
           {cards.map((card) => (
             <Link
               prefetch={false}
               href={card.href}
               key={card.title}
-              className="zo-news-card"
+              className={`zo-news-card${singleOffer ? ' zo-news-card-featured' : ''}`}
               data-reveal
             >
               <div className="zo-news-photo">
@@ -59,13 +60,14 @@ export function LatestOffersSection({ offers }: { offers: Offer[] }) {
                   src={`${imageRoot}/${card.image}`}
                   alt={`${card.title} — ZeroOne venue photograph`}
                   fill
-                  sizes="(max-width: 700px) 92vw, 40vw"
+                  sizes={singleOffer ? '(max-width: 760px) 92vw, 46vw' : '(max-width: 600px) 92vw, (max-width: 900px) 44vw, 24vw'}
                 />
               </div>
               <div className="zo-news-copy">
                 <span className="zo-eyebrow">{card.label}</span>
                 <h3>{card.title}</h3>
                 <p>{card.description}</p>
+                {singleOffer && <span className="zo-news-offer-link">Explore this offer</span>}
                 <span className="zo-circle-arrow">
                   <Arrow />
                 </span>
