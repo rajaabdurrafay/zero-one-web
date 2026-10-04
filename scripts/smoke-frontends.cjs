@@ -39,10 +39,14 @@ function cookie(response, name) {
 }
 async function main() {
   let lastAuthorization, logoutRevoked = false, rejectLogout = false;
+  let homeOffers = [];
   backend = http.createServer((request, response) => {
     lastAuthorization = request.headers.authorization;
     response.setHeader('Content-Type', 'application/json');
     const send = data => response.end(JSON.stringify(data));
+    if (request.url === '/api/offers/active') return send(homeOffers);
+    if (request.url.startsWith('/api/reviews')) return send({reviews:[],stats:{totalReviews:0,averageRating:5}});
+    if (request.url === '/api/public-stats') return send({totalPlayerVisits:0});
     if (request.url === '/api/auth/admin/login') return send({ token: 'fixture-admin-token', user: {id:'admin1',username:'test',name:'Test',role:'SUPER_ADMIN'}, isNewDevice: false });
     if (request.url === '/api/auth/admin/me') {
       if (lastAuthorization !== 'Bearer fixture-admin-token') { response.statusCode = 401; return send({error:'Unauthorized'}); }
@@ -102,6 +106,25 @@ async function main() {
   assert.equal(securityHeaders.headers.get('x-frame-options'),'DENY');
   assert.equal(securityHeaders.headers.get('x-powered-by'),null);
   console.log('PASS protected cache revalidation and frontend security headers');
+
+  const sampleOffer = {id:'fixture-offer',title:'Fixture offer',description:'A local test offer',isActive:true,isVisibleOnWebsite:true,discountType:'PERCENTAGE',discountValue:10,applicableTo:'ALL_ACTIVITIES'};
+  for (const count of [0, 1, 2]) {
+    homeOffers = Array.from({length:count}, (_, index) => ({...sampleOffer,id:`fixture-offer-${index}`,title:`Fixture offer ${index}`}));
+    const response = await fetch(website+'/');
+    assert.equal(response.status,200);
+    const html = await response.text();
+    const section = html.match(/<section class="zo-section zo-latest"[\s\S]*?<\/section>/)?.[0];
+    assert.ok(section,'Home offers section renders');
+    assert.equal((section.match(/class="zo-news-card(?: zo-news-card-featured)?"/g)||[]).length,count||2);
+    assert.equal(section.includes('zo-news-grid-single'),count===1,'Only a single offer fills the grid');
+    assert.equal(section.includes('zo-news-card-featured'),count===1);
+    assert.equal(section.includes('Explore the Experiences'),count===0);
+    assert.equal(section.includes('No active offers right now.'),count===0);
+    assert.equal(section.includes('Explore Current Offers'),count>0);
+    if(count) assert.match(section,/offerId=fixture-offer-0/,'The deal keeps its booking link');
+    else {assert.match(section,/friendly snooker rivalry/);assert.match(section,/movie night with your name/);}
+  }
+  console.log('PASS home offers: zero-offer fallback, single full-width deal, two cards and booking links');
 }
 main().catch(error=>{console.error(error.message);process.exitCode=1;}).finally(async()=>{
   for (const child of children) child.kill();
