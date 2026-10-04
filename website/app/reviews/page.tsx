@@ -23,7 +23,13 @@ export default function ReviewsPage() {
   return (
     <div className="space-y-12 sm:space-y-16 zo-page-spacing">
       {/* Top Banner Header */}
-      <PageIntro label="Reviews" title="Good times. Real stories." description="Hear from the players, console squads and movie lovers who have spent time at ZeroOne." />
+      <PageIntro
+        label="Reviews"
+        title="Good times. Real stories."
+        description="Hear from the players, console squads and movie lovers who have spent time at ZeroOne."
+        image="/images/Snokker/snooker-table.jpg (3).webp"
+        alt="Players enjoying the full-size snooker tables inside ZeroOne's illuminated lounge"
+      />
       <section className="zo-container">
         {/* Global Average Rating Card */}
         {stats.totalReviews > 0 && (
