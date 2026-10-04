@@ -113,6 +113,15 @@ async function main() {
     const response = await fetch(website+'/');
     assert.equal(response.status,200);
     const html = await response.text();
+    const featureSection = html.match(/<section class="zo-section zo-container" aria-label="Featured ZeroOne experiences">[\s\S]*?<\/section>/)?.[0];
+    const nextSessionCard = [...(featureSection || '').matchAll(/<a\b([^>]*)>([\s\S]*?)<\/a>/g)].find((card) => card[2].includes('A little play goes a long way.'));
+    assert.ok(nextSessionCard,'Next-session feature card renders');
+    assert.match(nextSessionCard[1],/href="\/activities"/,'Next-session feature opens activities regardless of current offers');
+    const statsSection = html.match(/<section class="zo-stats zo-container"[\s\S]*?<\/section>/)?.[0];
+    assert.ok(statsSection,'Home statistics render without client JavaScript');
+    assert.match(statsSection,/class="zo-count-visible" aria-hidden="true">06<\/span>/);
+    assert.match(statsSection,/class="zo-count-visible" aria-hidden="true">24\/7<\/span>/);
+    assert.match(statsSection,/class="sr-only">06<\/span>/,'Assistive technology gets the final value rather than animation frames');
     const section = html.match(/<section class="zo-section zo-latest"[\s\S]*?<\/section>/)?.[0];
     assert.ok(section,'Home offers section renders');
     assert.equal((section.match(/class="zo-news-card(?: zo-news-card-featured)?"/g)||[]).length,count||2);
