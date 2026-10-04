@@ -41,7 +41,7 @@ export default async function HomePage() {
     <div className="zo-home">
       <Reveal>
         <HeroSection stats={reviews.stats} />
-        <FeatureCardsSection offers={offers} />
+        <FeatureCardsSection />
         <ActivitiesSection activities={activities} />
         <WhyZeroOneSection />
         <StatsSection visitStats={visitStats} />
