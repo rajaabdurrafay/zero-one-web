@@ -32,7 +32,7 @@ const FONT_OPTIONS = [
   { name: 'Playfair Display', category: 'Editorial Serif', desc: 'Luxury, classy, high contrast' },
 ];
 
-export const DEFAULT_WEBSITE_THEME_DARK: ThemeSettings = {
+const DEFAULT_WEBSITE_THEME_DARK: ThemeSettings = {
   target: 'WEBSITE',
   mode: 'DARK',
   primaryColor: '#8b5cf6',
@@ -49,7 +49,7 @@ export const DEFAULT_WEBSITE_THEME_DARK: ThemeSettings = {
   logoUrlLight: null,
 };
 
-export const DEFAULT_WEBSITE_THEME_LIGHT: ThemeSettings = {
+const DEFAULT_WEBSITE_THEME_LIGHT: ThemeSettings = {
   target: 'WEBSITE',
   mode: 'LIGHT',
   primaryColor: '#7c3aed',
@@ -66,7 +66,7 @@ export const DEFAULT_WEBSITE_THEME_LIGHT: ThemeSettings = {
   logoUrlLight: null,
 };
 
-export const DEFAULT_ADMIN_THEME_DARK: ThemeSettings = {
+const DEFAULT_ADMIN_THEME_DARK: ThemeSettings = {
   target: 'ADMIN',
   mode: 'DARK',
   primaryColor: '#c9a84c',
@@ -83,7 +83,7 @@ export const DEFAULT_ADMIN_THEME_DARK: ThemeSettings = {
   logoUrlLight: null,
 };
 
-export const DEFAULT_ADMIN_THEME_LIGHT: ThemeSettings = {
+const DEFAULT_ADMIN_THEME_LIGHT: ThemeSettings = {
   target: 'ADMIN',
   mode: 'LIGHT',
   primaryColor: '#b48c36',

@@ -178,6 +178,10 @@ async function runAutomation() {
 let timer: NodeJS.Timeout | undefined;
 const server = app.listen(Number(PORT), process.env.HOST || '0.0.0.0', () => {
   console.log('Server listening on port ' + PORT);
+  if (process.env.ENABLE_BOOKING_AUTOMATION !== 'true') {
+    console.log('Booking automation disabled');
+    return;
+  }
   void runAutomation();
   timer = setInterval(() => { void runAutomation(); }, 30_000);
   timer.unref();

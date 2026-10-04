@@ -1,5 +1,8 @@
 import type { NextConfig } from 'next';
+import path from 'node:path';
 const nextConfig: NextConfig = {
+  output: 'standalone',
+  outputFileTracingRoot: path.join(__dirname, '..'),
   poweredByHeader: false,
   images:{remotePatterns:[{protocol:(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001').startsWith('https:') ? 'https':'http',hostname:new URL(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001').hostname,port:new URL(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001').port,pathname:'/uploads/**'}]},
   async headers() {
