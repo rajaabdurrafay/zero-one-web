@@ -12,3 +12,4 @@ export function businessInstant(date: string, time?: string): Date;
 export function canonicalPhone(value: string): string;
 
 export function allocatePayments(total:number,weights:number[]):number[];
+export function isSameOriginRequest(request: { url: string; headers: { get(name: string): string | null } }, publicOrigin?: string): boolean;

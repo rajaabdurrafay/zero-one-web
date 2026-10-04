@@ -50,4 +50,10 @@ function allocatePayments(total,weights) {
   let assigned=0;
   return weights.map((weight,index)=>{const value=index===weights.length-1 ? cents-assigned : Math.floor(sum ? cents*weight/sum : cents/weights.length);assigned+=value;return value/100});
 }
-module.exports = { allocatePayments, BUSINESS_TIMEZONE, money, activityPrice, quote, elapsedSeconds, businessDate, businessInstant, canonicalPhone };
+function isSameOriginRequest(request, publicOrigin) {
+  const origin = request.headers.get('origin');
+  if (!origin) return false;
+  try { return origin === new URL(publicOrigin || request.url).origin; }
+  catch { return false; }
+}
+module.exports = { isSameOriginRequest, allocatePayments, BUSINESS_TIMEZONE, money, activityPrice, quote, elapsedSeconds, businessDate, businessInstant, canonicalPhone };

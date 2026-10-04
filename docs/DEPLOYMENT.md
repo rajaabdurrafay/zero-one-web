@@ -26,6 +26,8 @@ Backend:
 
 Website/admin:
 
+- APP_ORIGIN: exact browser-facing origin used for mutation/CSRF checks behind hosting proxies. Defaults in production are https://zeroone.exocorastudio.com for the website and https://admin-zeroone.exocorastudio.com for admin. Override for other domains or isolated production fixture servers. Do not derive trusted origins from client-controlled forwarding headers.
+
 - API_URL: reachable server-side backend origin.
 - NEXT_PUBLIC_API_URL: public HTTPS backend origin used by image URLs; baked into client builds, so rebuild when changing it.
 - Website REVALIDATE_SECRET: same as backend; never prefix with NEXT_PUBLIC_.

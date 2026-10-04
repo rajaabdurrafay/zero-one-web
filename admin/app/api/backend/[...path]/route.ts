@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { hasValidOrigin } from '@/lib/requestOrigin';
 import { SESSION_TOKEN } from '@/lib/auth';
 const API = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 export const runtime = 'nodejs';
@@ -6,7 +7,7 @@ async function relay(request: NextRequest, context: { params: Promise<{ path: st
   const token = request.cookies.get(SESSION_TOKEN)?.value;
   if (!token) return NextResponse.json({ error: 'Authentication required.' }, { status: 401 });
   const mutation = !['GET', 'HEAD'].includes(request.method);
-  if (mutation && request.headers.get('origin') !== request.nextUrl.origin) return NextResponse.json({ error: 'Invalid origin.' }, { status: 403 });
+  if (mutation && !hasValidOrigin(request)) return NextResponse.json({ error: 'Invalid origin.' }, { status: 403 });
   const { path } = await context.params;
   if (path[0] !== 'api' || path.some(segment => segment === '..' || segment === '.' || segment.includes('/') || segment.includes('\\'))) return NextResponse.json({ error: 'Invalid API path.' }, { status: 400 });
   try {

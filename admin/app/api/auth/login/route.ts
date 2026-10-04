@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { hasValidOrigin } from '@/lib/requestOrigin';
 import { SESSION_TOKEN, TOKEN_COOKIE, ROLE_COOKIE, USER_COOKIE } from '@/lib/auth';
 
 const API_BASE = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 export async function POST(request: NextRequest) {
   try {
-    if (request.headers.get('origin') !== request.nextUrl.origin) return NextResponse.json({ error: 'Invalid origin' }, { status: 403 });
+    if (!hasValidOrigin(request)) return NextResponse.json({ error: 'Invalid origin' }, { status: 403 });
     const body = await request.json();
     const { username, password } = body;
 

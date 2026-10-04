@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
+import { hasValidOrigin } from '@/lib/requestOrigin';
 import { cookies } from 'next/headers';
 import { SESSION_TOKEN, TOKEN_COOKIE, ROLE_COOKIE, USER_COOKIE } from '@/lib/auth';
 
 const API_BASE = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 export async function POST(request: Request) {
-  if (request.headers.get('origin') !== new URL(request.url).origin) return NextResponse.json({ error: 'Invalid origin' }, { status: 403 });
+  if (!hasValidOrigin(request)) return NextResponse.json({ error: 'Invalid origin' }, { status: 403 });
   const cookieStore = await cookies();
   const token = cookieStore.get(SESSION_TOKEN)?.value;
 

@@ -8,6 +8,7 @@ const root = path.resolve(__dirname, '..');
 const nextBin = require.resolve('next/dist/bin/next');
 const revalidationSecret = 'fixture-revalidation-' + 'x'.repeat(48);
 const children = [];
+const publicOrigins = {admin:'https://admin.zeroone-fixture.invalid',website:'https://website.zeroone-fixture.invalid'};
 let failures = '';
 let backend;
 const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -21,7 +22,7 @@ async function ready(url) {
 function start(app, port, api) {
   const child = spawn(process.execPath, [nextBin, 'start', '-p', String(port)], {
     cwd: path.join(root, app), windowsHide: true,
-    env: { ...process.env, NODE_ENV: 'production', API_URL: api, NEXT_PUBLIC_API_URL: api, REVALIDATE_SECRET: revalidationSecret },
+    env: { ...process.env, NODE_ENV: 'production', APP_ORIGIN: publicOrigins[app], API_URL: api, NEXT_PUBLIC_API_URL: api, REVALIDATE_SECRET: revalidationSecret },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
   child.stderr.on('data', data => { failures = (failures + data.toString()).slice(-4000); });
@@ -60,7 +61,7 @@ async function main() {
   await Promise.all([ready(admin + '/login'), ready(website + '/api/revalidate')]);
   assert.match(await (await fetch(admin+'/login')).text(), /#123456/, 'Server-rendered admin theme uses configured backend');
 
-  const adminLogin = await fetch(admin + '/api/auth/login', {method:'POST',headers:{Origin:admin,'Content-Type':'application/json'},body:JSON.stringify({username:'test',password:'test-password'})});
+  const adminLogin = await fetch(admin + '/api/auth/login', {method:'POST',headers:{Origin:publicOrigins.admin,'Content-Type':'application/json'},body:JSON.stringify({username:'test',password:'test-password'})});
   assert.equal(adminLogin.status,200);
   const adminCookie = cookie(adminLogin,'gz-admin-session');
   assert.equal((await adminLogin.json()).token,undefined);
@@ -69,22 +70,27 @@ async function main() {
   assert.equal(adminRelay.status,200); assert.equal(lastAuthorization,'Bearer fixture-admin-token');
   assert.equal((await fetch(admin+'/api/backend/api/bookings')).status,401);
   assert.equal((await fetch(admin+'/api/backend/api/bookings',{method:'POST',headers:{Cookie:adminCookie,Origin:'https://attacker.invalid'},body:'{}'})).status,403);
+  assert.equal((await fetch(admin+'/api/backend/api/bookings',{method:'POST',headers:{Cookie:adminCookie,Origin:publicOrigins.admin},body:'{}'})).status,200,'Public admin origin works behind an internal HTTP URL');
+  const adminLogout = await fetch(admin+'/api/auth/logout',{method:'POST',headers:{Cookie:adminCookie,Origin:publicOrigins.admin}});
+  assert.equal(adminLogout.status,200);
+  assert.ok(adminLogout.headers.getSetCookie().some(value=>value.startsWith('gz-admin-session=;')));
   const forged = await fetch(admin+'/staff',{headers:{Cookie:'gz-admin-session=forged; gz-admin-role=SUPER_ADMIN'},redirect:'manual'});
   assert.equal(forged.status,307); assert.match(forged.headers.get('location'),/\/login$/);
   console.log('PASS admin HttpOnly login, API relay, CSRF and forged-session rejection');
 
-  const customerLogin = await fetch(website+'/api/backend/api/auth/login',{method:'POST',headers:{Origin:website,'Content-Type':'application/json'},body:JSON.stringify({phone:'03000000000',password:'test-password'})});
+  const customerLogin = await fetch(website+'/api/backend/api/auth/login',{method:'POST',headers:{Origin:publicOrigins.website,'Content-Type':'application/json'},body:JSON.stringify({phone:'03000000000',password:'test-password'})});
   assert.equal(customerLogin.status,200);
   const customerCookie = cookie(customerLogin,'zeroone-customer-session');
   assert.equal((await customerLogin.json()).token,'cookie-session');
   const profile = await fetch(website+'/api/backend/api/auth/me',{headers:{Cookie:customerCookie}});
   assert.equal(profile.status,200); assert.equal(lastAuthorization,'Bearer fixture-customer-token');
   assert.equal((await fetch(website+'/api/backend/api/bookings',{method:'POST',headers:{Cookie:customerCookie,Origin:'https://attacker.invalid'},body:'{}'})).status,403);
+  assert.equal((await fetch(website+'/api/backend/api/bookings',{method:'POST',headers:{Cookie:customerCookie,Origin:publicOrigins.website},body:'{}'})).status,200,'Public customer origin works behind an internal HTTP URL');
   rejectLogout = true;
-  const failedLogout = await fetch(website+'/api/auth/logout',{method:'POST',headers:{Origin:website,Cookie:customerCookie}});
+  const failedLogout = await fetch(website+'/api/auth/logout',{method:'POST',headers:{Origin:publicOrigins.website,Cookie:customerCookie}});
   assert.equal(failedLogout.status,502);assert.equal(failedLogout.headers.getSetCookie().length,0,'Failed revocation retains the cookie for retry');
   rejectLogout = false;
-  const logout = await fetch(website+'/api/auth/logout',{method:'POST',headers:{Origin:website,Cookie:customerCookie}});
+  const logout = await fetch(website+'/api/auth/logout',{method:'POST',headers:{Origin:publicOrigins.website,Cookie:customerCookie}});
   assert.equal(logout.status,200); assert.ok(logout.headers.getSetCookie().some(value=>value.startsWith('zeroone-customer-session=;')));
   assert.equal(logoutRevoked,true,'Logout revokes backend credential before clearing cookie');
   console.log('PASS customer HttpOnly login, relay, CSRF and cookie logout');

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { hasValidOrigin } from '@/lib/requestOrigin';
 export async function POST(request: NextRequest) {
-  if (request.headers.get('origin') !== request.nextUrl.origin) return NextResponse.json({ error: 'Invalid origin.' }, { status: 403 });
+  if (!hasValidOrigin(request)) return NextResponse.json({ error: 'Invalid origin.' }, { status: 403 });
   const token=request.cookies.get('zeroone-customer-session')?.value;
   if(token){
     try{
