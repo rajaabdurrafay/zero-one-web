@@ -13,6 +13,7 @@ import {
 import { formatTime12h, formatDateReadable, formatTimeRange12h } from '@/lib/timeUtils';
 import { Icon } from '@/components/Icon';
 import { AdminRole } from '@/lib/auth';
+import { PageContainer } from '@/components/Card';
 
 function getCookie(name: string): string | null {
   if (typeof document === 'undefined') return null;
@@ -129,7 +130,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
   const whatsappUrl = `https://wa.me/${formatCleanPhone(customer.phone)}`;
 
   return (
-    <div className="space-y-6 pb-12">
+    <PageContainer className="space-y-6 pb-12">
       {userRole!=='RECEPTIONIST' && <button className="btn btn-secondary" onClick={async()=>{const guestId=prompt('Guest customer ID after verifying their ownership:');if(!guestId)return;const note=prompt('Record how ownership was verified (at least 10 characters):');if(!note)return;try{const result=await claimGuestBookings(guestId,customerId,note);showToast('Linked '+result.claimedBookings+' verified bookings');void mutate()}catch(error){alert(error instanceof Error ? error.message:'Could not link bookings')}}}>Link verified guest bookings</button>}
       {/* Toast Notification */}
       {toastMessage && (
@@ -516,6 +517,6 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
           </div>
         </div>
       )}
-    </div>
+    </PageContainer>
   );
 }

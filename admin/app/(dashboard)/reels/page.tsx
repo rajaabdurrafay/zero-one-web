@@ -5,6 +5,7 @@ import Image from 'next/image';
 import toast from 'react-hot-toast';
 import { Icon } from '@/components/Icon';
 import { getAdminReels, addAdminReel, updateAdminReel, deleteAdminReel, type SocialReel } from '@/lib/api';
+import { PageContainer } from '@/components/Card';
 
 const PLATFORM_OPTIONS = [
   { value: 'INSTAGRAM', label: 'Instagram' },
@@ -231,7 +232,7 @@ export default function AdminReelsPage() {
   const selectedEditPlatformObj = PLATFORM_OPTIONS.find(p => p.value === editPlatform) || PLATFORM_OPTIONS[0];
 
   return (
-    <div className="max-w-7xl mx-auto p-4 sm:p-8 space-y-8 pb-32">
+    <PageContainer className="p-4 sm:p-8 space-y-8 pb-32">
       <div className="flex flex-col gap-1">
         <h1 className="text-2xl font-bold tracking-tight text-text">Social Reels</h1>
         <p className="text-muted text-sm">Add links to your social media reels to showcase on the website.</p>
@@ -615,6 +616,6 @@ export default function AdminReelsPage() {
           </div>
         </div>
       )}
-    </div>
+    </PageContainer>
   );
 }

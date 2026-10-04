@@ -13,6 +13,7 @@ import {
   getPKTDateTime,
 } from '@/lib/timeUtils';
 import { Icon } from '@/components/Icon';
+import { PageContainer } from '@/components/Card';
 
 const ACTIVITY_FILTER_OPTIONS = [
   { value: '', label: 'All Arenas' },
@@ -152,7 +153,7 @@ function VenueTimelineContent() {
   const isTodaySelected = dayTabs.length > 0 && selectedDate === dayTabs[0].dateStr;
 
   return (
-    <div className="space-y-6">
+    <PageContainer className="space-y-6">
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -495,7 +496,7 @@ function VenueTimelineContent() {
           </div>
         </div>
       )}
-    </div>
+    </PageContainer>
   );
 }
 

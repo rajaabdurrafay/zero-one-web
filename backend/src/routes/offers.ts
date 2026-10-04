@@ -3,6 +3,8 @@ import { z } from 'zod';
 import { prisma } from '../db';
 import { DiscountType, ApplicableTo, AdminRole } from '@prisma/client';
 import { requireAdminAuth } from '../middleware/adminAuth';
+import { deleteLocalUpload } from '../utils/uploads';
+import { processOfferBanner } from '../utils/offerBanner';
 
 const router = Router();
 
@@ -139,6 +141,10 @@ router.post('/', requireAdminAuth([AdminRole.SUPER_ADMIN, AdminRole.MANAGER]), a
       validatedData.promoCode = validatedData.promoCode.trim().toUpperCase();
     }
 
+    if (validatedData.bannerImageUrl) {
+      validatedData.bannerImageUrl = processOfferBanner(validatedData.bannerImageUrl);
+    }
+
     const offer = await (prisma as any).offer.create({
       data: validatedData,
       include: {
@@ -167,6 +173,10 @@ router.patch('/:id', requireAdminAuth([AdminRole.SUPER_ADMIN, AdminRole.MANAGER]
       validatedData.promoCode = validatedData.promoCode.trim().toUpperCase();
     }
 
+    if (validatedData.bannerImageUrl !== undefined) {
+      validatedData.bannerImageUrl = processOfferBanner(validatedData.bannerImageUrl);
+    }
+
     const offer = await (prisma as any).offer.update({
       where: { id },
       data: validatedData,
@@ -175,6 +185,9 @@ router.patch('/:id', requireAdminAuth([AdminRole.SUPER_ADMIN, AdminRole.MANAGER]
       }
     });
 
+    if (validatedData.bannerImageUrl !== undefined && existing.bannerImageUrl && existing.bannerImageUrl !== offer.bannerImageUrl) {
+      deleteLocalUpload(existing.bannerImageUrl, 'offers');
+    }
     res.json(offer);
   } catch (error) {
     if (error instanceof z.ZodError) {

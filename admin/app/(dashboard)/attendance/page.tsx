@@ -5,6 +5,7 @@ import useSWR from 'swr';
 import { Icon } from '@/components/Icon';
 import Select from '@/components/Select';
 import { getAttendanceLogs, getStaffMembers, AttendanceLog, StaffMember } from '@/lib/api';
+import { PageContainer } from '@/components/Card';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -205,7 +206,7 @@ export default function AttendancePage() {
   ];
 
   return (
-    <div className="space-y-6">
+    <PageContainer className="space-y-6">
       {/* Header Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-panel border border-line p-5 rounded-2xl shadow-sm">
         <div>
@@ -462,6 +463,6 @@ export default function AttendancePage() {
           <span className="font-mono text-[11px]">Auto-updates every 10s</span>
         </div>
       </div>
-    </div>
+    </PageContainer>
   );
 }

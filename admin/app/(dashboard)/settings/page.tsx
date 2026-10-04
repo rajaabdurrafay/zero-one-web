@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { Icon } from '@/components/Icon';
+import { PageContainer } from '@/components/Card';
 import {
   getAdminSystemSettings,
   updateAdminSystemSettings,
@@ -193,7 +194,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="space-y-6 sm:space-y-8 max-w-5xl mx-auto pb-16">
+    <PageContainer className="pb-16">
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-line-soft pb-5">
         <div>
@@ -709,6 +710,6 @@ export default function SettingsPage() {
           </div>
         </div>
       )}
-    </div>
+    </PageContainer>
   );
 }

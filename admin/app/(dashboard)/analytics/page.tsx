@@ -37,6 +37,7 @@ import {
 } from '@/lib/api';
 import toast from 'react-hot-toast';
 import { Icon } from '@/components/Icon';
+import { Card, PageContainer } from '@/components/Card';
 
 /* Vibrant, high-contrast, punchy palette for charts & data visualizations */
 const SERIES = [
@@ -287,7 +288,7 @@ export default function AnalyticsPage() {
   }
 
   return (
-    <div className="space-y-6 sm:space-y-8">
+    <PageContainer className="pb-16">
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-line/60">
         <div>
@@ -930,6 +931,6 @@ export default function AnalyticsPage() {
           )}
         </div>
       </section>
-    </div>
+    </PageContainer>
   );
 }

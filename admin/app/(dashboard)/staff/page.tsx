@@ -11,6 +11,7 @@ import {
 } from '@/lib/api';
 import { Icon } from '@/components/Icon';
 import Select from '@/components/Select';
+import { PageContainer } from '@/components/Card';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -330,7 +331,7 @@ export default function StaffManagementPage() {
   const receptionistCount = staff.filter((s) => s.role === 'RECEPTIONIST').length;
 
   return (
-    <div className="space-y-6">
+    <PageContainer className="space-y-6">
       {/* Toast Notifications */}
       <div className="fixed top-4 right-4 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none">
         {toasts.map((toast) => (
@@ -986,6 +987,6 @@ export default function StaffManagementPage() {
           </div>
         </div>
       )}
-    </div>
+    </PageContainer>
   );
 }

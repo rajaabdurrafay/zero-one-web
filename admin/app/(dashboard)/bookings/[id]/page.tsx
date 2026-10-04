@@ -16,6 +16,7 @@ import {
 import { formatTime12h, formatDateReadable, formatTimeRange12h } from '@/lib/timeUtils';
 import { generateWhatsAppBookingUrl, generateWhatsAppGroupBookingUrl } from '@/lib/whatsapp';
 import { Icon } from '@/components/Icon';
+import { PageContainer } from '@/components/Card';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -297,7 +298,7 @@ export default function BookingDetailPage({ params }: { params: Promise<{ id: st
     .join(' ') || '0 min';
 
   return (
-    <div className="space-y-5">
+    <PageContainer className="space-y-5">
       {toastMessage && (
         <div className="fixed top-[72px] right-4 sm:right-7 z-50 panel border-live/45 px-4 py-3 flex items-center gap-3 no-print">
           <Icon name="check" size={14} className="text-live" />
@@ -964,7 +965,7 @@ export default function BookingDetailPage({ params }: { params: Promise<{ id: st
           </div>
         </div>
       )}
-    </div>
+    </PageContainer>
   );
 }
 

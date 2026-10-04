@@ -10,6 +10,7 @@ import { playNotificationSound } from '@/lib/sound';
 import { formatDateReadable, formatTime12h } from '@/lib/timeUtils';
 import { generateWhatsAppBookingUrl, generateWhatsAppReminderUrl } from '@/lib/whatsapp';
 import { Icon } from '@/components/Icon';
+import { PageContainer } from '@/components/Card';
 
 const RESOURCE_TYPES = ['SNOOKER', 'PS5_OPEN', 'PS5_PRIVATE', 'CINEMA', 'TABLE_TENNIS', 'CAR_SIMULATOR'];
 const RESOURCE_LABELS: Record<string, string> = {
@@ -184,7 +185,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="space-y-6 sm:space-y-8">
+    <PageContainer className="space-y-6 sm:space-y-8">
       {/* Header bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-line/60">
         <div>
@@ -244,10 +245,20 @@ export default function DashboardPage() {
         </p>
       )}
 
-      {/* Takings / workload stat cards row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6">
-        {/* Highlight Card 1: Today's takings */}
-        <div className="bg-brass text-white rounded-2xl p-5 sm:p-6 shadow-sm flex flex-col justify-between relative overflow-hidden">
+      {/* Takings / workload stat cards row
+          Layout:
+          mobile  → 1 col (stack)
+          sm      → 2 col
+          lg/xl   → 6-col grid:
+                    - Today's Takings: spans 2 cols (Bara / Hero card)
+                    - Bays In Play: spans 1 col (Same size)
+                    - Staff On Duty: spans 1 col (Same size)
+                    - Awaiting Approval: spans 1 col (Same size)
+                    - Reminders Due: spans 1 col (Same size)
+      */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 sm:gap-5">
+        {/* Highlight Card 1: Today's takings — Sirf ye bara hoga (2 Columns) */}
+        <div className="sm:col-span-2 lg:col-span-2 bg-brass text-white rounded-2xl p-5 sm:p-6 shadow-sm flex flex-col justify-between relative overflow-hidden">
           <div className="flex items-center justify-between">
             <span className="text-xs uppercase font-bold tracking-wider text-white/80">Today&apos;s Takings</span>
             <span className="p-2 rounded-xl bg-white/15 text-white">
@@ -255,8 +266,8 @@ export default function DashboardPage() {
             </span>
           </div>
           <div className="my-3 sm:my-4">
-            <p className="text-3xl sm:text-4xl 2xl:text-5xl font-extrabold tracking-tight text-white">
-              <span className="text-xl sm:text-2xl font-bold opacity-80 mr-1">Rs </span>
+            <p className="text-3xl sm:text-4xl xl:text-5xl font-extrabold tracking-tight text-white leading-none">
+              <span className="text-xl sm:text-2xl xl:text-3xl font-bold opacity-80 mr-1">Rs </span>
               {todayRevenue.toLocaleString()}
             </p>
           </div>
@@ -265,8 +276,8 @@ export default function DashboardPage() {
           </p>
         </div>
 
-        {/* Highlight Card 2: Bays in Play / Bookings */}
-        <div className="bg-accent-custom text-white rounded-2xl p-5 sm:p-6 shadow-sm flex flex-col justify-between relative overflow-hidden">
+        {/* Highlight Card 2: Bays in Play — 1 Column (Same size as other 3) */}
+        <div className="sm:col-span-1 lg:col-span-1 bg-accent-custom text-white rounded-2xl p-5 sm:p-6 shadow-sm flex flex-col justify-between relative overflow-hidden">
           <div className="flex items-center justify-between">
             <span className="text-xs uppercase font-bold tracking-wider text-white/80">Bays In Play</span>
             <span className="p-2 rounded-xl bg-white/15 text-white">
@@ -274,7 +285,7 @@ export default function DashboardPage() {
             </span>
           </div>
           <div className="my-3 sm:my-4">
-            <p className="text-3xl sm:text-4xl 2xl:text-5xl font-extrabold tracking-tight text-white">
+            <p className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white leading-none">
               {busyCount}
               <span className="text-xl sm:text-2xl font-semibold opacity-75">/{resourcesList.length}</span>
             </p>
@@ -284,10 +295,10 @@ export default function DashboardPage() {
           </p>
         </div>
 
-        {/* Staff On Duty Indicator Widget Card */}
+        {/* Staff On Duty — 1 Column (Same size) */}
         <Link
           href="/attendance"
-          className="panel p-5 sm:p-6 flex flex-col justify-between hover:border-brass/50 transition-all group"
+          className="sm:col-span-1 lg:col-span-1 panel p-5 sm:p-6 flex flex-col justify-between hover:border-brass/50 transition-all group"
         >
           <div className="flex items-center justify-between">
             <p className="eyebrow group-hover:text-brass transition-colors">Staff On Duty</p>
@@ -296,7 +307,7 @@ export default function DashboardPage() {
             </span>
           </div>
           <div className="my-3 sm:my-4">
-            <p className="text-3xl sm:text-4xl 2xl:text-5xl font-extrabold tracking-tight text-text flex items-baseline gap-2">
+            <p className="text-3xl sm:text-4xl font-extrabold tracking-tight text-text flex items-baseline gap-2">
               {(staffOnDuty || []).length}
               <span className="text-xs text-muted font-normal uppercase tracking-wider">active</span>
             </p>
@@ -316,8 +327,8 @@ export default function DashboardPage() {
           </div>
         </Link>
 
-        {/* Standard White Card: Awaiting Approval */}
-        <div className="panel p-5 sm:p-6 flex flex-col justify-between">
+        {/* Standard Card: Awaiting Approval — 1 Column (Same size) */}
+        <div className="sm:col-span-1 lg:col-span-1 panel p-5 sm:p-6 flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <p className="eyebrow">Awaiting Approval</p>
             <span className={`p-2 rounded-xl ${pendingCount > 0 ? 'bg-wait/15 text-wait' : 'bg-raised text-muted'}`}>
@@ -325,7 +336,7 @@ export default function DashboardPage() {
             </span>
           </div>
           <div className="my-3 sm:my-4">
-            <p className={`text-3xl sm:text-4xl 2xl:text-5xl font-extrabold tracking-tight ${pendingCount > 0 ? 'text-wait' : 'text-text'}`}>
+            <p className={`text-3xl sm:text-4xl font-extrabold tracking-tight ${pendingCount > 0 ? 'text-wait' : 'text-text'}`}>
               {pendingCount}
             </p>
           </div>
@@ -342,10 +353,10 @@ export default function DashboardPage() {
           )}
         </div>
 
-        {/* Reminders Due Card */}
+        {/* Reminders Due Card — 1 Column (Same size) */}
         <Link
           href="/reminders"
-          className="panel p-5 sm:p-6 flex flex-col justify-between hover:border-emerald-500/50 transition-all group"
+          className="sm:col-span-1 lg:col-span-1 panel p-5 sm:p-6 flex flex-col justify-between hover:border-emerald-500/50 transition-all group"
         >
           <div className="flex items-center justify-between">
             <p className="eyebrow group-hover:text-emerald-400 transition-colors">Reminders Due</p>
@@ -354,7 +365,7 @@ export default function DashboardPage() {
             </span>
           </div>
           <div className="my-3 sm:my-4">
-            <p className={`text-3xl sm:text-4xl 2xl:text-5xl font-extrabold tracking-tight ${remindersCount > 0 ? 'text-emerald-400' : 'text-text'}`}>
+            <p className={`text-3xl sm:text-4xl font-extrabold tracking-tight ${remindersCount > 0 ? 'text-emerald-400' : 'text-text'}`}>
               {remindersCount}
             </p>
           </div>
@@ -773,7 +784,7 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
-    </div>
+    </PageContainer>
   );
 }
 

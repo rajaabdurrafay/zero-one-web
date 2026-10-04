@@ -12,6 +12,7 @@ import {
 import { generateWhatsAppWinBackUrl } from '@/lib/whatsapp';
 import { Icon } from '@/components/Icon';
 import { AdminRole } from '@/lib/auth';
+import { PageContainer } from '@/components/Card';
 
 function getCookie(name: string): string | null {
   if (typeof document === 'undefined') return null;
@@ -170,7 +171,7 @@ function CustomersContent() {
   };
 
   return (
-    <div className="space-y-6">
+    <PageContainer className="space-y-6">
       {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed top-20 right-6 z-50 p-4 rounded-xl bg-panel border border-brass text-text text-sm font-semibold shadow-2xl animate-in fade-in flex items-center gap-3">
@@ -730,7 +731,7 @@ function CustomersContent() {
           </div>
         </div>
       )}
-    </div>
+    </PageContainer>
   );
 }
 

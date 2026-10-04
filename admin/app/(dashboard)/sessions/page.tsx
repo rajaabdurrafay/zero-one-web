@@ -18,6 +18,7 @@ import {
 } from '@/lib/api';
 import { Icon, type IconName } from '@/components/Icon';
 import toast from 'react-hot-toast';
+import { PageContainer } from '@/components/Card';
 
 const RESOURCE_ICONS: Record<string, IconName> = {
   SNOOKER: 'crosshair',
@@ -206,7 +207,7 @@ export default function LiveSessionsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <PageContainer className="space-y-6">
       {lastBill && <div className="panel p-5 space-y-2"><h2 className="font-bold">Final bill: Rs {lastBill.finalAmount.toLocaleString()}</h2><p>{lastBill.totalElapsedMinutes} billable minutes</p>{lastBill.session.bookingId && <Link className="btn btn-primary" href={'/bookings/'+lastBill.session.bookingId}>Open final booking and receipt</Link>}<button className="btn btn-ghost ml-3" onClick={()=>setLastBill(null)}>Close</button></div>}
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-line-soft pb-5">
@@ -604,7 +605,7 @@ export default function LiveSessionsPage() {
           </div>
         </div>
       )}
-    </div>
+    </PageContainer>
   );
 }
 
