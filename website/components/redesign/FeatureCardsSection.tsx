@@ -16,8 +16,8 @@ export function FeatureCardsSection({ offers }: { offers: Offer[] }) {
           href="/activities"
         />
         <FeatureCard
-          tag={offer ? 'Current offer' : 'Your next session'}
-          title={offer?.title || 'A little play goes a long way.'}
+          tag="Your next session"
+          title="A little play goes a long way."
           image={venueImages.deal}
           alt="Console gaming room at ZeroOne"
           href={offerHref(offer)}

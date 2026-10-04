@@ -1,7 +1,8 @@
 /* The redesign inherits the existing light/dark admin-managed brand palette. */
 .zo-home,
 .zo-navigation,
-.zo-footer {
+.zo-footer,
+.zo-popup-panel {
   --zo-bg: var(--theme-bg);
   --zo-card: var(--theme-surface);
   --zo-raised: var(--theme-surface-raised);
@@ -781,6 +782,18 @@
   flex-direction: column;
   gap: 4px;
 }
+.zo-review-stage { min-height: 160px; }
+.zo-review-slide { animation: zo-review-enter 420ms ease both; }
+.zo-review-footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-top: 18px; }
+.zo-review-footer .zo-text-link { margin-top: 0; }
+.zo-review-controls { display: flex; align-items: center; gap: 8px; }
+.zo-review-controls button { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: var(--zo-raised); border: 1px solid var(--zo-border); color: var(--zo-ink); cursor: pointer; }
+.zo-review-controls button:hover { background: var(--zo-accent); color: var(--theme-primary-contrast, #080d16); }
+.zo-review-controls button:focus-visible { outline: 2px solid var(--zo-accent); outline-offset: 3px; }
+.zo-review-position { font-size: 11px; color: var(--zo-muted); min-width: 32px; text-align: center; }
+@keyframes zo-review-enter { from { opacity: 0; transform: translateX(16px); } to { opacity: 1; transform: translateX(0); } }
+[data-motion="off"] .zo-review-slide { animation: none; }
+@media (prefers-reduced-motion: reduce) { .zo-review-slide { animation: none; } }
 .zo-review-author strong {
   font-size: 12px;
   font-weight: 600;
