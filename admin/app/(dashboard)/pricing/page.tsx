@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { getPricing, updatePricing, type Activity } from '@/lib/api';
 import { Icon } from '@/components/Icon';
 import Select from '@/components/Select';
+import { PageContainer } from '@/components/Card';
 
 interface ToastNotification {
   id: number;
@@ -174,7 +175,7 @@ export default function PricingPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <PageContainer className="space-y-6">
       {/* Toasts */}
       <div className="fixed top-[72px] right-4 sm:right-7 z-50 flex flex-col gap-2 w-full max-w-sm pointer-events-none">
         {toasts.map((toast) => (
@@ -382,6 +383,6 @@ export default function PricingPage() {
           })}
         </div>
       )}
-    </div>
+    </PageContainer>
   );
 }

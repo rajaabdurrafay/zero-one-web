@@ -5,6 +5,7 @@ import useSWR from 'swr';
 import { Icon } from '@/components/Icon';
 import Select from '@/components/Select';
 import { getAuditLogs, AuditLog } from '@/lib/api';
+import { PageContainer } from '@/components/Card';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -172,7 +173,7 @@ export default function AuditLogsPage() {
   }, [allLogs, actionFilter, entityFilter, searchQuery]);
 
   return (
-    <div className="space-y-6">
+    <PageContainer className="space-y-6">
       {/* Header Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-panel border border-line p-5 rounded-2xl shadow-sm">
         <div>
@@ -495,6 +496,6 @@ export default function AuditLogsPage() {
           </div>
         </div>
       )}
-    </div>
+    </PageContainer>
   );
 }

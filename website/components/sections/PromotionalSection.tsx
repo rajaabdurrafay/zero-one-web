@@ -4,12 +4,25 @@ import Link from 'next/link';
 import Image from 'next/image';
 import type { Offer } from '@/lib/api';
 
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+
+/** Resolve a backend image path to a full URL (prepend API_BASE for /uploads/ paths). */
+function resolveImageUrl(url: string): string {
+  if (url.startsWith('http') || url.startsWith('data:')) return url;
+  if (url.startsWith('/uploads/')) return `${API_BASE}${url}`;
+  return url;
+}
+
 interface PromotionalSectionProps {
   offers: Offer[];
 }
 
 export function PromotionalSection({ offers }: PromotionalSectionProps) {
   const activeOffer = offers.find((o) => o.isActive);
+
+  const bannerImage = activeOffer?.bannerImageUrl
+    ? resolveImageUrl(activeOffer.bannerImageUrl)
+    : '/images/Snokker/snooker-table.jpg (7).webp';
 
   return (
     <section className="w-full py-12 sm:py-16 bg-brand-surface/50 border-y border-brand-border/40">
@@ -20,9 +33,10 @@ export function PromotionalSection({ offers }: PromotionalSectionProps) {
             <Image
               fill
               className="object-cover"
-              src="/images/Snokker/snooker-table.jpg (7).webp"
-              alt="ZeroOne Snooker Hall"
+              src={bannerImage}
+              alt={activeOffer?.title || 'ZeroOne Snooker Hall'}
               sizes="(max-width: 1024px) 100vw, 50vw"
+              unoptimized={bannerImage.includes('/uploads/')}
             />
             <span className="absolute top-4 left-4 text-xs font-bold px-3 py-1 rounded-full bg-brand-surface/90 backdrop-blur-md border border-brand-border text-brand-text-main z-10">
               24/7 RESERVED

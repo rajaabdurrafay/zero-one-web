@@ -11,6 +11,7 @@ import {
 import { Icon } from '@/components/Icon';
 import Select from '@/components/Select';
 import toast from 'react-hot-toast';
+import { PageContainer } from '@/components/Card';
 
 const CATEGORIES = ['Snacks', 'Cold Drinks', 'Hot Drinks', 'Fast Food', 'Gaming Gear / Accessories', 'Others'];
 
@@ -158,7 +159,7 @@ export default function AddonsPage() {
   }, [addons, searchQuery, selectedCategory]);
 
   return (
-    <div className="space-y-6">
+    <PageContainer className="space-y-6">
       {/* Page Header matching Customers/Dashboard */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-line-soft pb-5">
         <div>
@@ -516,6 +517,6 @@ export default function AddonsPage() {
           </div>
         </div>
       )}
-    </div>
+    </PageContainer>
   );
 }

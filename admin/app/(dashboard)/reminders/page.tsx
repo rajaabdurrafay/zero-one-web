@@ -9,6 +9,7 @@ import { formatDateReadable, formatTime12h, formatTimeRange12h } from '@/lib/tim
 import { generateWhatsAppReminderUrl } from '@/lib/whatsapp';
 import { Icon } from '@/components/Icon';
 import Select from '@/components/Select';
+import { PageContainer } from '@/components/Card';
 
 export default function RemindersPage() {
   const [activeTab, setActiveTab] = useState<'due' | 'history'>('due');
@@ -157,7 +158,7 @@ export default function RemindersPage() {
   }, [historyList, searchQuery]);
 
   return (
-    <div className="space-y-6 sm:space-y-8">
+    <PageContainer className="space-y-6 sm:space-y-8">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-line/60">
         <div>
@@ -518,6 +519,6 @@ export default function RemindersPage() {
           </div>
         )}
       </div>
-    </div>
+    </PageContainer>
   );
 }

@@ -9,6 +9,7 @@ import {
   GetMessagesParams,
 } from '@/lib/api';
 import { Icon } from '@/components/Icon';
+import { PageContainer } from '@/components/Card';
 
 type DatePreset = 'all' | 'today' | '7days' | '30days';
 
@@ -199,7 +200,7 @@ export default function MessagesPage() {
   const unreadCount = messages.filter((m) => !m.isRead).length;
 
   return (
-    <div className="space-y-6">
+    <PageContainer className="space-y-6">
       {/* Top Header Card */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-panel border border-line p-5 sm:p-6 rounded-2xl shadow-sm">
         <div>
@@ -715,6 +716,6 @@ export default function MessagesPage() {
           )}
         </div>
       </div>
-    </div>
+    </PageContainer>
   );
 }

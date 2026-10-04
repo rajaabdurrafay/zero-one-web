@@ -4,6 +4,15 @@ import type { Offer } from '@/lib/api';
 import { imageRoot, offerHref } from './content';
 import { Arrow, PillLink, SectionHeading } from './ui';
 
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+
+/** Resolve a backend image path to a full URL (prepend API_BASE for /uploads/ paths). */
+function resolveImageUrl(url: string): string {
+  if (url.startsWith('http') || url.startsWith('data:')) return url;
+  if (url.startsWith('/uploads/')) return `${API_BASE}${url}`;
+  return url;
+}
+
 export function LatestOffersSection({ offers }: { offers: Offer[] }) {
   const live = offers
     .filter((item) => item.isActive && item.isVisibleOnWebsite !== false)
@@ -15,7 +24,9 @@ export function LatestOffersSection({ offers }: { offers: Offer[] }) {
         label: 'Current offer',
         description: offer.description || 'See this offer when you book your next session.',
         href: offerHref(offer),
-        image: index === 0 ? 'PS5/ps5-room.jpg.webp' : 'Snokker/snooker-table.jpg.webp',
+        image: offer.bannerImageUrl
+          ? resolveImageUrl(offer.bannerImageUrl)
+          : `${imageRoot}/${index === 0 ? 'PS5/ps5-room.jpg.webp' : 'Snokker/snooker-table.jpg.webp'}`,
       }))
     : [
         {
@@ -23,14 +34,14 @@ export function LatestOffersSection({ offers }: { offers: Offer[] }) {
           label: 'Experience guide',
           description: 'Get your friends together for a little focus and a lot of fun.',
           href: '/activities',
-          image: 'Snokker/snooker-table.jpg.webp',
+          image: `${imageRoot}/Snokker/snooker-table.jpg.webp`,
         },
         {
           title: 'A movie night with your name on it.',
           label: 'Experience guide',
           description: 'Pick the film, bring your people and make the room your own.',
           href: '/activities',
-          image: 'Cinema/cinema.jpg.webp',
+          image: `${imageRoot}/Cinema/cinema.jpg.webp`,
         },
       ];
   return (
@@ -57,10 +68,11 @@ export function LatestOffersSection({ offers }: { offers: Offer[] }) {
             >
               <div className="zo-news-photo">
                 <Image
-                  src={`${imageRoot}/${card.image}`}
+                  src={card.image}
                   alt={`${card.title} — ZeroOne venue photograph`}
                   fill
                   sizes={singleOffer ? '(max-width: 760px) 92vw, 46vw' : '(max-width: 600px) 92vw, (max-width: 900px) 44vw, 24vw'}
+                  unoptimized={card.image.includes('/uploads/')}
                 />
               </div>
               <div className="zo-news-copy">

@@ -15,6 +15,7 @@ import {
 import { getLuminance } from '@/lib/themeUtils';
 import { Icon } from '@/components/Icon';
 import Select from '@/components/Select';
+import { Card, PageContainer } from '@/components/Card';
 
 const FONT_OPTIONS = [
   { name: 'Poppins', category: 'Geometric Sans', desc: 'Clean, modern, highly legible' },
@@ -412,7 +413,7 @@ export default function AppearancePage() {
   }
 
   return (
-    <div className="space-y-6">
+    <PageContainer className="pb-16">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-line-soft pb-5">
         <div>
@@ -556,7 +557,7 @@ export default function AppearancePage() {
       {/* Two Column Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Left Column: Form Controls */}
-        <div className="lg:col-span-7 panel p-6 sm:p-8 space-y-6">
+        <Card className="lg:col-span-7 space-y-6">
           {/* Section: POPUP */}
           {activeSection === 'POPUP' ? (
             <div className="space-y-6">
@@ -1082,7 +1083,7 @@ export default function AppearancePage() {
               )}
             </div>
           )}
-        </div>
+        </Card>
 
         {/* Right Column: Live Interactive Preview Card */}
         <div className="lg:col-span-5 space-y-4 sticky top-24">
@@ -1351,6 +1352,6 @@ export default function AppearancePage() {
           )}
         </div>
       </div>
-    </div>
+    </PageContainer>
   );
 }

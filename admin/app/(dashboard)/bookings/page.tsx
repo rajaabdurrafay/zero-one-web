@@ -10,6 +10,7 @@ import { formatDateReadable, formatTimeRange12h } from '@/lib/timeUtils';
 import { generateWhatsAppBookingUrl } from '@/lib/whatsapp';
 import { Icon } from '@/components/Icon';
 import Select from '@/components/Select';
+import { PageContainer } from '@/components/Card';
 
 const STATUS_OPTIONS = [
   { value: '', label: 'Any status' },
@@ -275,7 +276,7 @@ function BookingsContent() {
   };
 
   return (
-    <div className="space-y-5">
+    <PageContainer className="space-y-5">
       <div className="flex items-center gap-3"><button className="btn btn-secondary" disabled={page<=1} onClick={()=>setPage(value=>value-1)}>Previous</button><span>Page {page} of {Math.max(1,rawBookingsData?.meta.pagination.totalPages || 1)} · {rawBookingsData?.meta.pagination.total || 0} bookings</span><button className="btn btn-secondary" disabled={!rawBookingsData || page>=rawBookingsData.meta.pagination.totalPages} onClick={()=>setPage(value=>value+1)}>Next</button>{whatsappFilter!=='all' && <span className="text-muted">WhatsApp filter applies to this page</span>}</div>
       {toastMessage && (
         <div className="fixed top-[72px] right-4 sm:right-7 z-50 panel border-live/45 px-4 py-3 flex items-center gap-3 no-print">
@@ -1006,7 +1007,7 @@ function BookingsContent() {
           </div>
         </div>
       )}
-    </div>
+    </PageContainer>
   );
 }
 

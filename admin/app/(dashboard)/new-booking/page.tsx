@@ -18,6 +18,7 @@ import { getNext7Days } from '@/lib/timeUtils';
 import DateChipsSelector from '@/components/DateChipsSelector';
 import { Icon } from '@/components/Icon';
 import { isValidEmail, isValidPakistaniPhone } from '@/lib/validation';
+import { PageContainer } from '@/components/Card';
 
 function Step({ n, title, children }: { n?: number; title: string; children: React.ReactNode }) {
   return (
@@ -364,7 +365,7 @@ export default function NewBookingPage() {
   const selectedResourceName = resources.find((r) => r.id === selectedResource)?.name;
 
   return (
-    <div className="space-y-5">
+    <PageContainer className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="display text-[22px] text-text">New Walk-In Booking</h1>
@@ -1046,7 +1047,7 @@ export default function NewBookingPage() {
           </div>
         </div>
       </form>
-    </div>
+    </PageContainer>
   );
 }
 

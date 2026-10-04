@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { Icon } from '@/components/Icon';
 import { getReviews, createReviewManual, updateReview, deleteReview, type Review } from '@/lib/api';
+import { PageContainer } from '@/components/Card';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -254,7 +255,7 @@ export default function AdminReviewsPage() {
   const approvedCount = reviews.filter(r => r.isApproved).length;
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6 pb-32">
+    <PageContainer className="space-y-6 pb-32">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2">
         <div>
@@ -263,7 +264,7 @@ export default function AdminReviewsPage() {
         </div>
         <button
           onClick={() => { resetModal(); setShowAddModal(true); }}
-          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-white text-sm font-bold hover:bg-primary/90 transition-colors shadow-xs cursor-pointer"
+          className="btn btn-primary px-5 py-2.5 shadow-sm"
         >
           <Icon name="plus" size={15} />
           <span>Add Manually</span>
@@ -274,12 +275,12 @@ export default function AdminReviewsPage() {
       <div className="grid grid-cols-3 gap-3">
         {[
           { label: 'Total', value: reviews.length, color: 'text-text' },
-          { label: 'Pending', value: pendingCount, color: 'text-amber-500' },
-          { label: 'Approved', value: approvedCount, color: 'text-emerald-500' },
+          { label: 'Pending', value: pendingCount, color: 'text-wait' },
+          { label: 'Approved', value: approvedCount, color: 'text-live' },
         ].map((stat) => (
-          <div key={stat.label} className="bg-surface border border-line rounded-2xl p-4 text-center shadow-xs">
-            <p className={`text-2xl font-black ${stat.color}`}>{stat.value}</p>
-            <p className="text-[11px] font-bold text-muted uppercase tracking-wider mt-0.5">{stat.label}</p>
+          <div key={stat.label} className="panel p-4 text-center shadow-xs">
+            <p className={`display text-[26px] ${stat.color}`}>{stat.value}</p>
+            <p className="eyebrow mt-1">{stat.label}</p>
           </div>
         ))}
       </div>
@@ -292,14 +293,14 @@ export default function AdminReviewsPage() {
             onClick={() => setFilterStatus(tab)}
             className={`px-4 py-2 min-h-[40px] rounded-xl text-xs font-bold uppercase tracking-wider transition-colors capitalize cursor-pointer ${
               filterStatus === tab
-                ? 'bg-primary text-white shadow-xs'
-                : 'bg-surface text-muted hover:text-text border border-line'
+                ? 'btn-primary shadow-xs'
+                : 'bg-raised text-muted hover:text-text border border-line hover:border-brass/30'
             }`}
           >
             {tab === 'pending' ? 'Pending Approval' : tab}
             {tab !== 'all' && (
               <span className={`ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] font-mono ${
-                filterStatus === tab ? 'bg-white/20' : 'bg-raised'
+                filterStatus === tab ? 'bg-white/20' : 'bg-surface border border-line'
               }`}>
                 {tab === 'pending' ? pendingCount : approvedCount}
               </span>
@@ -311,10 +312,10 @@ export default function AdminReviewsPage() {
       {/* Reviews Grid */}
       {loading ? (
         <div className="p-16 flex items-center justify-center">
-          <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+          <div className="w-8 h-8 rounded-full border-2 border-brass border-t-transparent animate-spin" />
         </div>
       ) : reviews.length === 0 ? (
-        <div className="text-center py-16 bg-surface border border-line rounded-2xl text-muted text-sm">
+        <div className="text-center py-16 panel text-muted text-sm border-dashed">
           No reviews found for this filter.
         </div>
       ) : (
@@ -322,10 +323,10 @@ export default function AdminReviewsPage() {
           {reviews.map((review) => (
             <div
               key={review.id}
-              className="bg-surface border border-line rounded-2xl p-5 flex flex-col gap-4 shadow-xs hover:shadow-sm transition-shadow"
+              className="panel rounded-2xl p-5 flex flex-col shadow-xs hover:border-brass/40 transition-colors h-full"
             >
               {/* Top: Avatar + Name + Date + Stars */}
-              <div className="flex items-start gap-3">
+              <div className="flex items-start gap-3 mb-4">
                 <Avatar name={review.customerName} url={review.customerAvatarUrl} size="md" />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2">
@@ -337,45 +338,43 @@ export default function AdminReviewsPage() {
                         })}
                       </p>
                     </div>
-                    <div className="flex items-center gap-1.5 bg-amber-500/10 border border-amber-500/20 px-2 py-1 rounded-lg shrink-0">
-                      <Icon name="star" size={12} className="text-amber-500 fill-amber-500" />
-                      <span className="text-xs font-bold text-amber-500">{review.rating}/5</span>
+                    <div className="flex items-center gap-1.5 bg-raised border border-line-soft px-2 py-1 rounded-md shrink-0">
+                      <Icon name="star" size={12} className="text-brass fill-brass" />
+                      <span className="text-[11px] font-bold text-text">{review.rating} / 5</span>
                     </div>
                   </div>
-                  <StarDisplay rating={review.rating} />
+                  <div className="mt-1">
+                    <StarDisplay rating={review.rating} />
+                  </div>
                 </div>
               </div>
 
               {/* Review Text */}
-              <p className="text-sm text-muted leading-relaxed bg-raised/60 rounded-xl p-3 border border-line/50 italic">
+              <p className="text-[13px] text-muted leading-relaxed bg-raised rounded-xl p-3.5 border border-line-soft italic mb-4 flex-1">
                 &ldquo;{review.reviewText}&rdquo;
               </p>
 
               {/* Status Badges + Actions */}
-              <div className="flex items-center justify-between pt-1 border-t border-line">
+              <div className="flex items-center justify-between pt-4 border-t border-line-soft mt-auto">
                 <div className="flex items-center gap-1.5">
-                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                    review.isApproved
-                      ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'
-                      : 'bg-amber-500/10 text-amber-500 border border-amber-500/20'
+                  <span className={`pill shrink-0 text-[10px] font-bold ${
+                    review.isApproved ? 'pill-live' : 'pill-wait'
                   }`}>
                     {review.isApproved ? 'Approved' : 'Pending'}
                   </span>
                   {review.isFeatured && (
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-primary/10 text-primary border border-primary/20">
+                    <span className="pill shrink-0 text-[10px] font-bold pill-info border border-blue-500/20">
                       Featured
                     </span>
                   )}
                 </div>
 
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1.5 flex-wrap justify-end">
                   <button
                     onClick={() => handleFeatureToggle(review)}
                     title={review.isFeatured ? 'Unpin from homepage' : 'Pin to homepage'}
-                    className={`h-8 px-2.5 rounded-lg border text-[11px] font-bold transition-colors cursor-pointer ${
-                      review.isFeatured
-                        ? 'bg-primary text-white border-primary'
-                        : 'bg-surface text-muted hover:text-text border-line hover:border-primary/30'
+                    className={`btn px-2.5 py-1 text-[11px] shrink-0 ${
+                      review.isFeatured ? 'btn-primary' : 'btn-secondary'
                     }`}
                   >
                     {review.isFeatured ? 'Unpin' : 'Pin'}
@@ -384,10 +383,8 @@ export default function AdminReviewsPage() {
                   <button
                     onClick={() => handleApproveToggle(review)}
                     title={review.isApproved ? 'Move back to pending' : 'Approve for website'}
-                    className={`h-8 px-2.5 rounded-lg border text-[11px] font-bold transition-colors cursor-pointer ${
-                      review.isApproved
-                        ? 'bg-amber-500/10 text-amber-600 border-amber-500/20 hover:bg-amber-500/20'
-                        : 'bg-emerald-500 text-white border-emerald-500 hover:bg-emerald-600'
+                    className={`btn px-2.5 py-1 text-[11px] shrink-0 ${
+                      review.isApproved ? 'btn-secondary' : 'btn-confirm'
                     }`}
                   >
                     {review.isApproved ? 'Unapprove' : 'Approve'}
@@ -396,9 +393,9 @@ export default function AdminReviewsPage() {
                   <button
                     onClick={() => handleDelete(review.id)}
                     title="Delete review"
-                    className="w-8 h-8 rounded-lg bg-stop/10 text-stop border border-stop/20 flex items-center justify-center hover:bg-stop/20 transition-colors cursor-pointer"
+                    className="btn btn-ghost px-2 py-1 shrink-0 text-stop hover:text-red-400"
                   >
-                    <Icon name="trash" size={13} />
+                    <Icon name="trash" size={14} />
                   </button>
                 </div>
               </div>
@@ -518,6 +515,6 @@ export default function AdminReviewsPage() {
           </div>
         </div>
       )}
-    </div>
+    </PageContainer>
   );
 }

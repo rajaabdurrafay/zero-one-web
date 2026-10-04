@@ -109,7 +109,7 @@ async function main() {
 
   const sampleOffer = {id:'fixture-offer',title:'Fixture offer',description:'A local test offer',isActive:true,isVisibleOnWebsite:true,discountType:'PERCENTAGE',discountValue:10,applicableTo:'ALL_ACTIVITIES'};
   for (const count of [0, 1, 2]) {
-    homeOffers = Array.from({length:count}, (_, index) => ({...sampleOffer,id:`fixture-offer-${index}`,title:`Fixture offer ${index}`}));
+    homeOffers = Array.from({length:count}, (_, index) => ({...sampleOffer,id:`fixture-offer-${index}`,title:`Fixture offer ${index}`,bannerImageUrl:index===0?'/uploads/offers/smoke-banner.png':null}));
     const response = await fetch(website+'/');
     assert.equal(response.status,200);
     const html = await response.text();
@@ -134,7 +134,10 @@ async function main() {
     assert.equal(section.includes('Explore the Experiences'),count===0);
     assert.equal(section.includes('No active offers right now.'),count===0);
     assert.equal(section.includes('Explore Current Offers'),count>0);
-    if(count) assert.match(section,/offerId=fixture-offer-0/,'The deal keeps its booking link');
+    if(count) {
+      assert.match(section,/offerId=fixture-offer-0/,'The deal keeps its booking link');
+      assert.match(section, /src="[^"]*\/uploads\/offers\/smoke-banner\.png"/, 'The deal displays its uploaded banner directly');
+    }
     else {assert.match(section,/friendly snooker rivalry/);assert.match(section,/movie night with your name/);}
   }
   console.log('PASS home offers: zero-offer fallback, single full-width deal, two cards and booking links');

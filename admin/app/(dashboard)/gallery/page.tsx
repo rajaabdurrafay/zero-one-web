@@ -5,6 +5,7 @@ import Image from 'next/image';
 import toast from 'react-hot-toast';
 import { Icon } from '@/components/Icon';
 import { getGallery, uploadGalleryImage, updateGalleryImage, deleteGalleryImage, type GalleryImage } from '@/lib/api';
+import { PageContainer } from '@/components/Card';
 
 export default function AdminGalleryPage() {
   const [images, setImages] = useState<GalleryImage[]>([]);
@@ -149,7 +150,7 @@ export default function AdminGalleryPage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-4 sm:p-8 space-y-8 pb-32">
+    <PageContainer className="p-4 sm:p-8 space-y-8 pb-32">
       {/* Header */}
       <div className="flex flex-col gap-4">
         <div>
@@ -311,6 +312,6 @@ export default function AdminGalleryPage() {
           </div>
         )}
       </div>
-    </div>
+    </PageContainer>
   );
 }

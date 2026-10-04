@@ -1,10 +1,20 @@
 'use client';
 
 import { businessDate, businessInstant } from '@zeroone/domain';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { getOffers, createOffer, updateOffer, toggleOfferActive, toggleOfferVisibility, deleteOffer, getPricing, Offer, Activity } from '@/lib/api';
 import { Icon } from '@/components/Icon';
 import Select from '@/components/Select';
+import { PageContainer } from '@/components/Card';
+import toast from 'react-hot-toast';
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+
+function getBannerSrc(url?: string | null): string | null {
+  if (!url) return null;
+  if (url.startsWith('http') || url.startsWith('data:')) return url;
+  return `${API_BASE}${url}`;
+}
 
 export default function OffersPage() {
   const [offers, setOffers] = useState<Offer[]>([]);
@@ -14,6 +24,8 @@ export default function OffersPage() {
   const [editingOffer, setEditingOffer] = useState<Offer | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [bannerPreviewBase64, setBannerPreviewBase64] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState(() => ({
     title: '',
@@ -52,6 +64,7 @@ export default function OffersPage() {
   function handleOpenCreate() {
     setEditingOffer(null);
     setError('');
+    setBannerPreviewBase64(null);
     setFormData({
       title: '',
       description: '',
@@ -73,6 +86,7 @@ export default function OffersPage() {
   function handleOpenEdit(offer: Offer) {
     setEditingOffer(offer);
     setError('');
+    setBannerPreviewBase64(null);
     setFormData({
       title: offer.title,
       description: offer.description || '',
@@ -139,7 +153,7 @@ export default function OffersPage() {
         isVisibleOnWebsite: formData.isVisibleOnWebsite,
         minDuration: formData.minDuration ? Number(formData.minDuration) : null,
         promoCode: formData.promoCode ? formData.promoCode.trim().toUpperCase() : null,
-        bannerImageUrl: formData.bannerImageUrl || null,
+        bannerImageUrl: bannerPreviewBase64 || formData.bannerImageUrl || null,
       };
 
       if (editingOffer) {
@@ -158,7 +172,7 @@ export default function OffersPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <PageContainer className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-[13px] text-muted max-w-xl">
           Discounts and promo codes apply automatically in the customer booking flow.
@@ -326,6 +340,71 @@ export default function OffersPage() {
                   <span>{error}</span>
                 </p>
               )}
+
+              <div>
+                <label className="field-label">Banner Image</label>
+                <div className="flex items-center gap-4 mt-2">
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-24 h-20 rounded-[4px] bg-raised border border-line flex flex-col items-center justify-center cursor-pointer hover:border-brass transition-colors"
+                  >
+                    {(bannerPreviewBase64 || formData.bannerImageUrl) ? (
+                      <img
+                        src={bannerPreviewBase64 || getBannerSrc(formData.bannerImageUrl)!}
+                        alt="Preview"
+                        className="w-full h-full object-cover rounded-[4px]"
+                      />
+                    ) : (
+                      <>
+                        <Icon name="image" size={20} className="text-muted" />
+                        <span className="text-[10px] text-muted">Upload</span>
+                      </>
+                    )}
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="btn btn-secondary text-xs"
+                    >
+                      {formData.bannerImageUrl || bannerPreviewBase64 ? 'Change' : 'Upload Image'}
+                    </button>
+                    {(formData.bannerImageUrl || bannerPreviewBase64) && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFormData({ ...formData, bannerImageUrl: '' });
+                          setBannerPreviewBase64(null);
+                        }}
+                        className="btn btn-ghost text-xs text-stop"
+                      >
+                        Clear
+                      </button>
+                    )}
+                  </div>
+                </div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      e.target.value = '';
+                      if (!['image/png', 'image/jpeg', 'image/webp', 'image/gif'].includes(file.type) || file.size > 5 * 1024 * 1024) {
+                        toast.error('Choose a PNG, JPEG, WebP or GIF image under 5 MB.');
+                        return;
+                      }
+                      const reader = new FileReader();
+                      reader.onload = (ev) => {
+                        setBannerPreviewBase64(ev.target?.result as string);
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                  }}
+                />
+              </div>
 
               <div>
                 <label htmlFor="offer-title" className="field-label">
@@ -544,6 +623,6 @@ export default function OffersPage() {
           </div>
         </div>
       )}
-    </div>
+    </PageContainer>
   );
 }
