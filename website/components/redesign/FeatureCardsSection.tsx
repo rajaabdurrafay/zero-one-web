@@ -1,9 +1,7 @@
-import type { Offer } from '@/lib/api';
 import { FeatureCard } from './FeatureCard';
-import { venueImages, offerHref } from './content';
+import { venueImages } from './content';
 
-export function FeatureCardsSection({ offers }: { offers: Offer[] }) {
-  const offer = offers.find((item) => item.isActive && item.isVisibleOnWebsite !== false);
+export function FeatureCardsSection() {
   return (
     <section className="zo-section zo-container" aria-label="Featured ZeroOne experiences">
       <h2 className="sr-only">Featured ZeroOne experiences</h2>
@@ -20,7 +18,7 @@ export function FeatureCardsSection({ offers }: { offers: Offer[] }) {
           title="A little play goes a long way."
           image={venueImages.deal}
           alt="Console gaming room at ZeroOne"
-          href={offerHref(offer)}
+          href="/activities"
           variant="accent"
         />
         <FeatureCard
