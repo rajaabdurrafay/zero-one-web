@@ -325,9 +325,9 @@
   gap: 16px;
 }
 .zo-hero-chips > div {
-  border: 1px solid #ffffff26;
-  background: #ffffffde;
-  color: #17232d;
+  border: 1px solid var(--zo-border);
+  background: var(--zo-card);
+  color: var(--zo-ink);
   border-radius: 16px;
   padding: 17px 20px;
 }
@@ -336,7 +336,7 @@
   text-transform: uppercase;
   letter-spacing: 0.1em;
   font-size: 9px;
-  color: #46515b;
+  color: var(--zo-muted);
   margin-bottom: 6px;
 }
 .zo-hero-chips strong {
