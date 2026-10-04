@@ -33,7 +33,7 @@ export default async function HomePage() {
   const [activities, offers, reviews, visitStats] = await Promise.all([
     fetchActivities(),
     getActiveOffers().catch(() => [] as Offer[]),
-    getPublicReviews({ limit: 3 }),
+    getPublicReviews({ limit: 12 }),
     getPublicVisitStats(),
   ]);
 

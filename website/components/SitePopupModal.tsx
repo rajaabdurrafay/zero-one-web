@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
+import { useState, useEffect, useRef, useId } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { getPopupSettings, type SitePopupSettings } from '@/lib/api';
 import { Icon } from '@/components/Icon';
+import { Arrow } from '@/components/redesign/ui';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -13,6 +14,21 @@ export function SitePopupModal() {
   const [popup, setPopup] = useState<SitePopupSettings | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(false); // For CSS opacity transition
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const titleId = useId();
+  const messageId = useId();
+
+  useEffect(() => {
+    if (!isOpen || !dialogRef.current) return;
+    const dialog = dialogRef.current;
+    dialog.showModal();
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      dialog.close();
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [isOpen]);
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
@@ -73,7 +89,7 @@ export function SitePopupModal() {
     }, 300);
   };
 
-  const handleActionClick = (e: React.MouseEvent) => {
+  const handleActionClick = () => {
     if (!popup || !popup.buttonLink) return;
     markDismissed();
     setIsVisible(false);
@@ -99,77 +115,70 @@ export function SitePopupModal() {
     : null;
 
   return (
-    <div
-      className={`fixed inset-0 z-100 flex items-center justify-center p-4 sm:p-6 transition-all duration-300 ${
-        isVisible ? 'bg-black/80 backdrop-blur-md opacity-100' : 'bg-transparent opacity-0'
-      }`}
-      onClick={handleClose}
-      role="dialog"
+    <dialog
+      ref={dialogRef}
+      className={`zo-popup-overlay${isVisible ? ' is-visible' : ''}`}
+      onClick={(event) => { if (event.target === event.currentTarget) handleClose(); }}
+      onCancel={(event) => { event.preventDefault(); handleClose(); }}
+      aria-labelledby={titleId}
+      aria-describedby={messageId}
       aria-modal="true"
     >
       <div
-        className={`relative w-full max-w-lg bg-[#0c101d]/95 border border-brand-primary/40 rounded-2xl shadow-[0_0_50px_rgba(139,92,246,0.3)] overflow-hidden transition-all duration-300 transform ${
-          isVisible ? 'scale-100 translate-y-0 opacity-100' : 'scale-95 translate-y-4 opacity-0'
-        }`}
+        className={`zo-popup-panel${fullImageUrl ? ' zo-popup-with-photo' : ''}`}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Top Glow bar */}
-        <div className="h-1.5 w-full bg-linear-to-r from-brand-accent via-brand-primary to-brand-accent" />
-
         {/* Close Button X */}
         <button
           onClick={handleClose}
           aria-label="Close Announcement"
-          className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 border border-white/15 flex items-center justify-center text-white/80 hover:text-white transition-all cursor-pointer shadow-lg"
+          type="button"
+          className="zo-popup-close"
         >
           <Icon name="close" size={14} />
         </button>
 
         {/* Optional Header Banner Image */}
         {fullImageUrl && (
-          <div className="w-full h-44 sm:h-52 overflow-hidden border-b border-white/10 relative bg-black/40">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+          <div className="zo-popup-photo">
+            <Image
               src={fullImageUrl}
               alt={popup.heading || 'Announcement'}
-              className="w-full h-full object-cover"
+              fill
+              sizes="(max-width: 600px) 90vw, 340px"
+              unoptimized={!fullImageUrl.startsWith(`${API_BASE}/uploads/`)}
             />
-            <div className="absolute inset-0 bg-linear-to-t from-[#0c101d] via-transparent to-transparent opacity-80" />
+            <span className="zo-popup-photo-tag">ZeroOne Cue &amp; Play <Arrow /></span>
           </div>
         )}
 
         {/* Content Body */}
-        <div className="p-6 sm:p-7 space-y-4 text-center sm:text-left">
+        <div className="zo-popup-copy">
           {/* Badge */}
-          <div className="flex items-center justify-center sm:justify-start gap-2">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider bg-brand-primary/15 text-brand-primary border border-brand-primary/30">
-              <span className="w-2 h-2 rounded-full bg-brand-primary animate-pulse" />
+            <span className="zo-eyebrow">
               Special Notice
             </span>
-          </div>
 
           {/* Heading */}
           <h2
-            style={{ fontFamily: 'var(--font-display, inherit)' }}
-            className="text-2xl sm:text-3xl font-black text-white tracking-tight leading-tight"
+            id={titleId}
           >
             {popup.heading}
           </h2>
 
           {/* Message */}
           <p
-            style={{ fontFamily: 'var(--font-body, inherit)' }}
-            className="text-sm sm:text-base text-zinc-300 leading-relaxed font-normal whitespace-pre-line"
+            id={messageId}
           >
             {popup.message}
           </p>
 
           {/* Actions */}
-          <div className="pt-3 flex flex-col-reverse sm:flex-row items-center gap-3">
+          <div className="zo-popup-actions">
             <button
               type="button"
               onClick={handleClose}
-              className="w-full sm:w-auto px-5 py-3 rounded-xl text-sm font-semibold text-zinc-400 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 transition-colors cursor-pointer text-center"
+              className="zo-pill zo-pill-secondary"
             >
               Not now
             </button>
@@ -177,16 +186,14 @@ export function SitePopupModal() {
             <button
               type="button"
               onClick={handleActionClick}
-              style={{
-                fontFamily: 'var(--font-display, inherit)',
-              }}
-              className="w-full sm:flex-1 py-3 px-6 rounded-xl font-black text-sm uppercase tracking-wider text-white bg-brand-primary hover:brightness-110 shadow-[0_0_20px_rgba(139,92,246,0.4)] transition-all transform active:scale-95 cursor-pointer text-center"
+              className="zo-pill"
             >
-              {popup.buttonText || 'Book Your Slot'} →
+              <span>{popup.buttonText || 'Book Your Slot'}</span>
+              <span className="zo-pill-arrow"><Arrow /></span>
             </button>
           </div>
         </div>
       </div>
-    </div>
+    </dialog>
   );
 }
