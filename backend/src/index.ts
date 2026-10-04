@@ -168,7 +168,7 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
   res.status(status).json({ error: status >= 500 ? 'Internal Server Error' : status === 413 ? 'Request body exceeds size limit.' : err.message || 'Invalid request.' });
 });
 
-if (require.main === module) {
+export function startServer() {
 let automationRunning = false;
 async function runAutomation() {
   if (automationRunning) return;
@@ -178,7 +178,8 @@ async function runAutomation() {
 }
 let timer: NodeJS.Timeout | undefined;
 const server = app.listen(Number(PORT), process.env.HOST || '0.0.0.0', () => {
-  console.log('Server listening on port ' + PORT);
+  const address = server.address();
+  console.log('Server listening on port ' + (typeof address === 'object' && address ? address.port : PORT));
   if (process.env.ENABLE_BOOKING_AUTOMATION !== 'true') {
     console.log('Booking automation disabled');
     return;
@@ -197,5 +198,7 @@ function shutdown() {
 }
 process.on('SIGTERM', shutdown);
 process.on('SIGINT', shutdown);
-
+return server;
 }
+
+if (require.main === module) startServer();

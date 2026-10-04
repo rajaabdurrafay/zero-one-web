@@ -32,6 +32,8 @@ Website/admin:
 
 Use npm ci --include=dev for build installations, then npm run build. Build backend before running backend tests so the Prisma client is generated. Use individual workspace build scripts if the host manages separate apps. Keep root package-lock.json and workspace structure intact.
 
+Hostinger backend entry file must be backend/dist/server.js. Hosted runtimes require the entry module, so the dedicated entry calls startServer() directly; index.js remains safe to import in tests. Production-only installations also need the backend TypeScript declaration packages, including @types/compression.
+
 Use npm run start:backend (workspace cwd ensures backend/uploads path), next start -p HOST_PORT for each frontend, or the configured root frontend start scripts for the documented default ports. Persist backend/uploads across releases. Do not clean uploaded files without database reference checks and a backup.
 
 ## Release validation
