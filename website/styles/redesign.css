@@ -325,9 +325,13 @@
   gap: 16px;
 }
 .zo-hero-chips > div {
-  border: 1px solid var(--zo-border);
-  background: var(--zo-card);
-  color: var(--zo-ink);
+  border: 1px solid #ffffff2e;
+  border-top-color: #ffffff59;
+  background: #11192399;
+  color: #f8fafc;
+  -webkit-backdrop-filter: blur(24px) saturate(145%);
+  backdrop-filter: blur(24px) saturate(145%);
+  box-shadow: inset 0 1px 0 #ffffff24, inset 0 -1px 0 #ffffff0d, 0 8px 24px #00000024;
   border-radius: 16px;
   padding: 17px 20px;
 }
@@ -336,7 +340,7 @@
   text-transform: uppercase;
   letter-spacing: 0.1em;
   font-size: 9px;
-  color: var(--zo-muted);
+  color: #c2cbd6;
   margin-bottom: 6px;
 }
 .zo-hero-chips strong {
