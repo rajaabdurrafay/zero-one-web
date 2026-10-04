@@ -1,3 +1,4 @@
+import { getUploadsRoot } from '../utils/uploadStorage';
 import { saveLocalEmail } from '../utils/localEmail';
 import { decodeImage } from '../utils/uploads';
 import { canonicalPhone } from '@zeroone/domain';
@@ -314,7 +315,7 @@ router.post('/profile-picture', requireCustomerAuth, async (req: AuthenticatedCu
       return res.status(400).json({ error: 'Profile photo exceeds 3MB limit.' });
     }
 
-    const uploadsDir = path.join(process.cwd(), 'uploads', 'avatars');
+    const uploadsDir = path.join(getUploadsRoot(), 'avatars');
     if (!fs.existsSync(uploadsDir)) {
       fs.mkdirSync(uploadsDir, { recursive: true });
     }

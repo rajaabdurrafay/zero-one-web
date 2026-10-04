@@ -2,13 +2,13 @@
 
 ## Existing database
 
-This branch requires the additive columns/indexes described in docs/SCHEMA_CHANGES.sql and docs/HANDOVER.md. They have NOT been applied to production. Review the actual MySQL schema, rehearse on an isolated restored copy, back up and obtain owner approval before applying them. Do not run prisma db push, migrate dev, seed or the removed PostgreSQL theme migration against production. Establish a reviewed migration baseline before any future schema changes; the repository currently has no production migration history.
+This branch requires the additive columns/indexes described in docs/SCHEMA_CHANGES.sql and docs/HANDOVER.md. With owner approval on 4 October 2026, these six columns and six indexes were applied to the existing Hostinger database after an encrypted recovery backup and an isolated local restore rehearsal. Do not blindly rerun this SQL. For other databases, inspect the actual schema, rehearse on an isolated restored copy, back up and obtain owner approval before applying missing additions. Do not run prisma db push, migrate dev, seed or the removed PostgreSQL theme migration against production. Establish a reviewed migration baseline before any future schema changes; the repository currently has no production migration history.
 
 Before deployment, take an encrypted MySQL dump and a separate backup of backend/uploads. The sanitized dashboard JSON export is not a complete restoration source. Keep the old release and its configuration for rollback. Do not share .env files or database dumps with a source-code handover.
 
 ## Environment and routing
 
-Deploy three applications: backend, website and admin. Use HTTPS for all public domains and configure the reverse proxy to the correct internal ports. Obtain the exact app build/start settings from the hosting account; Hostinger deployment was not accessed or verified here.
+Deploy three applications: backend, website and admin. Use HTTPS for all public domains and configure the reverse proxy to the correct internal ports. The Hostinger website deployment was inspected on 4 October 2026 and follows GitHub main automatically. Preserve its Webpack build and standalone-server packaging settings.
 
 Backend:
 
@@ -21,6 +21,8 @@ Backend:
 - RESEND_API_KEY and verified email sender configuration for password-reset/login emails. Current reset sender is onboarding@resend.dev; replace with a verified sender before sending to arbitrary customer addresses.
 - Payment account settings from backend/.env.example: supply real values. Existing fallback display numbers are demo placeholders.
 - ENABLE_IP_GEOLOCATION is false by default. Enabling it sends approximate IP lookups to an external service; review the provider and policy first.
+- ENABLE_BOOKING_AUTOMATION must explicitly equal true to run booking expiry/reminder jobs. Preserve the existing production opt-in; do not enable jobs as part of a UI release.
+- UPLOADS_DIR optionally overrides file storage. All upload writers/readers share the same resolver. On Hostinger production, a working directory under hbuilds uses hbuilds/uploads, outside current/versions; copy existing uploads there before the first release. Other hosts/local development default to cwd/uploads. Persist and back up this directory; do not place private receipts in frontend public directories.
 
 Website/admin:
 

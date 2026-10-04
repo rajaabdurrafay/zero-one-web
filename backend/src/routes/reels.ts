@@ -1,3 +1,4 @@
+import { getUploadsRoot } from '../utils/uploadStorage';
 import { decodeImage } from '../utils/uploads';
 import { Router, Request, Response } from 'express';
 import { prisma } from '../db';
@@ -48,7 +49,7 @@ function resolveThumbnailUrl(url: string, platform: string): string {
 
 // Helper for saving base64 thumbnail
 function saveBase64Thumbnail(base64Data: string): string {
-  const uploadsDir = path.join(process.cwd(), 'uploads', 'reels');
+  const uploadsDir = path.join(getUploadsRoot(), 'reels');
   if (!fs.existsSync(uploadsDir)) {
     fs.mkdirSync(uploadsDir, { recursive: true });
   }

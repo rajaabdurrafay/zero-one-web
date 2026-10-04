@@ -1,3 +1,4 @@
+import { getUploadsRoot } from '../utils/uploadStorage';
 import { decodeImage } from '../utils/uploads';
 import { Router } from 'express';
 import { z } from 'zod';
@@ -25,7 +26,7 @@ function saveAvatarFile(base64Data: string, prefix: string): string {
     throw new Error('Avatar image exceeds 5MB size limit.');
   }
 
-  const uploadsDir = path.join(process.cwd(), 'uploads', 'avatars');
+  const uploadsDir = path.join(getUploadsRoot(), 'avatars');
   if (!fs.existsSync(uploadsDir)) {
     fs.mkdirSync(uploadsDir, { recursive: true });
   }

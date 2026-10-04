@@ -1,3 +1,4 @@
+import { getUploadsRoot } from '../utils/uploadStorage';
 import { decodeImage, deleteLocalUpload } from '../utils/uploads';
 import { Router, Request, Response } from 'express';
 import { prisma } from '../db';
@@ -165,7 +166,7 @@ router.post('/upload-logo', requireAdminAuth([AdminRole.SUPER_ADMIN]), async (re
     }
 
     // Prepare uploads directory
-    const uploadsDir = path.join(process.cwd(), 'uploads', 'branding');
+    const uploadsDir = path.join(getUploadsRoot(), 'branding');
     if (!fs.existsSync(uploadsDir)) {
       fs.mkdirSync(uploadsDir, { recursive: true });
     }

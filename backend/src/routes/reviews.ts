@@ -1,3 +1,4 @@
+import { getUploadsRoot } from '../utils/uploadStorage';
 import { decodeImage, deleteLocalUpload } from '../utils/uploads';
 import { Router, Request, Response } from 'express';
 import { prisma } from '../db';
@@ -130,7 +131,7 @@ router.post('/admin', requireAdminAuth([AdminRole.SUPER_ADMIN, AdminRole.MANAGER
     let finalAvatarUrl = validatedData.customerAvatarUrl || null;
 
     if (validatedData.avatarBase64) {
-      const uploadsDir = path.join(process.cwd(), 'uploads', 'reviews');
+      const uploadsDir = path.join(getUploadsRoot(), 'reviews');
       if (!fs.existsSync(uploadsDir)) {
         fs.mkdirSync(uploadsDir, { recursive: true });
       }
@@ -174,7 +175,7 @@ router.patch('/admin/:id', requireAdminAuth([AdminRole.SUPER_ADMIN, AdminRole.MA
     delete updatePayload.avatarBase64;
 
     if (validatedData.avatarBase64) {
-      const uploadsDir = path.join(process.cwd(), 'uploads', 'reviews');
+      const uploadsDir = path.join(getUploadsRoot(), 'reviews');
       if (!fs.existsSync(uploadsDir)) {
         fs.mkdirSync(uploadsDir, { recursive: true });
       }

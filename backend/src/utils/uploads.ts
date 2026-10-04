@@ -1,3 +1,4 @@
+import { getUploadsRoot } from './uploadStorage';
 import path from 'path';
 import fs from 'fs';
 
@@ -21,7 +22,7 @@ export function deleteLocalUpload(url: string, folder: string): void {
   if (!url.startsWith(prefix)) return;
   const name = url.slice(prefix.length);
   if (!name || name !== path.basename(name) || name.includes('\\') || name.includes('..')) return;
-  const base = path.resolve(process.cwd(), 'uploads', folder);
+  const base = path.resolve(getUploadsRoot(), folder);
   const target = path.resolve(base, name);
   if (path.dirname(target) !== base) return;
   if (fs.existsSync(target) && !fs.lstatSync(target).isSymbolicLink()) fs.unlinkSync(target);

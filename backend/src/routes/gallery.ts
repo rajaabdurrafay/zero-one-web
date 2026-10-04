@@ -1,3 +1,4 @@
+import { getUploadsRoot } from '../utils/uploadStorage';
 import { decodeImage, deleteLocalUpload } from '../utils/uploads';
 import { Router, Request, Response } from 'express';
 import { prisma } from '../db';
@@ -66,7 +67,7 @@ router.post('/admin', requireAdminAuth([AdminRole.SUPER_ADMIN, AdminRole.MANAGER
 
     // If Base64 image is passed, save it to disk
     if (validatedData.imageBase64) {
-      const uploadsDir = path.join(process.cwd(), 'uploads', 'gallery');
+      const uploadsDir = path.join(getUploadsRoot(), 'gallery');
       if (!fs.existsSync(uploadsDir)) {
         fs.mkdirSync(uploadsDir, { recursive: true });
       }

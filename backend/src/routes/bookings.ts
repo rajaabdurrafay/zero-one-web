@@ -1,3 +1,4 @@
+import { getUploadsRoot } from '../utils/uploadStorage';
 import { decodeImage } from '../utils/uploads';
 import { pagination, pageResult } from '../middleware/apiContract';
 import { activityPrice, quote, Snapshot, money, allocatePayments, businessDate, businessInstant } from '@zeroone/domain';
@@ -292,7 +293,7 @@ router.post('/', optionalCustomerAuth, transactionalBooking(async (req: Authenti
         }
         const buffer = Buffer.from(base64Data, 'base64');
         if (buffer.length <= 5 * 1024 * 1024) {
-          const uploadsDir = path.join(process.cwd(), 'uploads');
+          const uploadsDir = getUploadsRoot();
           if (!fs.existsSync(uploadsDir)) {
             fs.mkdirSync(uploadsDir, { recursive: true });
           }
@@ -665,7 +666,7 @@ router.post('/group', optionalCustomerAuth, transactionalBooking(async (req: Aut
         }
         const buffer = Buffer.from(base64Data, 'base64');
         if (buffer.length <= 5 * 1024 * 1024) {
-          const uploadsDir = path.join(process.cwd(), 'uploads');
+          const uploadsDir = getUploadsRoot();
           if (!fs.existsSync(uploadsDir)) {
             fs.mkdirSync(uploadsDir, { recursive: true });
           }
@@ -883,7 +884,7 @@ router.post('/group/:groupId/upload-payment', requireBookingAccess(true), transa
       return res.status(400).json({ error: 'Image size exceeds maximum limit of 5MB.' });
     }
 
-    const uploadsDir = path.join(process.cwd(), 'uploads');
+    const uploadsDir = getUploadsRoot();
     if (!fs.existsSync(uploadsDir)) {
       fs.mkdirSync(uploadsDir, { recursive: true });
     }
@@ -1431,7 +1432,7 @@ router.post('/:id/reupload-payment', requireCustomerAuth, transactionalBooking(a
       return res.status(400).json({ error: 'Image size exceeds maximum limit of 5MB.' });
     }
 
-    const uploadsDir = path.join(process.cwd(), 'uploads');
+    const uploadsDir = getUploadsRoot();
     if (!fs.existsSync(uploadsDir)) {
       fs.mkdirSync(uploadsDir, { recursive: true });
     }
@@ -1868,7 +1869,7 @@ router.post('/:id/upload-payment', requireBookingAccess(false), transactionalBoo
       return res.status(400).json({ error: 'Image size exceeds maximum limit of 5MB.' });
     }
 
-    const uploadsDir = path.join(process.cwd(), 'uploads');
+    const uploadsDir = getUploadsRoot();
     if (!fs.existsSync(uploadsDir)) {
       fs.mkdirSync(uploadsDir, { recursive: true });
     }

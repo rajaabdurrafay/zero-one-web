@@ -1,3 +1,4 @@
+import { getUploadsRoot } from './utils/uploadStorage';
 import {versionedApi} from './middleware/apiContract';
 import {publicCache} from './middleware/publicCache';
 import {validateQueries} from './middleware/queryValidation';
@@ -88,7 +89,7 @@ app.use('/uploads', (req, res, next) => {
   next();
 });
 // Serve static uploads
-app.use('/uploads', express.static(path.join(process.cwd(), 'uploads'), { dotfiles: 'deny', index: false, maxAge: '1d', setHeaders: res => { res.setHeader('X-Content-Type-Options', 'nosniff'); if (/^(?:payment_|grp_payment_|reupload_|pos_)/.test(path.basename(res.req.path))) res.setHeader('Cache-Control', 'private, no-store'); } }));
+app.use('/uploads', express.static(getUploadsRoot(), { dotfiles: 'deny', index: false, maxAge: '1d', setHeaders: res => { res.setHeader('X-Content-Type-Options', 'nosniff'); if (/^(?:payment_|grp_payment_|reupload_|pos_)/.test(path.basename(res.req.path))) res.setHeader('Cache-Control', 'private, no-store'); } }));
 
 app.use('/api',publicCache);
 
